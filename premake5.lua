@@ -3,7 +3,7 @@ require "extensions/premake-qt/qt"
 local qtdir_x86 = io.readfile("tmp/.qtdir_x86")
 local qtdir_x64 = io.readfile("tmp/.qtdir_x64")
 
-workspace "CharnoBot"
+workspace "UmikoBot"
 	location "sln/"
 	configurations {
 		"Debug",
@@ -14,7 +14,7 @@ workspace "CharnoBot"
 		"x64",
 	}
 
-project "CharnoBot"
+project "UmikoBot"
 	premake.extensions.qt.enable()
 	location "sln/prj/"
 	kind "ConsoleApp"
