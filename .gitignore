@@ -1,0 +1,6 @@
+bin/
+obj/
+pmk/premake5.exe
+pmk/premake5
+sln/
+tmp/
