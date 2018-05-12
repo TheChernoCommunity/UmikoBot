@@ -1,3 +1,6 @@
 [submodule "dep/QDiscord"]
 	path = dep/QDiscord
 	url = https://github.com/Gaztin/QDiscord.git
+[submodule "pmk/extensions/premake-qt"]
+	path = pmk/extensions/premake-qt
+	url = https://github.com/dcourtois/premake-qt.git
