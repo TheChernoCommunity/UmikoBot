@@ -1,6 +1,7 @@
 #include "UmikoBot.h"
 
 #include "modules/TimezoneModule.h"
+#include "modules/CurrencyModule.h"
 
 UmikoBot::UmikoBot(QObject* parent)
 	: Client("umiko-bot", parent)
@@ -8,6 +9,7 @@ UmikoBot::UmikoBot(QObject* parent)
 	GuildSettings::Load("settings.json");
 
 	m_modules.push_back(new TimezoneModule);
+	m_modules.push_back(new CurrencyModule);
 }
 
 UmikoBot::~UmikoBot()
