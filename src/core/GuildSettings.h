@@ -13,8 +13,9 @@ struct GuildSetting
 {
 	snowflake_t id;
 	QList<snowflake_t> owners;
-	// Here we shall add the other settings
 
+	QString prefix = "!";
+	QList<QPair<QString, bool>> modules;
 };
 
 class GuildSettings 
@@ -28,5 +29,10 @@ public:
 
 	static GuildSetting& GetGuildSetting(snowflake_t id);
 
+	static void AddGuild(snowflake_t id);
+
 	static bool IsOwner(snowflake_t guild, snowflake_t id);
+
+	static bool IsModuleEnabled(snowflake_t guild, const QString& moduleName, bool default = true);
+	static void ToggleModule(snowflake_t guild, const QString& moduleName, bool enabled, bool default = true);
 };
