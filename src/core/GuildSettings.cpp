@@ -68,7 +68,8 @@ void GuildSettings::Save()
 			owners.append(QString::number(owner));
 		}
 		current["owners"] = owners;
-		current["prefix"] = setting.prefix;
+		if(setting.prefix != "!")
+			current["prefix"] = setting.prefix;
 
 		if (setting.modules.size() > 0) 
 		{
