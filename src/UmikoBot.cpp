@@ -20,7 +20,7 @@ UmikoBot::~UmikoBot()
 
 void UmikoBot::onMessageCreate(const Discord::Message& message)
 {
-	Q_FOREACH(const Module* module, m_modules)
+	Q_FOREACH(Module* module, m_modules)
 	{
 		module->OnMessage(*this, message);
 	}
