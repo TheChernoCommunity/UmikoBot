@@ -12,7 +12,7 @@ Module::Module(const QString& name, bool enabledByDefault)
 void Module::OnMessage(Discord::Client& client, const Discord::Message& message) const
 {
 	client.getChannel(message.channelId()).then(
-		[this, message](const Discord::Channel& channel)
+		[this, message, &client](const Discord::Channel& channel)
 	{
 		GuildSetting setting = GuildSettings::GetGuildSetting(channel.guildId());
 
@@ -22,7 +22,7 @@ void Module::OnMessage(Discord::Client& client, const Discord::Message& message)
 			{
 				if (message.content().startsWith(setting.prefix + command.name))
 				{
-					command.callback(message);
+					command.callback(client, message);
 				}
 			}
 		}

@@ -7,7 +7,7 @@
 
 struct Command
 {
-	using Callback = std::function<void(const Discord::Message&)>;
+	using Callback = std::function<void(Discord::Client&, const Discord::Message&)>;
 
 	QString name;
 	QString briefDesc;
@@ -18,7 +18,7 @@ struct Command
 class Module
 {
 public:
-	void OnMessage(Discord::Client& client, const Discord::Message& message) const;
+	virtual void OnMessage(Discord::Client& client, const Discord::Message& message) const;
 	inline bool IsEnabledByDefault() { return m_enabledByDefault; }
 
 	void Save() const;
