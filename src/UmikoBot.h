@@ -1,6 +1,8 @@
 #pragma once
 #include <Discord/Client.h>
 
+#include "core/GuildSettings.h"
+
 class UmikoBot : public Discord::Client
 {
 public:
