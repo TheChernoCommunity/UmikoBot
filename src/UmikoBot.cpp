@@ -16,3 +16,7 @@ void UmikoBot::onMessageCreate(const Discord::Message& message)
 {
 	qDebug("%s", qPrintable(message.content()));
 }
+
+void UmikoBot::onGuildCreate(const Discord::Guild& guild) {
+	GuildSettings::AddGuild(guild.id);
+}
