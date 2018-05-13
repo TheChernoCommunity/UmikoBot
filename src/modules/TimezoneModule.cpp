@@ -4,30 +4,26 @@ TimezoneModule::TimezoneModule()
 	: Module("timezone", true)
 {
 	RegisterCommand("timeoffset", "brief", "full",
-		[this](/*Discord::Client& client, */const Discord::Message& message)
+		[this](Discord::Client& client, const Discord::Message& message)
 	{
 		QStringList arguments = message.content().split(' ');
 		if (arguments.count() == 2)
 		{
 			Setting& setting = m_settings[message.author().id()];
 			if (TimeFromString(arguments[1], &setting.time))
-			{
-				// Send error message
-			}
+				client.createMessage(message.channelId(), "Timezone set to " + setting.time.timeZoneAbbreviation());
+			else
+				client.createMessage(message.channelId(), "Invalid time format");
 
 			qDebug() << m_settings[message.author().id()].time.offsetFromUtc();
 		}
 	});
 
 	RegisterCommand("status", "brief", "full",
-		[this](/*Discord::Client& client, */const Discord::Message& message)
+		[this](Discord::Client& client, const Discord::Message& message)
 	{
 		qDebug() << message.author().username() << "has timezone" << m_settings[message.author().id()].time.offsetFromUtc();
 	});
-
-	QString t("+56");
-	quint32 i = t.toUInt();
-	qDebug("%d", i);
 }
 
 void TimezoneModule::OnSave(QJsonDocument& doc) const
