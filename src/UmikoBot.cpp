@@ -18,5 +18,5 @@ void UmikoBot::onMessageCreate(const Discord::Message& message)
 }
 
 void UmikoBot::onGuildCreate(const Discord::Guild& guild) {
-	GuildSettings::AddGuild(guild.id);
+	GuildSettings::AddGuild(guild.id());
 }
