@@ -122,7 +122,7 @@ fi
 if [ "$os" == "windows" ]; then
 	# Download premake executable
 	$(curl -L -o "tmp/premake5.zip" "https://github.com/premake/premake-core/releases/download/v$PREMAKE_VERSION/premake-$PREMAKE_VERSION-windows.zip")
-	$(unzip -u -q "tmp/premake5.zip" -d "bin")
+	$(unzip -u -q "tmp/premake5.zip" -d "pmk")
 
 # Linux setup
 elif [ "$os" == "linux" ]; then
@@ -130,7 +130,7 @@ elif [ "$os" == "linux" ]; then
 	if [ "$arch" == "x86_64" ]; then
 		# Download premake executable
 		$(curl -L -o "tmp/premake5.tar.gz" "https://github.com/premake/premake-core/releases/download/v$PREMAKE_VERSION/premake-$PREMAKE_VERSION-linux.tar.gz")
-		$(tar -xvzf "tmp/premake5.tar.gz" -C "bin")
+		$(tar -xvzf "tmp/premake5.tar.gz" -C "pmk")
 	else
 		# Download premake source package
 		$(curl -L -o "tmp/premake5-src.zip" "https://github.com/premake/premake-core/releases/download/v$PREMAKE_VERSION/premake-$PREMAKE_VERSION-src.zip")
@@ -139,12 +139,13 @@ elif [ "$os" == "linux" ]; then
 		# Build premake
 		echo "Building premake from source.."
 		$(make -C "tmp/premake-$PREMAKE_VERSION/build/gmake.unix/")
-		$(cp "tmp/premake-$PREMAKE_VERSION/bin/release/premake5" "bin/")
+		$(cp "tmp/premake-$PREMAKE_VERSION/bin/release/premake5" "pmk/")
 	fi
 
 # Mac OS X setup
 elif [ "$os" == "osx" ]; then
 	# Download premake executable
 	$(curl -L -o "tmp/premake5.tar.gz" "https://github.com/premake/premake-core/releases/download/v$PREMAKE_VERSION/premake-$PREMAKE_VERSION-macosx.tar.gz")
-	$(tar -xvzf "tmp/premake5.tar.gz" -C "bin")
+	$(tar -xvzf "tmp/premake5.tar.gz" -C "pmk")
 fi
+git submodule update --init
