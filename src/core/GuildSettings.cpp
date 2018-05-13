@@ -73,3 +73,11 @@ GuildSetting& GuildSettings::GetGuildSetting(snowflake_t id)
 	s_settings[s_settings.size() - 1].id = id;
 	return s_settings[s_settings.size() - 1];
 }
+
+bool GuildSettings::IsOwner(snowflake_t guild, snowflake_t id) {
+	const GuildSetting& setting = GetGuildSetting(guild);
+	for (snowflake_t owner : setting.owners)
+		if (owner == id)
+			return true;
+	return false;
+}

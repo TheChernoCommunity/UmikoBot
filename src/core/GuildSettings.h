@@ -27,4 +27,6 @@ public:
 	static void Save();
 
 	static GuildSetting& GetGuildSetting(snowflake_t id);
+
+	static bool IsOwner(snowflake_t guild, snowflake_t id);
 };
