@@ -10,6 +10,11 @@ UmikoBot::UmikoBot(QObject* parent)
 
 	m_modules.push_back(new TimezoneModule);
 	m_modules.push_back(new CurrencyModule);
+
+	Q_FOREACH(Module* module, m_modules)
+	{
+		module->Load();
+	}
 }
 
 UmikoBot::~UmikoBot()
