@@ -111,7 +111,8 @@ void GuildSettings::AddGuild(snowflake_t id)
 }
 
 
-bool GuildSettings::IsOwner(snowflake_t guild, snowflake_t id) {
+bool GuildSettings::IsOwner(snowflake_t guild, snowflake_t id) 
+{
 	const GuildSetting& setting = GetGuildSetting(guild);
 	for (snowflake_t owner : setting.owners)
 		if (owner == id)
@@ -136,7 +137,8 @@ bool GuildSettings::IsModuleEnabled(snowflake_t guild, const QString& moduleName
 	return default;
 }
 
-void GuildSettings::ToggleModule(snowflake_t guild, const QString& moduleName, bool enabled, bool default) {
+void GuildSettings::ToggleModule(snowflake_t guild, const QString& moduleName, bool enabled, bool default) 
+{
 	GuildSetting& setting = GetGuildSetting(guild);
 	
 	QList<QPair<QString, bool>>& modules = setting.modules;
