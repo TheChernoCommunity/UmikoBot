@@ -5,7 +5,7 @@ QString GuildSettings::s_location;
 
 void GuildSettings::Load(const QString& location)
 {
-	s_location = QDir::currentPath() + "/" + location;
+	s_location = "configs/" + location;
 
 	qDebug("%s", qPrintable(s_location));
 
