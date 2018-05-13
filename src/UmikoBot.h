@@ -13,5 +13,7 @@ private:
 	void onMessageCreate(const Discord::Message& message) override;
 	void onGuildCreate(const Discord::Guild& guild) override;
 
-	QList<Module> m_modules;
+	void Save();
+
+	QList<Module*> m_modules;
 };

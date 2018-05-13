@@ -1,14 +1,12 @@
 #include "Module.h"
 
+#include <QtCore/QFile>
+#include <QtCore/QJsonDocument>
+
 Module::Module(const QString& name, bool enabledByDefault)
 	: m_name(name)
 	, m_enabledByDefault(enabledByDefault)
 {
-}
-
-void Module::RegisterCommand(const QString& name, const QString& briefDescription, const QString& fullDescription, Command::Callback callback)
-{
-	m_commands.push_back({name, briefDescription, fullDescription, callback});
 }
 
 void Module::OnMessage(Discord::Client& client, const Discord::Message& message) const
@@ -29,4 +27,32 @@ void Module::OnMessage(Discord::Client& client, const Discord::Message& message)
 			}
 		}
 	});
+}
+
+void Module::RegisterCommand(const QString& name, const QString& briefDescription, const QString& fullDescription, Command::Callback callback)
+{
+	m_commands.push_back({name, briefDescription, fullDescription, callback});
+}
+
+void Module::Save() const
+{
+	QFile file("configs/" + m_name + ".json");
+	if (file.open(QFile::WriteOnly))
+	{
+		QJsonDocument doc;
+		OnSave(doc);
+
+		file.write(doc.toJson(QJsonDocument::Indented));
+		file.close();
+	}
+}
+
+void Module::Load()
+{
+	QFile file("configs/" + m_name + ".json");
+	if (file.open(QFile::ReadOnly))
+	{
+		OnLoad(QJsonDocument::fromJson(file.readAll()));
+		file.close();
+	}
 }
