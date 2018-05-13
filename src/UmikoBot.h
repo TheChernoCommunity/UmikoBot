@@ -1,7 +1,7 @@
 #pragma once
 #include <Discord/Client.h>
-
 #include "core/GuildSettings.h"
+#include "core/Module.h"
 
 class UmikoBot : public Discord::Client
 {
@@ -13,4 +13,5 @@ private:
 	void onMessageCreate(const Discord::Message& message) override;
 	void onGuildCreate(const Discord::Guild& guild) override;
 
+	QList<Module> m_modules;
 };

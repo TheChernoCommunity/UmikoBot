@@ -11,12 +11,15 @@ UmikoBot::~UmikoBot()
 	GuildSettings::Save();
 }
 
-
 void UmikoBot::onMessageCreate(const Discord::Message& message)
 {
-	qDebug("%s", qPrintable(message.content()));
+	Q_FOREACH(const Module& module, m_modules)
+	{
+		module.OnMessage(*this, message);
+	}
 }
 
-void UmikoBot::onGuildCreate(const Discord::Guild& guild) {
+void UmikoBot::onGuildCreate(const Discord::Guild& guild)
+{
 	GuildSettings::AddGuild(guild.id());
 }
