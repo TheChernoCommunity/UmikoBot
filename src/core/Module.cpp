@@ -15,17 +15,17 @@ void Module::OnMessage(Discord::Client& client, const Discord::Message& message)
 		[this, message, &client](const Discord::Channel& channel)
 	{
 		GuildSetting setting = GuildSettings::GetGuildSetting(channel.guildId());
-
-		if (GuildSettings::IsModuleEnabled(channel.guildId(), m_name, m_enabledByDefault))
-		{
-			for (const Command& command : m_commands)
+		if (channel.guildId() != 0) // DM
+			if (GuildSettings::IsModuleEnabled(channel.guildId(), m_name, m_enabledByDefault))
 			{
-				if (message.content().startsWith(setting.prefix + command.name))
+				for (const Command& command : m_commands)
 				{
-					command.callback(client, message);
+					if (message.content().startsWith(setting.prefix + command.name))
+					{
+						command.callback(client, message, channel);
+					}
 				}
 			}
-		}
 	});
 }
 
