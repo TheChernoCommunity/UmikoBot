@@ -10,9 +10,6 @@ public:
 	~UmikoBot();
 
 private:
-	void onMessageCreate(const Discord::Message& message) override;
-	void onGuildCreate(const Discord::Guild& guild) override;
-
 	void Save();
 
 	QList<Module*> m_modules;

@@ -8,6 +8,21 @@ UmikoBot::UmikoBot(QObject* parent)
 	GuildSettings::Load("settings.json");
 
 	m_modules.push_back(new TimezoneModule);
+
+	connect(this, &Client::onMessageCreate,
+		[this](const Discord::Message& message)
+	{
+		Q_FOREACH(const Module* module, m_modules)
+		{
+			module->OnMessage(*this, message);
+		}
+	});
+
+	connect(this, &Client::onGuildCreate,
+		[](const Discord::Guild& guild)
+	{
+		GuildSettings::AddGuild(guild.id());
+	});
 }
 
 UmikoBot::~UmikoBot()
@@ -16,19 +31,6 @@ UmikoBot::~UmikoBot()
 
 	for (Module* module : m_modules)
 		delete module;
-}
-
-void UmikoBot::onMessageCreate(const Discord::Message& message)
-{
-	Q_FOREACH(const Module* module, m_modules)
-	{
-		module->OnMessage(*this, message);
-	}
-}
-
-void UmikoBot::onGuildCreate(const Discord::Guild& guild)
-{
-	GuildSettings::AddGuild(guild.id());
 }
 
 void UmikoBot::Save()
