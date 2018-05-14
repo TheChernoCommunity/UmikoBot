@@ -30,7 +30,7 @@ LevelModule::LevelModule()
 		client.getChannel(message.channelId()).then(
 			[this, message, &client](const Discord::Channel& channel) {
 			client.getGuildMember(channel.guildId(), message.author().id()).then(
-				[this, message, &channel, &client](const Discord::GuildMember& member) {
+				[this, message, channel, &client](const Discord::GuildMember& member) {
 				Discord::Embed embed;
 				QString url = "https://cdn.discordapp.com/avatars/" + QString::number(member.user().id()) + "/" + member.user().avatar() + ".png";
 				embed.setAuthor(Discord::EmbedAuthor(member.nick(), url, url));
