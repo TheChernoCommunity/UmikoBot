@@ -8,11 +8,12 @@ LevelModule::LevelModule()
 	QObject::connect(&m_timer, &QTimer::timeout, 
 		[this]()
 	{
-		for (auto it = m_exp.begin(); it != m_exp.end(); it++)
+		for (auto& it = m_exp.begin(); it != m_exp.end(); it++)
 		{
 			for (GuildLevelData& data : it.value())
 			{
-				if (data.messageCount > 0) {
+				if (data.messageCount > 0) 
+				{
 					data.messageCount = 0;
 					data.exp += qrand() % 31 + 15;
 				}
@@ -28,9 +29,11 @@ LevelModule::LevelModule()
 		[this](Discord::Client& client, const Discord::Message& message)
 	{
 		client.getChannel(message.channelId()).then(
-			[this, message, &client](const Discord::Channel& channel) {
+			[this, message, &client](const Discord::Channel& channel) 
+		{
 			client.getGuildMember(channel.guildId(), message.author().id()).then(
-				[this, message, channel, &client](const Discord::GuildMember& member) {
+				[this, message, channel, &client](const Discord::GuildMember& member) 
+			{
 				Discord::Embed embed;
 				QString url = "https://cdn.discordapp.com/avatars/" + QString::number(member.user().id()) + "/" + member.user().avatar() + ".png";
 				embed.setAuthor(Discord::EmbedAuthor(member.nick(), url, url));
@@ -87,7 +90,7 @@ void LevelModule::OnMessage(Discord::Client& client, const Discord::Message& mes
 	Module::OnMessage(client, message);
 
 	client.getChannel(message.channelId()).then(
-		[this, &message](const Discord::Channel& channel) 
+		[this, message](const Discord::Channel& channel) 
 	{
 		for (GuildLevelData& data : m_exp[channel.guildId()]) {
 			if (data.user == message.author().id()) {
