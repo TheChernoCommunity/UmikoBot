@@ -26,27 +26,59 @@ LevelModule::LevelModule()
 	qsrand(now.msec());
 
 	RegisterCommand("status", "retrieves the status", "[name]/[#number] \n[name] - optional, used to retrieve the status of somebody else\n\tEx: !status Timmy\n[#number] - optional, used to retrieve the status of a person at that rank\n\tEx: !status #2", 
-		[this](Discord::Client& client, const Discord::Message& message)
+		[this](Discord::Client& client, const Discord::Message& message, const Discord::Channel& channel)
 	{
-		client.getChannel(message.channelId()).then(
-			[this, message, &client](const Discord::Channel& channel) 
+		client.getGuildMember(channel.guildId(), message.author().id()).then(
+			[this, message, channel, &client](const Discord::GuildMember& member) 
 		{
-			client.getGuildMember(channel.guildId(), message.author().id()).then(
-				[this, message, channel, &client](const Discord::GuildMember& member) 
-			{
-				Discord::Embed embed;
-				QString url = "https://cdn.discordapp.com/avatars/" + QString::number(member.user().id()) + "/" + member.user().avatar() + ".png";
-				embed.setAuthor(Discord::EmbedAuthor(member.nick(), url, url));
-				embed.setColor(qrand() % 16777216);
-				embed.setTitle("Gay");
+			Discord::Embed embed;
+			QString url = "https://cdn.discordapp.com/avatars/" + QString::number(member.user().id()) + "/" + member.user().avatar() + ".png";
+			embed.setAuthor(Discord::EmbedAuthor(member.nick(), url, url));
+			embed.setColor(qrand() % 16777216);
+			embed.setTitle("Gay");
 
-				GuildLevelData data = GetData(channel.guildId(), message.author().id());
+			GuildLevelData data = GetData(channel.guildId(), message.author().id());
 
-				embed.setDescription("Experience: " + QString::number(data.exp));
+			embed.setDescription("Experience: " + QString::number(data.exp));
 
-				client.createMessage(message.channelId(), embed);
-			});
+			client.createMessage(message.channelId(), embed);
 		});
+	});
+
+	RegisterCommand("top", "brief", "bleh",
+		[this](Discord::Client& client, const Discord::Message& message, const Discord::Channel& channel)
+	{
+		QStringList args = message.content().split(' ');
+		if (args.size() == 2) {
+			qSort(m_exp[channel.guildId()].begin(), m_exp[channel.guildId()].end(),
+				[](const LevelModule::GuildLevelData& v1, const LevelModule::GuildLevelData& v2) -> bool
+			{
+				return v1.exp < v2.exp;
+			});
+
+			Discord::Embed embed;
+			embed.setColor(qrand() % 16777216);
+			embed.setTitle("Top " + args.back());
+
+			QString desc = "";
+			for (size_t i = 0; i < args.back().toUInt(); i++) 
+			{
+				LevelModule::GuildLevelData& curr = m_exp[channel.guildId()][i];
+				desc += QString::number(i + 1) + ". ";
+
+				client.getGuildMember(channel.guildId(), curr.user).then(
+					[&desc](const Discord::GuildMember& member)
+				{
+					desc += member.nick();
+				});
+
+				desc += " - " + curr.exp;
+			}
+
+			embed.setDescription(desc);
+
+			client.createMessage(message.channelId(), embed);
+		}
 	});
 }
 
