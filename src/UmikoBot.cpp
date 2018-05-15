@@ -2,6 +2,7 @@
 #include "modules/LevelModule.h"
 
 #include "modules/TimezoneModule.h"
+#include "modules/CurrencyModule.h"
 
 UmikoBot::UmikoBot(QObject* parent)
 	: Client("umiko-bot", parent)
@@ -10,6 +11,12 @@ UmikoBot::UmikoBot(QObject* parent)
 
 	m_modules.append(new LevelModule());
 	m_modules.push_back(new TimezoneModule);
+	m_modules.push_back(new CurrencyModule);
+
+	Q_FOREACH(Module* module, m_modules)
+	{
+		module->Load();
+	}
 }
 
 UmikoBot::~UmikoBot()
@@ -22,7 +29,7 @@ UmikoBot::~UmikoBot()
 
 void UmikoBot::onMessageCreate(const Discord::Message& message)
 {
-	Q_FOREACH(const Module* module, m_modules)
+	Q_FOREACH(Module* module, m_modules)
 	{
 		module->OnMessage(*this, message);
 	}

@@ -9,7 +9,7 @@ Module::Module(const QString& name, bool enabledByDefault)
 {
 }
 
-void Module::OnMessage(Discord::Client& client, const Discord::Message& message) const
+void Module::OnMessage(Discord::Client& client, const Discord::Message& message)
 {
 	client.getChannel(message.channelId()).then(
 		[this, message, &client](const Discord::Channel& channel)
