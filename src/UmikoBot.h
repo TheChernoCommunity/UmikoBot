@@ -16,4 +16,5 @@ private:
 	void Save();
 
 	QList<Module*> m_modules;
+	QTimer m_timer;
 };

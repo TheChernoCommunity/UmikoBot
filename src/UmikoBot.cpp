@@ -7,6 +7,9 @@
 UmikoBot::UmikoBot(QObject* parent)
 	: Client("umiko-bot", parent)
 {
+	if (!QDir("configs").exists())
+		QDir().mkdir("configs");
+
 	GuildSettings::Load("settings.json");
 
 	m_modules.append(new LevelModule());
@@ -17,6 +20,14 @@ UmikoBot::UmikoBot(QObject* parent)
 	{
 		module->Load();
 	}
+
+	m_timer.setInterval(/*60 * 60 */ 1000);
+	QObject::connect(&m_timer, &QTimer::timeout, 
+		[this]()
+	{
+		Save();
+	});
+	m_timer.start();
 }
 
 UmikoBot::~UmikoBot()
