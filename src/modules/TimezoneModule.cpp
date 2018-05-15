@@ -4,7 +4,7 @@ TimezoneModule::TimezoneModule()
 	: Module("timezone", true)
 {
 	RegisterCommand("timeoffset", "brief", "full",
-		[this](Discord::Client& client, const Discord::Message& message)
+		[this](Discord::Client& client, const Discord::Message& message, const Discord::Channel& channel)
 	{
 		QStringList arguments = message.content().split(' ');
 		if (arguments.count() == 2)
@@ -20,7 +20,7 @@ TimezoneModule::TimezoneModule()
 	});
 
 	RegisterCommand("status", "brief", "full",
-		[this](Discord::Client& client, const Discord::Message& message)
+		[this](Discord::Client& client, const Discord::Message& message, const Discord::Channel& channel)
 	{
 		qDebug() << message.author().username() << "has timezone" << m_settings[message.author().id()].time.offsetFromUtc();
 	});
