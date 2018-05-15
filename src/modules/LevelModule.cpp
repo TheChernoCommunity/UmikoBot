@@ -119,7 +119,7 @@ void LevelModule::OnLoad(const QJsonDocument& doc)
 
 }
 
-void LevelModule::OnMessage(Discord::Client& client, const Discord::Message& message) const 
+void LevelModule::OnMessage(Discord::Client& client, const Discord::Message& message) 
 {
 	Module::OnMessage(client, message);
 

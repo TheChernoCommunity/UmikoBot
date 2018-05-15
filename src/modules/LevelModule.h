@@ -15,7 +15,7 @@ public:
 	void OnSave(QJsonDocument& doc) const override;
 	void OnLoad(const QJsonDocument& doc) override;
 
-	void OnMessage(Discord::Client& client, const Discord::Message& message) const override;
+	void OnMessage(Discord::Client& client, const Discord::Message& message) override;
 
 private:
 	struct GuildLevelData {

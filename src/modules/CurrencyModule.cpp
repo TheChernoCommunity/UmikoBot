@@ -4,7 +4,7 @@ CurrencyModule::CurrencyModule()
 	: Module("currency", true)
 {
 	RegisterCommand("$", "brief", "full",
-		[this](Discord::Client& client, const Discord::Message& message)
+		[this](Discord::Client& client, const Discord::Message& message, const Discord::Channel& channel)
 	{
 		const Setting& setting = m_settings[message.author().id()];
 
