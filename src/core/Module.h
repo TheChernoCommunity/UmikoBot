@@ -8,7 +8,7 @@
 struct Command
 {
 	using Callback = std::function<void(Discord::Client&, const Discord::Message&, const Discord::Channel&)>;
-
+	
 	QString name;
 	QString briefDesc;
 	QString fullDesc;

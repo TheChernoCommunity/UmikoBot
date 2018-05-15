@@ -1,12 +1,15 @@
 #include "UmikoBot.h"
 #include "modules/LevelModule.h"
 
+#include "modules/TimezoneModule.h"
+
 UmikoBot::UmikoBot(QObject* parent)
 	: Client("umiko-bot", parent)
 {
 	GuildSettings::Load("settings.json");
 
 	m_modules.append(new LevelModule());
+	m_modules.push_back(new TimezoneModule);
 }
 
 UmikoBot::~UmikoBot()
