@@ -63,6 +63,8 @@ LevelModule::LevelModule()
 			QString desc = "";
 			for (size_t i = 0; i < args.back().toUInt(); i++) 
 			{
+				if (i >= m_exp[channel.guildId()].size())
+					return;
 				LevelModule::GuildLevelData& curr = m_exp[channel.guildId()][i];
 				desc += QString::number(i + 1) + ". ";
 
@@ -72,7 +74,7 @@ LevelModule::LevelModule()
 					desc += member.nick();
 				});
 
-				desc += " - " + curr.exp;
+				desc += " - " + QString::number(curr.exp) + "\n";
 			}
 
 			embed.setDescription(desc);
