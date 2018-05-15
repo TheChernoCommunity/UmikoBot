@@ -10,46 +10,47 @@ void GuildSettings::Load(const QString& location)
 	qDebug("%s", qPrintable(s_location));
 
 	QFile file(s_location);
-	file.open(QIODevice::ReadOnly);
-
-	QByteArray data = file.readAll();
-
-	QJsonDocument doc(QJsonDocument::fromJson(data));
-	QJsonObject json = doc.object();
-	QStringList guildIds = json.keys();
-
-	for (const QString& id : guildIds) 
+	if (file.open(QIODevice::ReadOnly))
 	{
-		QJsonObject current = json.value(id).toObject();
-		GuildSetting setting;
-		setting.id = id.toULongLong();
-		QJsonArray owners = current["owners"].toArray();
+		QByteArray data = file.readAll();
 
-		for (const QJsonValue& owner : owners) 
-		{
-			setting.owners.push_back(owner.toString().toULongLong());
-		}
-		
-		if (current.contains("prefix")) 
-		{
-			setting.prefix = current["prefix"].toString();
-		}
+		QJsonDocument doc(QJsonDocument::fromJson(data));
+		QJsonObject json = doc.object();
+		QStringList guildIds = json.keys();
 
-		if (current.contains("modules")) 
+		for (const QString& id : guildIds)
 		{
-			QJsonObject moduleJson = current["modules"].toObject();
-			QStringList modules = moduleJson.keys();
-			
-			for (const QString& moduleName : modules) 
+			QJsonObject current = json.value(id).toObject();
+			GuildSetting setting;
+			setting.id = id.toULongLong();
+			QJsonArray owners = current["owners"].toArray();
+
+			for (const QJsonValue& owner : owners)
 			{
-				setting.modules.push_back({ moduleName, moduleJson[moduleName].toBool() });
+				setting.owners.push_back(owner.toString().toULongLong());
 			}
+
+			if (current.contains("prefix"))
+			{
+				setting.prefix = current["prefix"].toString();
+			}
+
+			if (current.contains("modules"))
+			{
+				QJsonObject moduleJson = current["modules"].toObject();
+				QStringList modules = moduleJson.keys();
+
+				for (const QString& moduleName : modules)
+				{
+					setting.modules.push_back({ moduleName, moduleJson[moduleName].toBool() });
+				}
+			}
+
+			s_settings.push_back(setting);
 		}
 
-		s_settings.push_back(setting);
+		file.close();
 	}
-
-	file.close();
 }
 
 void GuildSettings::Save()
