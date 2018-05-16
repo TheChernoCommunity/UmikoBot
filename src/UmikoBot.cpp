@@ -12,7 +12,7 @@ UmikoBot::UmikoBot(QObject* parent)
 
 	GuildSettings::Load("settings.json");
 
-	m_modules.append(new LevelModule());
+	m_modules.push_back(new LevelModule());
 	m_modules.push_back(new TimezoneModule);
 	m_modules.push_back(new CurrencyModule);
 
