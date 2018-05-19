@@ -144,7 +144,7 @@ void GuildSettings::ToggleModule(snowflake_t guild, const QString& moduleName, b
 	
 	QList<QPair<QString, bool>>& modules = setting.modules;
 
-	for (size_t i = 0; i < modules.size(); i++)
+	for (int i = 0; i < modules.size(); i++)
 	{
 		if (modules[i].first == moduleName)
 			if (enabled == default)

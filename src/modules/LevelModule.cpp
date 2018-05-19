@@ -1,5 +1,5 @@
 #include "LevelModule.h"
-
+#include "UmikoBot.h"
 
 LevelModule::LevelModule()
 	: Module("levels", true)
@@ -33,7 +33,7 @@ LevelModule::LevelModule()
 		{
 			Discord::Embed embed;
 			QString url = "https://cdn.discordapp.com/avatars/" + QString::number(member.user().id()) + "/" + member.user().avatar() + ".png";
-			embed.setAuthor(Discord::EmbedAuthor(member.nick(), url, url));
+			embed.setAuthor(Discord::EmbedAuthor(member.nick() != "" ? member.nick() : member.user().username(), url, url));
 			embed.setColor(qrand() % 16777216);
 			embed.setTitle("Gay");
 
@@ -53,7 +53,7 @@ LevelModule::LevelModule()
 			qSort(m_exp[channel.guildId()].begin(), m_exp[channel.guildId()].end(),
 				[](const LevelModule::GuildLevelData& v1, const LevelModule::GuildLevelData& v2) -> bool
 			{
-				return v1.exp < v2.exp;
+				return v1.exp > v2.exp;
 			});
 
 			Discord::Embed embed;
@@ -64,16 +64,14 @@ LevelModule::LevelModule()
 			for (size_t i = 0; i < args.back().toUInt(); i++) 
 			{
 				if (i >= m_exp[channel.guildId()].size())
-					return;
+				{
+					embed.setTitle("Top " + QString::number(i));
+					break;
+				}
+
 				LevelModule::GuildLevelData& curr = m_exp[channel.guildId()][i];
 				desc += QString::number(i + 1) + ". ";
-
-				client.getGuildMember(channel.guildId(), curr.user).then(
-					[&desc](const Discord::GuildMember& member)
-				{
-					desc += member.nick();
-				});
-
+				desc += reinterpret_cast<UmikoBot*>(&client)->GetNick(channel.guildId(), m_exp[channel.guildId()][i].user);
 				desc += " - " + QString::number(curr.exp) + "\n";
 			}
 
@@ -126,6 +124,9 @@ void LevelModule::OnMessage(Discord::Client& client, const Discord::Message& mes
 	client.getChannel(message.channelId()).then(
 		[this, message](const Discord::Channel& channel) 
 	{
+		if (message.author().bot())
+			return;
+
 		for (GuildLevelData& data : m_exp[channel.guildId()]) {
 			if (data.user == message.author().id()) {
 				data.messageCount++;
