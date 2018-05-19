@@ -128,7 +128,10 @@ void UmikoBot::GetGuildsMemberCount(snowflake_t guild, snowflake_t after)
 		{
 			for (size_t i = 0; i < members.size(); i++)
 			{
-				m_nicknames[guild][members[i].user().id()] = members[i].nick();
+				QString name = members[i].nick();
+				if (name == "")
+					name = members[i].user().username();
+				m_nicknames[guild][members[i].user().id()] = name;
 			}
 
 			if (members.size() == 1000) //guilds size is equal to the limit
@@ -145,7 +148,10 @@ void UmikoBot::GetGuildsMemberCount(snowflake_t guild, snowflake_t after)
 		{
 			for (size_t i = 0; i < members.size(); i++)
 			{
-				m_nicknames[guild][members[i].user().id()] = members[i].nick();
+				QString name = members[i].nick();
+				if (name == "")
+					name = members[i].user().username();
+				m_nicknames[guild][members[i].user().id()] = name;
 			}
 
 			if (members.size() == 1000) //guilds size is equal to the limit
