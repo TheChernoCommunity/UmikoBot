@@ -53,8 +53,10 @@ UmikoBot::UmikoBot(QObject* parent)
 	connect(this, &Client::onGuildMemberUpdate,
 		[this](snowflake_t guild, const QList<snowflake_t>& roles, const Discord::User& user, const QString& nick)
 	{
-		m_nicknames[guild][user.id()] = nick;
-		qDebug("%llu, %llu, %s", guild, user.id(), qPrintable(nick));
+		if(nick == "")
+			m_nicknames[guild][user.id()] = user.username();
+		else
+			m_nicknames[guild][user.id()] = nick;
 	});
 }
 
