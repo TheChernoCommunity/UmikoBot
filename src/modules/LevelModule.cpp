@@ -1,7 +1,7 @@
 #include "LevelModule.h"
 
 
-LevelModule::LevelModule()
+LevelModule::LevelModule(Discord::Client& client)
 	: Module("levels", true)
 {
 	m_timer.setInterval(/*300 */ 1000);
@@ -67,13 +67,7 @@ LevelModule::LevelModule()
 					return;
 				LevelModule::GuildLevelData& curr = m_exp[channel.guildId()][i];
 				desc += QString::number(i + 1) + ". ";
-
-				client.getGuildMember(channel.guildId(), curr.user).then(
-					[&desc](const Discord::GuildMember& member)
-				{
-					desc += member.nick();
-				});
-
+				desc += m_nicknames[channel.guildId()][message.author().id()];
 				desc += " - " + QString::number(curr.exp) + "\n";
 			}
 
@@ -82,6 +76,8 @@ LevelModule::LevelModule()
 			client.createMessage(message.channelId(), embed);
 		}
 	});
+
+	GetGuilds(client);
 }
 
 void LevelModule::OnSave(QJsonDocument& doc) const
@@ -146,4 +142,80 @@ LevelModule::GuildLevelData LevelModule::GetData(snowflake_t guild, snowflake_t 
 		}
 	}
 	return { user, 0,0 };
+}
+
+void LevelModule::GetGuilds(Discord::Client& client, snowflake_t after)
+{
+	if (after == 0) 
+	{
+		client.getCurrentUserGuilds().then(
+			[this, &client](const QList<Discord::Guild>& guilds)
+		{
+			for (size_t i = 0; i < guilds.size(); i++)
+			{
+				GetGuildsMemberCount(client, guilds[i].id());
+			}
+
+			if (guilds.size() == 100) //guilds size is equal to the limit
+			{
+				GetGuilds(client, guilds[guilds.size() - 1].id());
+			}
+			qDebug("Guild count: %llu", guilds.size());
+		});
+	}
+	else 
+	{
+		client.getCurrentUserGuilds(0, after).then(
+			[this, &client](const QList<Discord::Guild>& guilds)
+		{
+			for (size_t i = 0; i < guilds.size(); i++)
+			{
+				GetGuildsMemberCount(client, guilds[i].id());
+			}
+
+			if (guilds.size() == 100) //guilds size is equal to the limit
+			{
+				GetGuilds(client, guilds[guilds.size() - 1].id());
+			}
+			qDebug("Guild count: %llu", guilds.size());
+		});
+	}
+}
+
+void LevelModule::GetGuildsMemberCount(Discord::Client& client, snowflake_t guild, snowflake_t after)
+{
+	if (after == 0) 
+	{
+		client.listGuildMembers(guild, 1000).then(
+			[this, guild, &client](const QList<Discord::GuildMember>& members)
+		{
+			for (size_t i = 0; i < members.size(); i++)
+			{
+				m_nicknames[guild][members[i].user().id()] = members[i].nick();
+			}
+
+			if (members.size() == 1000) //guilds size is equal to the limit
+			{
+				GetGuildsMemberCount(client, guild, members[members.size() - 1].user().id());
+			}
+			qDebug("Membercount: %llu, %i", guild, members.size());
+		});
+	} 
+	else
+	{
+		client.listGuildMembers(guild, after, 1000).then(
+			[this, guild, &client](const QList<Discord::GuildMember>& members)
+		{
+			for (size_t i = 0; i < members.size(); i++)
+			{
+				m_nicknames[guild][members[i].user().id()] = members[i].nick();
+			}
+
+			if (members.size() == 1000) //guilds size is equal to the limit
+			{
+				GetGuildsMemberCount(client, guild, members[members.size() - 1].user().id());
+			}
+			qDebug("Membercount: %llu, %i", guild, members.size());
+		});
+	}
 }

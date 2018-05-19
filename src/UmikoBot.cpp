@@ -12,9 +12,8 @@ UmikoBot::UmikoBot(QObject* parent)
 
 	GuildSettings::Load("settings.json");
 
-	m_modules.push_back(new LevelModule());
-	m_modules.push_back(new TimezoneModule);
-	m_modules.push_back(new CurrencyModule);
+	m_modules.push_back(new TimezoneModule());
+	m_modules.push_back(new CurrencyModule());
 
 	Q_FOREACH(Module* module, m_modules)
 	{
@@ -42,6 +41,12 @@ UmikoBot::UmikoBot(QObject* parent)
 		[](const Discord::Guild& guild)
 	{
 		GuildSettings::AddGuild(guild.id());
+	});
+
+	connect(this, &Client::onReady,
+		[this]()
+	{
+		m_modules.push_back(new LevelModule(*this));
 	});
 }
 
