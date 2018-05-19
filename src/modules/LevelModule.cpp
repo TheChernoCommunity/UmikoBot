@@ -124,6 +124,9 @@ void LevelModule::OnMessage(Discord::Client& client, const Discord::Message& mes
 	client.getChannel(message.channelId()).then(
 		[this, message](const Discord::Channel& channel) 
 	{
+		if (message.author().bot())
+			return;
+
 		for (GuildLevelData& data : m_exp[channel.guildId()]) {
 			if (data.user == message.author().id()) {
 				data.messageCount++;
