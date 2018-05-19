@@ -33,7 +33,7 @@ LevelModule::LevelModule()
 		{
 			Discord::Embed embed;
 			QString url = "https://cdn.discordapp.com/avatars/" + QString::number(member.user().id()) + "/" + member.user().avatar() + ".png";
-			embed.setAuthor(Discord::EmbedAuthor(member.nick(), url, url));
+			embed.setAuthor(Discord::EmbedAuthor(member.nick() != "" ? member.nick() : member.user().username(), url, url));
 			embed.setColor(qrand() % 16777216);
 			embed.setTitle("Gay");
 
