@@ -53,7 +53,7 @@ LevelModule::LevelModule()
 			qSort(m_exp[channel.guildId()].begin(), m_exp[channel.guildId()].end(),
 				[](const LevelModule::GuildLevelData& v1, const LevelModule::GuildLevelData& v2) -> bool
 			{
-				return v1.exp < v2.exp;
+				return v1.exp > v2.exp;
 			});
 
 			Discord::Embed embed;
