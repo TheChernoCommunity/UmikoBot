@@ -9,9 +9,8 @@ struct Command
 {
 	using Callback = std::function<void(Discord::Client&, const Discord::Message&, const Discord::Channel&)>;
 	
+	unsigned int id;
 	QString name;
-	QString briefDesc;
-	QString fullDesc;
 	Callback callback;
 };
 
@@ -24,10 +23,14 @@ public:
 	void Save() const;
 	void Load();
 
+	virtual void StatusCommand(QString& result, snowflake_t guild, snowflake_t user) {}
+
+	QList<Command>& GetCommands() { return m_commands; }
+
 protected:
 	Module(const QString& name, bool enabledByDefault);
 
-	void RegisterCommand(const QString& name, const QString& briefDescription, const QString& fullDescription, Command::Callback callback);
+	void RegisterCommand(unsigned int id, const QString& name, Command::Callback callback);
 
 	virtual void OnSave(QJsonDocument& doc) const { Q_UNUSED(doc) };
 	virtual void OnLoad(const QJsonDocument& doc) { Q_UNUSED(doc) };

@@ -29,9 +29,9 @@ void Module::OnMessage(Discord::Client& client, const Discord::Message& message)
 	});
 }
 
-void Module::RegisterCommand(const QString& name, const QString& briefDescription, const QString& fullDescription, Command::Callback callback)
+void Module::RegisterCommand(unsigned int id, const QString& name, Command::Callback callback)
 {
-	m_commands.push_back({name, briefDescription, fullDescription, callback});
+	m_commands.push_back({id, name, callback});
 }
 
 void Module::Save() const
