@@ -36,6 +36,23 @@ UmikoBot::UmikoBot(QObject* parent)
 		{
 			module->OnMessage(*this, message);
 		}
+
+		getChannel(message.channelId()).then(
+			[this, message](const Discord::Channel& channel)
+		{
+			GuildSetting setting = GuildSettings::GetGuildSetting(channel.guildId());
+			if (channel.guildId() != 0 && !message.author().bot()) // DM
+			{
+				Q_FOREACH(const GlobalCommand& command, m_commands)
+				{
+					if (message.content().startsWith(setting.prefix + command.name))
+					{
+						command.callback(message, channel);
+					}
+				}
+			}
+		});
+	
 	});
 
 	connect(this, &Client::onGuildCreate,
@@ -58,6 +75,30 @@ UmikoBot::UmikoBot(QObject* parent)
 		else
 			m_nicknames[guild][user.id()] = nick;
 	});
+
+	m_commands.push_back({Commands::GLOBAL_STATUS, "status",
+		[this](const Discord::Message& message, const Discord::Channel& channel)
+	{
+		getGuildMember(channel.guildId(), message.author().id()).then(
+			[this, message, channel](const Discord::GuildMember& member)
+		{
+			QString status = "";
+			Q_FOREACH(Module* module, m_modules)
+			{
+				module->StatusCommand(status, channel.guildId(), message.author().id());
+			}
+
+			Discord::Embed embed;
+			QString icon = "https://cdn.discordapp.com/avatars/" + QString::number(member.user().id()) + "/" + member.user().avatar() + ".png";
+			embed.setAuthor(Discord::EmbedAuthor(GetNick(channel.guildId(), message.author().id()), "", icon));
+			embed.setColor(qrand() % 16777216);
+			embed.setTitle("Status");
+			embed.setDescription(status);
+
+			createMessage(message.channelId(), embed);
+		});
+	}});
+
 }
 
 UmikoBot::~UmikoBot()
