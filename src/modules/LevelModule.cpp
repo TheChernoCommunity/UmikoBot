@@ -25,27 +25,7 @@ LevelModule::LevelModule()
 	QTime now = QTime::currentTime();
 	qsrand(now.msec());
 
-	RegisterCommand("status", "retrieves the status", "[name]/[#number] \n[name] - optional, used to retrieve the status of somebody else\n\tEx: !status Timmy\n[#number] - optional, used to retrieve the status of a person at that rank\n\tEx: !status #2", 
-		[this](Discord::Client& client, const Discord::Message& message, const Discord::Channel& channel)
-	{
-		client.getGuildMember(channel.guildId(), message.author().id()).then(
-			[this, message, channel, &client](const Discord::GuildMember& member) 
-		{
-			Discord::Embed embed;
-			QString url = "https://cdn.discordapp.com/avatars/" + QString::number(member.user().id()) + "/" + member.user().avatar() + ".png";
-			embed.setAuthor(Discord::EmbedAuthor(member.nick() != "" ? member.nick() : member.user().username(), url, url));
-			embed.setColor(qrand() % 16777216);
-			embed.setTitle("Gay");
-
-			GuildLevelData data = GetData(channel.guildId(), message.author().id());
-
-			embed.setDescription("Experience: " + QString::number(data.exp));
-
-			client.createMessage(message.channelId(), embed);
-		});
-	});
-
-	RegisterCommand("top", "brief", "bleh",
+	RegisterCommand(Commands::LEVEL_MODULE_TOP, "top",
 		[this](Discord::Client& client, const Discord::Message& message, const Discord::Channel& channel)
 	{
 		QStringList args = message.content().split(' ');
@@ -116,6 +96,15 @@ void LevelModule::OnLoad(const QJsonDocument& doc)
 	}
 
 }
+
+void LevelModule::StatusCommand(QString& result, snowflake_t guild, snowflake_t user)
+{
+	result += "Rank: ...\n";
+	result += "Total exp: " + QString::number(GetData(guild, user).exp) + "\n";
+	result += "Exp needed for rankup: ./.\n";
+	result += "\n";
+}
+
 
 void LevelModule::OnMessage(Discord::Client& client, const Discord::Message& message) 
 {

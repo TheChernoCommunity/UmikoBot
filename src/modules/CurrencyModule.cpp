@@ -3,16 +3,6 @@
 CurrencyModule::CurrencyModule()
 	: Module("currency", true)
 {
-	RegisterCommand("$", "brief", "full",
-		[this](Discord::Client& client, const Discord::Message& message, const Discord::Channel& channel)
-	{
-		const Setting& setting = m_settings[message.author().id()];
-
-		Discord::Embed embed;
-		embed.setDescription("$ " + QString::number(setting.currency));
-
-		client.createMessage(message.channelId(), embed);
-	});
 }
 
 void CurrencyModule::OnMessage(Discord::Client& client, const Discord::Message& message)
@@ -20,6 +10,12 @@ void CurrencyModule::OnMessage(Discord::Client& client, const Discord::Message& 
 	m_settings[message.author().id()].currency += 5 + qrand() % 5;
 
 	Module::OnMessage(client, message);
+}
+
+void CurrencyModule::StatusCommand(QString& result, snowflake_t guild, snowflake_t user)
+{
+	result += "$ " + QString::number(m_settings[user].currency) + "\n";
+	result += "\n";
 }
 
 void CurrencyModule::OnSave(QJsonDocument& doc) const

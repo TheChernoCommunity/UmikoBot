@@ -17,6 +17,8 @@ public:
 
 	void OnMessage(Discord::Client& client, const Discord::Message& message) override;
 
+	void StatusCommand(QString& result, snowflake_t guild, snowflake_t user) override;
+
 private:
 	struct GuildLevelData {
 		snowflake_t    user;

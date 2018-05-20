@@ -1,9 +1,10 @@
 #include "TimezoneModule.h"
+#include "UmikoBot.h"
 
 TimezoneModule::TimezoneModule()
 	: Module("timezone", true)
 {
-	RegisterCommand("timeoffset", "brief", "full",
+	RegisterCommand(Commands::TIMEZONE_MODULE_TIMEOFFSET, "timeoffset",
 		[this](Discord::Client& client, const Discord::Message& message, const Discord::Channel& channel)
 	{
 		QStringList arguments = message.content().split(' ');
@@ -18,12 +19,14 @@ TimezoneModule::TimezoneModule()
 			qDebug() << m_settings[message.author().id()].time.offsetFromUtc();
 		}
 	});
+}
 
-	RegisterCommand("status", "brief", "full",
-		[this](Discord::Client& client, const Discord::Message& message, const Discord::Channel& channel)
-	{
-		qDebug() << message.author().username() << "has timezone" << m_settings[message.author().id()].time.offsetFromUtc();
-	});
+void TimezoneModule::StatusCommand(QString& result, snowflake_t guild, snowflake_t user)
+{
+	result += "Time offset: " + m_settings[user].time.timeZoneAbbreviation() + "\n";
+	QString time = m_settings[user].time.time().toString("");
+	result += "Current time: " + time + "\n";
+	result += "\n";
 }
 
 void TimezoneModule::OnSave(QJsonDocument& doc) const
@@ -80,6 +83,7 @@ bool TimezoneModule::TimeFromString(const QString& string, QDateTime* outTime) c
 	{
 		outTime->setTimeSpec(Qt::UTC);
 		outTime->setUtcOffset(sign ? -offset : offset);
+		outTime->addSecs(sign ? -offset : offset);
 		return true;
 	}
 

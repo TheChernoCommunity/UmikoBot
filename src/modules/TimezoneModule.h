@@ -7,6 +7,8 @@ class TimezoneModule : public Module
 public:
 	TimezoneModule();
 
+	void StatusCommand(QString& result, snowflake_t guild, snowflake_t user) override;
+
 private:
 	void OnSave(QJsonDocument& doc) const override;
 	void OnLoad(const QJsonDocument& doc) override;
