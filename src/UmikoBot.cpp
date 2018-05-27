@@ -79,24 +79,54 @@ UmikoBot::UmikoBot(QObject* parent)
 	m_commands.push_back({Commands::GLOBAL_STATUS, "status",
 		[this](const Discord::Message& message, const Discord::Channel& channel)
 	{
-		getGuildMember(channel.guildId(), message.author().id()).then(
-			[this, message, channel](const Discord::GuildMember& member)
-		{
-			QString status = "";
-			Q_FOREACH(Module* module, m_modules)
+		QStringList args = message.content().split(" ");
+		if (args.size() > 1) {
+			if (args.first() != GuildSettings::GetGuildSetting(channel.guildId()).prefix + "status")
+				return;
+			for (QMap<snowflake_t, QString>::iterator& it = m_nicknames[channel.guildId()].begin(); it != m_nicknames[channel.guildId()].end(); it++)
 			{
-				module->StatusCommand(status, channel.guildId(), message.author().id());
+				if (it.value() == args.last()) 
+				{
+					getGuildMember(channel.guildId(), message.author().id()).then(
+						[this, message, channel, it](const Discord::GuildMember& member)
+					{
+						QString status = "";
+						Q_FOREACH(Module* module, m_modules)
+						{
+							module->StatusCommand(status, channel.guildId(), it.key());
+						}
+
+						Discord::Embed embed;
+						QString icon = "https://cdn.discordapp.com/avatars/" + QString::number(member.user().id()) + "/" + member.user().avatar() + ".png";
+						embed.setAuthor(Discord::EmbedAuthor(GetNick(channel.guildId(), it.key()), "", icon));
+						embed.setColor(qrand() % 16777216);
+						embed.setTitle("Status");
+						embed.setDescription(status);
+
+						createMessage(message.channelId(), embed);
+					});
+				}
 			}
+		}
+		else
+			getGuildMember(channel.guildId(), message.author().id()).then(
+				[this, message, channel](const Discord::GuildMember& member)
+			{
+				QString status = "";
+				Q_FOREACH(Module* module, m_modules)
+				{
+					module->StatusCommand(status, channel.guildId(), message.author().id());
+				}
 
-			Discord::Embed embed;
-			QString icon = "https://cdn.discordapp.com/avatars/" + QString::number(member.user().id()) + "/" + member.user().avatar() + ".png";
-			embed.setAuthor(Discord::EmbedAuthor(GetNick(channel.guildId(), message.author().id()), "", icon));
-			embed.setColor(qrand() % 16777216);
-			embed.setTitle("Status");
-			embed.setDescription(status);
+				Discord::Embed embed;
+				QString icon = "https://cdn.discordapp.com/avatars/" + QString::number(member.user().id()) + "/" + member.user().avatar() + ".png";
+				embed.setAuthor(Discord::EmbedAuthor(GetNick(channel.guildId(), message.author().id()), "", icon));
+				embed.setColor(qrand() % 16777216);
+				embed.setTitle("Status");
+				embed.setDescription(status);
 
-			createMessage(message.channelId(), embed);
-		});
+				createMessage(message.channelId(), embed);
+			});
 	}});
 
 }
