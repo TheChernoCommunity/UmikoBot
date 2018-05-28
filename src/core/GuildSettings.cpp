@@ -108,7 +108,9 @@ GuildSetting& GuildSettings::GetGuildSetting(snowflake_t id)
 
 void GuildSettings::AddGuild(snowflake_t id)
 {
-	s_settings.push_back({ id });
+	GuildSetting gs = {};
+	gs.id = id;
+	s_settings.push_back(gs);
 }
 
 
