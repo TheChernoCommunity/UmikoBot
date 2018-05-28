@@ -11,7 +11,8 @@ UmikoBot::UmikoBot(QObject* parent)
 		QDir().mkdir("configs");
 
 	GuildSettings::Load("settings.json");
-
+	
+	Load();
 	m_modules.push_back(new LevelModule);
 	m_modules.push_back(new TimezoneModule);
 	m_modules.push_back(new CurrencyModule);
@@ -43,11 +44,11 @@ UmikoBot::UmikoBot(QObject* parent)
 			GuildSetting setting = GuildSettings::GetGuildSetting(channel.guildId());
 			if (channel.guildId() != 0 && !message.author().bot()) // DM
 			{
-				Q_FOREACH(const GlobalCommand& command, m_commands)
+				Q_FOREACH(const Command& command, m_commands)
 				{
 					if (message.content().startsWith(setting.prefix + command.name))
 					{
-						command.callback(message, channel);
+						command.callback(*this, message, channel);
 					}
 				}
 			}
@@ -77,10 +78,11 @@ UmikoBot::UmikoBot(QObject* parent)
 	});
 
 	m_commands.push_back({Commands::GLOBAL_STATUS, "status",
-		[this](const Discord::Message& message, const Discord::Channel& channel)
+		[this](Discord::Client& client,const Discord::Message& message, const Discord::Channel& channel)
 	{
 		QStringList args = message.content().split(" ");
-		if (args.size() > 1) {
+		if (args.size() > 1) 
+		{
 			if (args.first() != GuildSettings::GetGuildSetting(channel.guildId()).prefix + "status")
 				return;
 			for (QMap<snowflake_t, QString>::iterator& it = m_nicknames[channel.guildId()].begin(); it != m_nicknames[channel.guildId()].end(); it++)
@@ -129,6 +131,102 @@ UmikoBot::UmikoBot(QObject* parent)
 			});
 	}});
 
+	m_commands.push_back({Commands::GLOBAL_HELP, "help",
+		[this](Discord::Client& client, const Discord::Message& message, const Discord::Channel& channel)
+	{
+		QStringList args = message.content().split(" ");
+		QString prefix = GuildSettings::GetGuildSetting(channel.guildId()).prefix;
+		if (args.size() > 1)
+		{
+			if (args.first() != prefix + "help" || args.size() != 2)
+				return;
+
+			QString commandName = args[1];
+			if (commandName.startsWith(prefix))
+				commandName = QStringRef(&commandName, prefix.size(), commandName.size() - prefix.size()).toString();
+
+			QString description = "";
+			auto forCommand =
+				[this, &description, &prefix, &commandName](QList<Command> commands) 
+			{
+				for (const Command& command : commands)
+				{
+					if (command.name == commandName) 
+					{
+						CommandInfo& info = m_commandsInfo[command.id];
+						description += "Command Name:" + commandName + "\n";
+						description += info.briefDescription + "\n";
+
+						QStringList usages = info.usage.split("\n");
+						description += "Usage: \n";
+						if (usages.size() == 0)
+							description += "\t" + prefix + info.usage + "\n";
+						else
+							for (const QString& usage : usages)
+								description += "\t" + prefix + usage + "\n";
+
+						description += info.additionalInfo;
+						return true;
+					}
+				}
+				return false;
+			};
+
+			if (forCommand(m_commands))
+				;
+			else
+				Q_FOREACH(Module* module, m_modules)
+					if (forCommand(module->GetCommands()))
+						break;
+
+			Discord::Embed embed;
+			embed.setColor(qrand() % 16777216);
+			embed.setTitle("Help " + commandName);
+
+			if (description != "")
+				embed.setDescription(description);
+			else
+				embed.setDescription("Command not found!");
+
+			createMessage(message.channelId(), embed);
+		}
+		else
+		{
+			QString description = "";
+			[this, &prefix, &description]() {
+				auto forCommand =
+					[this, &description, &prefix](QList<Command> commands) 
+				{
+					for (const Command& command : commands)
+					{
+						QString current = "";
+						current = prefix + command.name + " - " + m_commandsInfo[command.id].briefDescription + "\n";
+						if (description.length() + current.length() < 2000)
+							description += current;
+						else
+							return false;
+					}
+					return true;
+				};
+
+				if (!forCommand(m_commands))
+					return;
+				else
+					Q_FOREACH(Module* module, m_modules)
+				{
+					if (!forCommand(module->GetCommands()))
+						return;
+				}
+			}();
+
+			Discord::Embed embed;
+			embed.setColor(qrand() % 16777216);
+			embed.setTitle("Help");
+			embed.setDescription(description);
+
+			createMessage(message.channelId(), embed);
+		}
+	}});
 }
 
 UmikoBot::~UmikoBot()
@@ -151,6 +249,47 @@ void UmikoBot::Save()
 	Q_FOREACH(const Module* module, m_modules)
 	{
 		module->Save();
+	}
+}
+
+void UmikoBot::Load()
+{
+#define Command(x) {#x, x}
+	using namespace Commands;
+	static QMap<QString, unsigned int> commandIds
+	{
+		Command(GLOBAL_STATUS),
+		Command(GLOBAL_HELP),
+
+		Command(LEVEL_MODULE_TOP),
+
+		Command(TIMEZONE_MODULE_TIMEOFFSET)
+	};
+
+	QFile file("commands.json");
+	if (file.open(QIODevice::ReadOnly))
+	{
+		QByteArray data = file.readAll();
+
+		QJsonDocument doc(QJsonDocument::fromJson(data));
+		QJsonObject json = doc.object();
+		QStringList commandsIdentifier = json.keys();
+		for (const QString& identifier : commandsIdentifier)
+		{
+			QJsonObject current = json.value(identifier).toObject();
+			CommandInfo info;
+			info.briefDescription = current["brief"].toString();
+			info.usage = current["usage"].toString();
+			info.additionalInfo = current["additional"].toString();
+
+			m_commandsInfo[commandIds[identifier]] = info;
+		}
+	}
+	else
+	{
+		qDebug("%s", "Could not open commands.json");
+		// Decide if we should generate them on the fly or something
+		// or just terminate the bot
 	}
 }
 
