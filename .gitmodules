@@ -4,3 +4,6 @@
 [submodule "pmk/extensions/premake-qt"]
 	path = pmk/extensions/premake-qt
 	url = https://github.com/dcourtois/premake-qt.git
+[submodule "pmk/extensions/premake-qmake"]
+	path = pmk/extensions/premake-qmake
+	url = https://github.com/Gaztin/premake-qmake.git
