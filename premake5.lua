@@ -21,6 +21,7 @@ workspace "UmikoBot"
 project "UmikoBot"
 	location "sln/prj/"
 	kind "ConsoleApp"
+	cppdialect "C++11"
 	files {
 		"src/**.cpp",
 		"src/**.h",
@@ -84,6 +85,7 @@ group "QDiscord"
 project "QDiscordCore"
 	location "sln/prj/"
 	kind "StaticLib"
+	cppdialect "C++11"
 	files {
 		"dep/QDiscord/src/core/**.h",
 		"dep/QDiscord/src/core/**.cpp",
