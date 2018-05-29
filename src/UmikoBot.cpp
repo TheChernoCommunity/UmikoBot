@@ -172,9 +172,7 @@ UmikoBot::UmikoBot(QObject* parent)
 				return false;
 			};
 
-			if (forCommand(m_commands))
-				;
-			else
+			if (!forCommand(m_commands))
 				Q_FOREACH(Module* module, m_modules)
 					if (forCommand(module->GetCommands()))
 						break;
@@ -204,19 +202,15 @@ UmikoBot::UmikoBot(QObject* parent)
 						if (description.length() + current.length() < 2000)
 							description += current;
 						else
-							return false;
+							return true;
 					}
-					return true;
+					return false;
 				};
 
 				if (!forCommand(m_commands))
-					return;
-				else
 					Q_FOREACH(Module* module, m_modules)
-				{
-					if (!forCommand(module->GetCommands()))
-						return;
-				}
+						if (forCommand(module->GetCommands()))
+							return;
 			}();
 
 			Discord::Embed embed;
@@ -295,82 +289,47 @@ void UmikoBot::Load()
 
 void UmikoBot::GetGuilds(snowflake_t after)
 {
+	auto processGuilds = [this](const QList<Discord::Guild>& guilds)
+	{
+		for (size_t i = 0; i < guilds.size(); i++)
+		{
+			GetGuildsMemberCount(guilds[i].id());
+		}
+
+		if (guilds.size() == 100) //guilds size is equal to the limit
+		{
+			GetGuilds(guilds[guilds.size() - 1].id());
+		}
+		qDebug("Guild count: %llu", guilds.size());
+	};
+
 	if (after == 0)
-	{
-		getCurrentUserGuilds().then(
-			[this](const QList<Discord::Guild>& guilds)
-		{
-			for (size_t i = 0; i < guilds.size(); i++)
-			{
-				GetGuildsMemberCount(guilds[i].id());
-			}
-
-			if (guilds.size() == 100) //guilds size is equal to the limit
-			{
-				GetGuilds(guilds[guilds.size() - 1].id());
-			}
-			qDebug("Guild count: %llu", guilds.size());
-		});
-	}
+		getCurrentUserGuilds().then(processGuilds);
 	else
-	{
-		getCurrentUserGuilds(0, after).then(
-			[this](const QList<Discord::Guild>& guilds)
-		{
-			for (size_t i = 0; i < guilds.size(); i++)
-			{
-				GetGuildsMemberCount(guilds[i].id());
-			}
-
-			if (guilds.size() == 100) //guilds size is equal to the limit
-			{
-				GetGuilds(guilds[guilds.size() - 1].id());
-			}
-			qDebug("Guild count: %llu", guilds.size());
-		});
-	}
+		getCurrentUserGuilds(0, after).then(processGuilds);
 }
 
 void UmikoBot::GetGuildsMemberCount(snowflake_t guild, snowflake_t after)
 {
+	auto processMembers = [this, guild](const QList<Discord::GuildMember>& members)
+	{
+		for (size_t i = 0; i < members.size(); i++)
+		{
+			QString name = members[i].nick();
+			if (name == "")
+				name = members[i].user().username();
+			m_nicknames[guild][members[i].user().id()] = name;
+		}
+
+		if (members.size() == 1000) //guilds size is equal to the limit
+		{
+			GetGuildsMemberCount(guild, members[members.size() - 1].user().id());
+		}
+		qDebug("Guild ID: %llu, Member count: %i", guild, members.size());
+	};
+
 	if (after == 0)
-	{
-		listGuildMembers(guild, 1000).then(
-			[this, guild](const QList<Discord::GuildMember>& members)
-		{
-			for (size_t i = 0; i < members.size(); i++)
-			{
-				QString name = members[i].nick();
-				if (name == "")
-					name = members[i].user().username();
-				m_nicknames[guild][members[i].user().id()] = name;
-			}
-
-			if (members.size() == 1000) //guilds size is equal to the limit
-			{
-				GetGuildsMemberCount(guild, members[members.size() - 1].user().id());
-			}
-			qDebug("Membercount: %llu, %i", guild, members.size());
-		});
-	}
+		listGuildMembers(guild, 1000).then(processMembers);
 	else
-	{
-		listGuildMembers(guild, after, 1000).then(
-			[this, guild](const QList<Discord::GuildMember>& members)
-		{
-			for (size_t i = 0; i < members.size(); i++)
-			{
-				QString name = members[i].nick();
-				if (name == "")
-					name = members[i].user().username();
-				m_nicknames[guild][members[i].user().id()] = name;
-			}
-
-			if (members.size() == 1000) //guilds size is equal to the limit
-			{
-				GetGuildsMemberCount(guild, members[members.size() - 1].user().id());
-			}
-			qDebug("Membercount: %llu, %i", guild, members.size());
-		});
-	}
+		listGuildMembers(guild, after, 1000).then(processMembers);
 }
