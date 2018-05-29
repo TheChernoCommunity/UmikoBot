@@ -123,7 +123,7 @@ bool GuildSettings::IsOwner(snowflake_t guild, snowflake_t id)
 	return false;
 }
 
-bool GuildSettings::IsModuleEnabled(snowflake_t guild, const QString& moduleName, bool default)
+bool GuildSettings::IsModuleEnabled(snowflake_t guild, const QString& moduleName, bool isDefault)
 {
 	GuildSetting& setting = GetGuildSetting(guild);
 	for (const QPair<QString, bool>& module : setting.modules)
@@ -137,10 +137,10 @@ bool GuildSettings::IsModuleEnabled(snowflake_t guild, const QString& moduleName
 	// in the module list of the guild settings are only going to be modules which don't have
 	// their usual default enabled setting
 
-	return default;
+	return isDefault;
 }
 
-void GuildSettings::ToggleModule(snowflake_t guild, const QString& moduleName, bool enabled, bool default) 
+void GuildSettings::ToggleModule(snowflake_t guild, const QString& moduleName, bool enabled, bool isDefault)
 {
 	GuildSetting& setting = GetGuildSetting(guild);
 	
@@ -149,10 +149,10 @@ void GuildSettings::ToggleModule(snowflake_t guild, const QString& moduleName, b
 	for (int i = 0; i < modules.size(); i++)
 	{
 		if (modules[i].first == moduleName)
-			if (enabled == default)
+			if (enabled == isDefault)
 				modules.removeAt(i);
 	}
-	if (enabled != default)
+	if (enabled != isDefault)
 		modules.append({ moduleName, enabled });
 
 }

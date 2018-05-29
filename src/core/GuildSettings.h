@@ -33,6 +33,6 @@ public:
 
 	static bool IsOwner(snowflake_t guild, snowflake_t id);
 
-	static bool IsModuleEnabled(snowflake_t guild, const QString& moduleName, bool default = true);
-	static void ToggleModule(snowflake_t guild, const QString& moduleName, bool enabled, bool default = true);
+	static bool IsModuleEnabled(snowflake_t guild, const QString& moduleName, bool isDefault = true);
+	static void ToggleModule(snowflake_t guild, const QString& moduleName, bool enabled, bool isDefault = true);
 };

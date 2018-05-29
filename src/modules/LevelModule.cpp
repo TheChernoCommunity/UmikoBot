@@ -8,7 +8,7 @@ LevelModule::LevelModule()
 	QObject::connect(&m_timer, &QTimer::timeout, 
 		[this]()
 	{
-		for (auto& it = m_exp.begin(); it != m_exp.end(); it++)
+		for (auto it = m_exp.begin(); it != m_exp.end(); it++)
 		{
 			for (GuildLevelData& data : it.value())
 			{
