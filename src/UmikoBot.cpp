@@ -154,18 +154,18 @@ UmikoBot::UmikoBot(QObject* parent)
 					if (command.name == commandName) 
 					{
 						CommandInfo& info = m_commandsInfo[command.id];
-						description += "Command Name:" + commandName + "\n";
-						description += info.briefDescription + "\n";
+						description += "**Command name**: " + commandName + "\n\n";
+						description += info.briefDescription + "\n\n";
 
 						QStringList usages = info.usage.split("\n");
-						description += "Usage: \n";
+						description += "**Usage**: \n";
 						if (usages.size() == 0)
 							description += "\t" + prefix + info.usage + "\n";
 						else
 							for (const QString& usage : usages)
 								description += "\t" + prefix + usage + "\n";
 
-						description += info.additionalInfo;
+						description += "\n" + info.additionalInfo;
 						return true;
 					}
 				}
