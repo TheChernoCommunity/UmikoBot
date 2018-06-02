@@ -1,0 +1,22 @@
+{
+	"GLOBAL_STATUS": {
+		"brief": "Retrieves status of a user",
+		"usage": "status [name]",
+		"additional": "If no name is specified it returns the status of the person who executes the command"
+	},
+	"GLOBAL_HELP": {
+		"brief": "Returns the usage of a command",
+		"usage": "help [page/command]",
+		"additional": ""
+	},
+	"LEVEL_MODULE_TOP": {
+		"brief": "Returns the top of a specified user count",
+		"usage": "top <x>",
+		"additional": ""
+	},
+	"TIMEZONE_MODULE_TIMEOFFSET": {
+		"brief": "Sets the timezone offset of the user",
+		"usage": "timeoffset <offset>",
+		"additional": "Where offset is the timezone offset from **UTC**\nIf your timezone is UTC+3 then your offset is +3"
+	}
+}
