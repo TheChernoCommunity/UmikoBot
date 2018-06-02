@@ -39,7 +39,7 @@ void CurrencyModule::OnLoad(const QJsonDocument& doc)
 
 	for (auto it = docObj.begin(); it != docObj.end(); ++it)
 	{
-		const QJsonObject obj = it->toObject();
+		const QJsonObject obj = it.value().toObject();
 		Setting& setting = m_settings[it.key().toULongLong()];
 		setting.currency = obj["currency"].toInt();
 	}

@@ -85,7 +85,7 @@ UmikoBot::UmikoBot(QObject* parent)
 		{
 			if (args.first() != GuildSettings::GetGuildSetting(channel.guildId()).prefix + "status")
 				return;
-			for (QMap<snowflake_t, QString>::iterator& it = m_nicknames[channel.guildId()].begin(); it != m_nicknames[channel.guildId()].end(); it++)
+			for (QMap<snowflake_t, QString>::iterator it = m_nicknames[channel.guildId()].begin(); it != m_nicknames[channel.guildId()].end(); it++)
 			{
 				if (it.value() == args.last()) 
 				{
