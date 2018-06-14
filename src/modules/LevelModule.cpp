@@ -83,7 +83,7 @@ void LevelModule::OnLoad(const QJsonDocument& doc)
 
 	QStringList guildIds = json.keys();
 
-	for (const QString& guild : guildIds) 
+	for (const QString& guild : guildIds)
 	{
 		snowflake_t guildId = guild.toULongLong();
 
@@ -94,17 +94,40 @@ void LevelModule::OnLoad(const QJsonDocument& doc)
 		for (const QString& user : userids)
 			m_exp[guildId].append({ user.toULongLong(), levels[user].toInt(), 0 });
 	}
-
 }
 
 void LevelModule::StatusCommand(QString& result, snowflake_t guild, snowflake_t user)
 {
-	result += "Rank: ...\n";
-	result += "Total exp: " + QString::number(GetData(guild, user).exp) + "\n";
-	result += "Exp needed for rankup: ./.\n";
+	GuildSetting s = GuildSettings::GetGuildSetting(guild);
+
+	if (s.ranks.size() > 0) {
+		result += "Rank: ...\n";
+	}
+	unsigned int xp = GetData(guild, user).exp;
+	result += "Total exp: " + QString::number(xp) + "\n";
+	
+	unsigned int xpRequirement = LEVELMODULE_EXP_REQUIREMENT;
+	unsigned int level = 1;
+	while (xp > xpRequirement && level < LEVELMODULE_MAXIMUM_LEVEL) {
+		level++;
+		xp -= xpRequirement;
+		xpRequirement *= 1.5;
+	}
+
+	if (level >= LEVELMODULE_MAXIMUM_LEVEL)
+	{
+		xp = 0;
+		level = LEVELMODULE_MAXIMUM_LEVEL;
+		xpRequirement = 0;
+	}
+
+	result += "Level: " + QString::number(level) + "\n";
+	if(xp == 0 && xpRequirement == 0)
+		result += QString("Exp needed for rankup: Maximum Level\n");
+	else
+		result += QString("Exp needed for rankup: %1/%2\n").arg(QString::number(xp), QString::number(xpRequirement));
 	result += "\n";
 }
-
 
 void LevelModule::OnMessage(Discord::Client& client, const Discord::Message& message) 
 {
