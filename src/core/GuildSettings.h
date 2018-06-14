@@ -18,7 +18,6 @@ struct LevelRank
 struct GuildSetting 
 {
 	snowflake_t id;
-	QList<snowflake_t> owners;
 
 	QString prefix;
 	QList<QPair<QString, bool>> modules;
@@ -40,8 +39,6 @@ public:
 	static GuildSetting& GetGuildSetting(snowflake_t id);
 
 	static void AddGuild(snowflake_t id);
-
-	static bool IsOwner(snowflake_t guild, snowflake_t id);
 
 	static bool IsModuleEnabled(snowflake_t guild, const QString& moduleName, bool isDefault = true);
 	static void ToggleModule(snowflake_t guild, const QString& moduleName, bool enabled, bool isDefault = true);

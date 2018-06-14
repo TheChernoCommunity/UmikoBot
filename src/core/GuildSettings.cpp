@@ -23,13 +23,7 @@ void GuildSettings::Load(const QString& location)
 		{
 			QJsonObject current = json.value(id).toObject();
 			GuildSetting setting = CreateGuildSetting(id.toULongLong());
-			QJsonArray owners = current["owners"].toArray();
-
-			for (const QJsonValue& owner : owners)
-			{
-				setting.owners.push_back(owner.toString().toULongLong());
-			}
-
+			
 			if (current.contains("prefix"))
 			{
 				setting.prefix = current["prefix"].toString();
@@ -75,12 +69,6 @@ void GuildSettings::Save()
 	for (const GuildSetting& setting : s_settings) 
 	{
 		QJsonObject current;
-		QJsonArray owners;
-		for (snowflake_t owner : setting.owners)
-		{
-			owners.append(QString::number(owner));
-		}
-		current["owners"] = owners;
 		if(setting.prefix != "!")
 			current["prefix"] = setting.prefix;
 
@@ -143,16 +131,6 @@ GuildSetting& GuildSettings::GetGuildSetting(snowflake_t id)
 void GuildSettings::AddGuild(snowflake_t id)
 {
 	s_settings.push_back(CreateGuildSetting(id));
-}
-
-
-bool GuildSettings::IsOwner(snowflake_t guild, snowflake_t id) 
-{
-	const GuildSetting& setting = GetGuildSetting(guild);
-	for (snowflake_t owner : setting.owners)
-		if (owner == id)
-			return true;
-	return false;
 }
 
 bool GuildSettings::IsModuleEnabled(snowflake_t guild, const QString& moduleName, bool isDefault)
