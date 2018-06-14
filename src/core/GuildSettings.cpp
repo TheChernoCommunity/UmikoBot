@@ -1,4 +1,5 @@
 #include "GuildSettings.h"
+#include "modules/LevelModule.h"
 
 QList<GuildSetting> GuildSettings::s_settings;
 QString GuildSettings::s_location;
@@ -21,8 +22,7 @@ void GuildSettings::Load(const QString& location)
 		for (const QString& id : guildIds)
 		{
 			QJsonObject current = json.value(id).toObject();
-			GuildSetting setting;
-			setting.id = id.toULongLong();
+			GuildSetting setting = CreateGuildSetting(id.toULongLong());
 			QJsonArray owners = current["owners"].toArray();
 
 			for (const QJsonValue& owner : owners)
@@ -44,6 +44,18 @@ void GuildSettings::Load(const QString& location)
 				{
 					setting.modules.push_back({ moduleName, moduleJson[moduleName].toBool() });
 				}
+			}
+
+			if (current.contains("levelmodule"))
+			{
+				QJsonObject levelModuleJson = current["levelmodule"].toObject();
+				if (levelModuleJson.contains("maximumLevel"))
+					setting.maximumLevel = levelModuleJson["maximumLevel"].toString().toUInt();
+
+				QJsonObject ranksJson = levelModuleJson["ranks"].toObject();
+				QStringList ranks = ranksJson.keys();
+				for (const QString& rankName : ranks)
+					setting.ranks.push_back({ rankName, ranksJson[rankName].toString().toUInt() });
 			}
 
 			s_settings.push_back(setting);
@@ -82,7 +94,30 @@ void GuildSettings::Save()
 			}
 
 			current["modules"] = moduleSettings;
+
+			
 		}
+		bool levelModuleDefault = true;
+		QJsonObject levelModule;
+		if (setting.ranks.size() > 0)
+		{
+			levelModuleDefault = false;
+			QJsonObject ranks;
+
+			for (const LevelRank& rank : setting.ranks)
+				ranks[rank.name] = QString::number(rank.minimumLevel);
+			
+			levelModule["ranks"] = ranks;
+		}
+
+		if (setting.maximumLevel != LEVELMODULE_MAXIMUM_LEVEL)
+		{
+			levelModuleDefault = false;
+			levelModule["maxmimumLevel"] = QString::number(setting.maximumLevel);
+		}
+
+		if(!levelModuleDefault)
+			current["levelModule"] = levelModule;
 
 		json[QString::number(setting.id)] = current;
 	}
@@ -101,16 +136,13 @@ GuildSetting& GuildSettings::GetGuildSetting(snowflake_t id)
 			return setting;
 	}
 
-	s_settings.append(GuildSetting());
-	s_settings[s_settings.size() - 1].id = id;
+	s_settings.append(CreateGuildSetting(id));
 	return s_settings[s_settings.size() - 1];
 }
 
 void GuildSettings::AddGuild(snowflake_t id)
 {
-	GuildSetting gs = {};
-	gs.id = id;
-	s_settings.push_back(gs);
+	s_settings.push_back(CreateGuildSetting(id));
 }
 
 
@@ -155,4 +187,13 @@ void GuildSettings::ToggleModule(snowflake_t guild, const QString& moduleName, b
 	if (enabled != isDefault)
 		modules.append({ moduleName, enabled });
 
+}
+
+GuildSetting GuildSettings::CreateGuildSetting(snowflake_t id)
+{
+	GuildSetting s;
+	s.id = id;
+	s.maximumLevel = LEVELMODULE_MAXIMUM_LEVEL;
+	s.prefix = "!";
+	return s;
 }
