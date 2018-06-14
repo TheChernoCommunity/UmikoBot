@@ -7,7 +7,7 @@
 
 struct Command
 {
-	using Callback = std::function<void(Discord::Client&, const Discord::Message&, const Discord::Channel&, const Discord::GuildMember&)>;
+	using Callback = std::function<void(Discord::Client&, const Discord::Message&, const Discord::Channel&)>;
 	
 	unsigned int id;
 	QString name;

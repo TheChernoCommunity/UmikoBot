@@ -1,6 +1,7 @@
 #include "UmikoBot.h"
-#include "modules/LevelModule.h"
+#include "core/Permissions.h"
 
+#include "modules/LevelModule.h"
 #include "modules/TimezoneModule.h"
 #include "modules/CurrencyModule.h"
 
@@ -41,22 +42,17 @@ UmikoBot::UmikoBot(QObject* parent)
 		getChannel(message.channelId()).then(
 			[this, message](const Discord::Channel& channel)
 		{
-			getGuildMember(channel.guildId(), message.author().id()).then(
-				[this, message, channel](const Discord::GuildMember& member)
+			GuildSetting setting = GuildSettings::GetGuildSetting(channel.guildId());
+			if (channel.guildId() != 0 && !message.author().bot()) // DM
 			{
-				GuildSetting setting = GuildSettings::GetGuildSetting(channel.guildId());
-				if (channel.guildId() != 0 && !message.author().bot()) // DM
+				Q_FOREACH(const Command& command, m_commands)
 				{
-					Q_FOREACH(const Command& command, m_commands)
+					if (message.content().startsWith(setting.prefix + command.name))
 					{
-						if (message.content().startsWith(setting.prefix + command.name))
-						{
-							command.callback(*this, message, channel, member);
-						}
+						command.callback(*this, message, channel);
 					}
 				}
-			});
-			
+			}
 		});
 	
 	});
@@ -77,22 +73,25 @@ UmikoBot::UmikoBot(QObject* parent)
 		[this](snowflake_t guild, const QList<snowflake_t>& roles, const Discord::User& user, const QString& nick)
 	{
 		if(nick == "")
-			m_nicknames[guild][user.id()] = user.username();
+			m_guildDatas[guild].userdata[user.id()].nickname = user.username();
 		else
-			m_nicknames[guild][user.id()] = nick;
+			m_guildDatas[guild].userdata[user.id()].nickname = nick;
 	});
 
 	m_commands.push_back({Commands::GLOBAL_STATUS, "status",
-		[this](Discord::Client& client,const Discord::Message& message, const Discord::Channel& channel, const Discord::GuildMember& member)
+		[this](Discord::Client& client,const Discord::Message& message, const Discord::Channel& channel)
 	{
+		if (Permissions::ContainsPermission(GetPermission(channel.guildId(), message.author().id()), Discord::Permissions::ADMINISTRATOR | Discord::Permissions::MANAGE_GUILD))
+			qDebug("Permissions Matched!");
+
 		QStringList args = message.content().split(" ");
 		if (args.size() > 1) 
 		{
 			if (args.first() != GuildSettings::GetGuildSetting(channel.guildId()).prefix + "status")
 				return;
-			for (QMap<snowflake_t, QString>::iterator it = m_nicknames[channel.guildId()].begin(); it != m_nicknames[channel.guildId()].end(); it++)
+			for (QMap<snowflake_t, UserData>::iterator it = m_guildDatas[channel.guildId()].userdata.begin(); it != m_guildDatas[channel.guildId()].userdata.end(); it++)
 			{
-				if (it.value() == args.last()) 
+				if (it.value().nickname == args.last()) 
 				{
 					getGuildMember(channel.guildId(), message.author().id()).then(
 						[this, message, channel, it](const Discord::GuildMember& member)
@@ -137,7 +136,7 @@ UmikoBot::UmikoBot(QObject* parent)
 	}});
 
 	m_commands.push_back({Commands::GLOBAL_HELP, "help",
-		[this](Discord::Client& client, const Discord::Message& message, const Discord::Channel& channel, const Discord::GuildMember& member)
+		[this](Discord::Client& client, const Discord::Message& message, const Discord::Channel& channel)
 	{
 		QStringList args = message.content().split(" ");
 		QString prefix = GuildSettings::GetGuildSetting(channel.guildId()).prefix;
@@ -238,7 +237,12 @@ UmikoBot::~UmikoBot()
 
 QString UmikoBot::GetNick(snowflake_t guild, snowflake_t user)
 {
-	return m_nicknames[guild][user];
+	return m_guildDatas[guild].userdata[user].nickname;
+}
+
+unsigned int UmikoBot::GetPermission(snowflake_t guild, snowflake_t user)
+{
+	return m_guildDatas[guild].userdata[user].permissions;
 }
 
 void UmikoBot::Save()
@@ -298,7 +302,12 @@ void UmikoBot::GetGuilds(snowflake_t after)
 	{
 		for (size_t i = 0; i < guilds.size(); i++)
 		{
-			GetGuildsMemberCount(guilds[i].id());
+			getGuildRoles(guilds[i].id()).then(
+				[this, guilds, i](const QList<Discord::Role>& roles)
+			{
+				m_guildDatas[guilds[i].id()].roles = roles;
+				GetGuildMemberInformation(guilds[i].id());
+			});
 		}
 
 		if (guilds.size() == 100) //guilds size is equal to the limit
@@ -314,7 +323,7 @@ void UmikoBot::GetGuilds(snowflake_t after)
 		getCurrentUserGuilds(0, after).then(processGuilds);
 }
 
-void UmikoBot::GetGuildsMemberCount(snowflake_t guild, snowflake_t after)
+void UmikoBot::GetGuildMemberInformation(snowflake_t guild, snowflake_t after)
 {
 	auto processMembers = [this, guild](const QList<Discord::GuildMember>& members)
 	{
@@ -323,12 +332,20 @@ void UmikoBot::GetGuildsMemberCount(snowflake_t guild, snowflake_t after)
 			QString name = members[i].nick();
 			if (name == "")
 				name = members[i].user().username();
-			m_nicknames[guild][members[i].user().id()] = name;
+			m_guildDatas[guild].userdata[members[i].user().id()].nickname = name;
+
+			for (const snowflake_t& roleId : members[i].roles())
+				for (const Discord::Role& role : m_guildDatas[guild].roles)
+					if (role.id() == roleId)
+					{
+						m_guildDatas[guild].userdata[members[i].user().id()].permissions |= role.permissions();
+						break;
+					}
 		}
 
 		if (members.size() == 1000) //guilds size is equal to the limit
 		{
-			GetGuildsMemberCount(guild, members[members.size() - 1].user().id());
+			GetGuildMemberInformation(guild, members[members.size() - 1].user().id());
 		}
 		qDebug("Guild ID: %llu, Member count: %i", guild, members.size());
 	};

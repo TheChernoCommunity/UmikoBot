@@ -14,24 +14,18 @@ void Module::OnMessage(Discord::Client& client, const Discord::Message& message)
 	client.getChannel(message.channelId()).then(
 		[this, message, &client](const Discord::Channel& channel)
 	{
-		client.getGuildMember(channel.guildId(), message.author().id()).then(
-			[this, message, &client, channel](const Discord::GuildMember& member)
-		{
-			GuildSetting setting = GuildSettings::GetGuildSetting(channel.guildId());
-			if (channel.guildId() != 0 && !message.author().bot()) // DM
-				if (GuildSettings::IsModuleEnabled(channel.guildId(), m_name, m_enabledByDefault))
+		GuildSetting setting = GuildSettings::GetGuildSetting(channel.guildId());
+		if (channel.guildId() != 0 && !message.author().bot()) // DM
+			if (GuildSettings::IsModuleEnabled(channel.guildId(), m_name, m_enabledByDefault))
+			{
+				for (const Command& command : m_commands)
 				{
-					for (const Command& command : m_commands)
+					if (message.content().startsWith(setting.prefix + command.name))
 					{
-						if (message.content().startsWith(setting.prefix + command.name))
-						{
-							command.callback(client, message, channel, member);
-						}
+						command.callback(client, message, channel);
 					}
 				}
-		});
-
-		
+			}
 	});
 }
 

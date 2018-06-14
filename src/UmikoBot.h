@@ -14,6 +14,16 @@ namespace Commands {
 	};
 }
 
+struct UserData {
+	QString nickname;
+	unsigned int permissions = 0;
+};
+
+struct GuildData {
+	QMap<snowflake_t, UserData> userdata;
+	QList<Discord::Role> roles;
+};
+
 struct CommandInfo {
 	QString briefDescription;
 	QString usage;
@@ -27,17 +37,18 @@ public:
 	~UmikoBot();
 
 	QString GetNick(snowflake_t guild, snowflake_t user);
+	unsigned int GetPermission(snowflake_t guild, snowflake_t user);
 
 private:
 	void Save();
 	void Load();
 	void GetGuilds(snowflake_t after = 0);
-	void GetGuildsMemberCount(snowflake_t guild, snowflake_t after = 0);
+	void GetGuildMemberInformation(snowflake_t guild, snowflake_t after = 0);
 
 	QList<Module*> m_modules;
 	QTimer m_timer;
 
-	QMap<snowflake_t, QMap<snowflake_t, QString>> m_nicknames;
+	QMap<snowflake_t,GuildData> m_guildDatas;
 	QList<Command> m_commands;
 	QMap<unsigned int, CommandInfo> m_commandsInfo;
 };

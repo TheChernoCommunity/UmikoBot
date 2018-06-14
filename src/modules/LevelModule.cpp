@@ -26,7 +26,7 @@ LevelModule::LevelModule()
 	qsrand(now.msec());
 
 	RegisterCommand(Commands::LEVEL_MODULE_TOP, "top",
-		[this](Discord::Client& client, const Discord::Message& message, const Discord::Channel& channel, const Discord::GuildMember& member)
+		[this](Discord::Client& client, const Discord::Message& message, const Discord::Channel& channel)
 	{
 		QStringList args = message.content().split(' ');
 		if (args.size() == 2) {

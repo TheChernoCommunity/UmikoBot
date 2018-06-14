@@ -5,7 +5,7 @@ TimezoneModule::TimezoneModule()
 	: Module("timezone", true)
 {
 	RegisterCommand(Commands::TIMEZONE_MODULE_TIMEOFFSET, "timeoffset",
-		[this](Discord::Client& client, const Discord::Message& message, const Discord::Channel& channel, const Discord::GuildMember& member)
+		[this](Discord::Client& client, const Discord::Message& message, const Discord::Channel& channel)
 	{
 		QStringList arguments = message.content().split(' ');
 		if (arguments.count() == 2)
