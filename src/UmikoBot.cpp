@@ -41,17 +41,22 @@ UmikoBot::UmikoBot(QObject* parent)
 		getChannel(message.channelId()).then(
 			[this, message](const Discord::Channel& channel)
 		{
-			GuildSetting setting = GuildSettings::GetGuildSetting(channel.guildId());
-			if (channel.guildId() != 0 && !message.author().bot()) // DM
+			getGuildMember(channel.guildId(), message.author().id()).then(
+				[this, message, channel](const Discord::GuildMember& member)
 			{
-				Q_FOREACH(const Command& command, m_commands)
+				GuildSetting setting = GuildSettings::GetGuildSetting(channel.guildId());
+				if (channel.guildId() != 0 && !message.author().bot()) // DM
 				{
-					if (message.content().startsWith(setting.prefix + command.name))
+					Q_FOREACH(const Command& command, m_commands)
 					{
-						command.callback(*this, message, channel);
+						if (message.content().startsWith(setting.prefix + command.name))
+						{
+							command.callback(*this, message, channel, member);
+						}
 					}
 				}
-			}
+			});
+			
 		});
 	
 	});
@@ -78,7 +83,7 @@ UmikoBot::UmikoBot(QObject* parent)
 	});
 
 	m_commands.push_back({Commands::GLOBAL_STATUS, "status",
-		[this](Discord::Client& client,const Discord::Message& message, const Discord::Channel& channel)
+		[this](Discord::Client& client,const Discord::Message& message, const Discord::Channel& channel, const Discord::GuildMember& member)
 	{
 		QStringList args = message.content().split(" ");
 		if (args.size() > 1) 
@@ -132,7 +137,7 @@ UmikoBot::UmikoBot(QObject* parent)
 	}});
 
 	m_commands.push_back({Commands::GLOBAL_HELP, "help",
-		[this](Discord::Client& client, const Discord::Message& message, const Discord::Channel& channel)
+		[this](Discord::Client& client, const Discord::Message& message, const Discord::Channel& channel, const Discord::GuildMember& member)
 	{
 		QStringList args = message.content().split(" ");
 		QString prefix = GuildSettings::GetGuildSetting(channel.guildId()).prefix;
