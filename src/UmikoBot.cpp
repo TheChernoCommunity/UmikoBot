@@ -78,11 +78,23 @@ UmikoBot::UmikoBot(QObject* parent)
 			m_guildDatas[guild].userdata[user.id()].nickname = nick;
 	});
 
+	connect(this, &Client::onGuildRoleUpdate,
+		[this](snowflake_t guild_id, const Discord::Role& role)
+	{
+		qDebug("Changed!");
+	});
+
 	m_commands.push_back({Commands::GLOBAL_STATUS, "status",
 		[this](Discord::Client& client,const Discord::Message& message, const Discord::Channel& channel)
 	{
-		if (Permissions::ContainsPermission(GetPermission(channel.guildId(), message.author().id()), Discord::Permissions::ADMINISTRATOR | Discord::Permissions::MANAGE_GUILD))
-			qDebug("Permissions Matched!");
+		Permissions::ContainsPermission(client, channel.guildId(), message.author().id(), Discord::Permissions::ADMINISTRATOR,
+			[this, channel](bool result)
+		{
+			if(result)
+				createMessage(channel.id(), "Woah, you're an admin");
+			else
+				createMessage(channel.id(), "Woah, you're not an admin");
+		});
 
 		QStringList args = message.content().split(" ");
 		if (args.size() > 1) 
@@ -240,9 +252,9 @@ QString UmikoBot::GetNick(snowflake_t guild, snowflake_t user)
 	return m_guildDatas[guild].userdata[user].nickname;
 }
 
-unsigned int UmikoBot::GetPermission(snowflake_t guild, snowflake_t user)
+const QList<Discord::Role>& UmikoBot::GetRoles(snowflake_t guild)
 {
-	return m_guildDatas[guild].userdata[user].permissions;
+	return m_guildDatas[guild].roles;
 }
 
 void UmikoBot::Save()
@@ -333,14 +345,6 @@ void UmikoBot::GetGuildMemberInformation(snowflake_t guild, snowflake_t after)
 			if (name == "")
 				name = members[i].user().username();
 			m_guildDatas[guild].userdata[members[i].user().id()].nickname = name;
-
-			for (const snowflake_t& roleId : members[i].roles())
-				for (const Discord::Role& role : m_guildDatas[guild].roles)
-					if (role.id() == roleId)
-					{
-						m_guildDatas[guild].userdata[members[i].user().id()].permissions |= role.permissions();
-						break;
-					}
 		}
 
 		if (members.size() == 1000) //guilds size is equal to the limit

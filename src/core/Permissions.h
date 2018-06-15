@@ -1,10 +1,13 @@
 #pragma once
+#include <functional>
 
 #include <Discord/Client.h>
-#include <QList>
+#include <QtCore/QList>
+
+using PermissionCallback = std::function<void(bool)>;
 
 class Permissions {
 public:
-	static bool ContainsPermission(unsigned int permissions, unsigned int requiredPermission);
-	static bool MatchesPermission(unsigned int permissions, unsigned int requiredPermission);
+	static void ContainsPermission(Discord::Client& client, snowflake_t guildId, snowflake_t memberId, unsigned int permissionList, PermissionCallback callback);
+	static void MatchesPermission(Discord::Client& client, snowflake_t guildId, snowflake_t memberId, unsigned int requiredPermission, PermissionCallback callback);
 };

@@ -16,7 +16,6 @@ namespace Commands {
 
 struct UserData {
 	QString nickname;
-	unsigned int permissions = 0;
 };
 
 struct GuildData {
@@ -37,7 +36,7 @@ public:
 	~UmikoBot();
 
 	QString GetNick(snowflake_t guild, snowflake_t user);
-	unsigned int GetPermission(snowflake_t guild, snowflake_t user);
+	const QList<Discord::Role>& GetRoles(snowflake_t guild);
 
 private:
 	void Save();
