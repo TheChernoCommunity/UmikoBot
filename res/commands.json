@@ -11,7 +11,7 @@
 	},
 	"LEVEL_MODULE_TOP": {
 		"brief": "Returns the top of a specified user count",
-		"usage": "top <x>",
+		"usage": "top <count>",
 		"additional": ""
 	},
 	"TIMEZONE_MODULE_TIMEOFFSET": {
