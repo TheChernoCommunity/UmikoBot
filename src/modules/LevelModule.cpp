@@ -93,6 +93,78 @@ LevelModule::LevelModule()
 		[this](Discord::Client& client, const Discord::Message& message, const Discord::Channel& channel)
 	{
 		QStringList args = message.content().split(' ');
+		GuildSetting* setting = &GuildSettings::GetGuildSetting(channel.guildId());
+		QString prefix = setting->prefix;
+
+		if (args.first() != prefix + "rank")
+			return;
+
+		auto printHelp = [&client, prefix, message]()
+		{
+			UmikoBot* bot = reinterpret_cast<UmikoBot*>(&client);
+			Discord::Embed embed;
+			embed.setColor(qrand() % 16777216);
+			embed.setTitle("Help rank");
+			QString description = bot->GetCommandHelp("rank", prefix);
+			embed.setDescription(description);
+			bot->createMessage(message.channelId(), embed);
+		};
+
+		if (args.last() == "list")
+		{
+			QList<LevelRank> ranks = setting->ranks;
+			Discord::Embed embed;
+			embed.setColor(qrand() % 16777216);
+			embed.setTitle("Rank list");
+
+			QString description = "";
+			
+			if (ranks.size() == 0)
+				description = "No ranks found!";
+			else
+				for (int i = 0; i < ranks.size(); i++)
+					description += ranks[i].name + " id " + QString::number(i) + " minimum level: " + QString::number(ranks[i].minimumLevel) + "\n";
+			
+			embed.setDescription(description);
+			client.createMessage(message.channelId(), embed);
+		}
+		else if (args[1] == "add")
+		{
+			bool ok;
+			unsigned int minimumLevel = args[2].toUInt(&ok);
+			if (!ok)
+			{
+				client.createMessage(message.channelId(), "Invalid minimum level");
+				return;
+			}
+			QString name = "";
+			for (int i = 3; i < args.size(); i++)
+			{
+				name += args[i];
+				if (i < args.size() - 1)
+					name += " ";
+			}
+
+			LevelRank rank = { name, minimumLevel };
+
+			setting->ranks.push_back(rank);
+			qSort(setting->ranks.begin(), setting->ranks.end(),
+				[](const LevelRank& v1, const LevelRank& v2) -> bool
+			{
+				return v1.minimumLevel < v2.minimumLevel;
+			});
+
+			for(int i=0; i < setting->ranks.size(); i++)
+				if (setting->ranks[i].name == name)
+				{
+					client.createMessage(message.channelId(), "Added rank " + name + " with id " + QString::number(i));
+					break;
+				}
+		}
+		else
+		{
+			printHelp();
+		}
 	});
 }
 
