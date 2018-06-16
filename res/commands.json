@@ -18,5 +18,10 @@
 		"brief": "Sets the timezone offset of the user",
 		"usage": "timeoffset <offset>",
 		"additional": "Where offset is the timezone offset from **UTC**\nIf your timezone is UTC+3 then your offset is +3"
+	},
+	"LEVEL_MODULE_RANK": {
+		"brief": "Used to control the ranking system",
+		"usage": "rank <list/add/remove/edit>\nrank list\nrank add <minimumLevel> <name>\nrank remove <id>\nrank edit <id> <minimumLeveL/name>",
+		"additional": "**rank list** returns the list of all the ranks, if any\n**rank add** adds a rank with a minimum level and a name\n**rank remove** removes a rank using an id\n**rank edit** edits a rank using it's id\n\nTo get the id of a rank you must use **rank list**"
 	}
 }

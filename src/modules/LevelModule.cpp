@@ -41,7 +41,7 @@ LevelModule::LevelModule()
 			embed.setTitle("Top " + args.back());
 
 			QString desc = "";
-			for (size_t i = 0; i < args.back().toUInt(); i++) 
+			for (int i = 0; i < args.back().toInt(); i++) 
 			{
 				if (i >= m_exp[channel.guildId()].size())
 				{
@@ -59,6 +59,12 @@ LevelModule::LevelModule()
 
 			client.createMessage(message.channelId(), embed);
 		}
+	});
+
+	RegisterCommand(Commands::LEVEL_MODULE_RANK, "rank",
+		[this](Discord::Client& client, const Discord::Message& message, const Discord::Channel& channel)
+	{
+
 	});
 }
 
