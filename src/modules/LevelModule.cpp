@@ -29,6 +29,11 @@ LevelModule::LevelModule()
 		[this](Discord::Client& client, const Discord::Message& message, const Discord::Channel& channel)
 	{
 		QStringList args = message.content().split(' ');
+		QString prefix = GuildSettings::GetGuildSetting(channel.guildId()).prefix;
+
+		if (args.first() != prefix + "top")
+			return;
+
 		if (args.size() == 2) {
 			qSort(m_exp[channel.guildId()].begin(), m_exp[channel.guildId()].end(),
 				[](const LevelModule::GuildLevelData& v1, const LevelModule::GuildLevelData& v2) -> bool
@@ -41,7 +46,20 @@ LevelModule::LevelModule()
 			embed.setTitle("Top " + args.back());
 
 			QString desc = "";
-			for (int i = 0; i < args.back().toInt(); i++) 
+
+			bool ok;
+			int count = args.back().toInt(&ok);
+
+			if (!ok) 
+			{
+				client.createMessage(message.channelId(), "Invalid count");
+				return;
+			}
+
+			if (count > 30)
+				count = 30;
+
+			for (int i = 0; i < count; i++) 
 			{
 				if (i >= m_exp[channel.guildId()].size())
 				{
@@ -59,12 +77,22 @@ LevelModule::LevelModule()
 
 			client.createMessage(message.channelId(), embed);
 		}
+		else
+		{
+			UmikoBot* bot = reinterpret_cast<UmikoBot*>(&client);
+			Discord::Embed embed;
+			embed.setColor(qrand() % 16777216);
+			embed.setTitle("Help top");
+			QString description = bot->GetCommandHelp("top", prefix);
+			embed.setDescription(description);
+			bot->createMessage(message.channelId(), embed);
+		}
 	});
 
 	RegisterCommand(Commands::LEVEL_MODULE_RANK, "rank",
 		[this](Discord::Client& client, const Discord::Message& message, const Discord::Channel& channel)
 	{
-
+		QStringList args = message.content().split(' ');
 	});
 }
 
