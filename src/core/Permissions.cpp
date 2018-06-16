@@ -15,11 +15,11 @@ void Permissions::ContainsPermission(Discord::Client& client, snowflake_t guildI
 					break;
 				}
 
-		int x = 1;
+		unsigned int x = 1;
 		while (x <= permissionList)
 		{
 			unsigned int currentPermission = permissionList & x;
-			if (totalPermissions & currentPermission != 0)
+			if ((totalPermissions & currentPermission) != 0)
 				return callback(true);
 			x = x << 1;
 		}
@@ -41,7 +41,7 @@ void Permissions::MatchesPermission(Discord::Client& client, snowflake_t guildId
 					break;
 				}
 
-		if (totalPermissions & requiredPermission == requiredPermission)
+		if ((totalPermissions & requiredPermission) == requiredPermission)
 			return callback(true);
 
 		return callback(true);
