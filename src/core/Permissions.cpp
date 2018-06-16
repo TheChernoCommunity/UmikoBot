@@ -6,8 +6,12 @@ void Permissions::ContainsPermission(Discord::Client& client, snowflake_t guildI
 	client.getGuildMember(guildId, memberId).then(
 		[&client, guildId, memberId, permissionList, callback](const Discord::GuildMember& member)
 	{
+		UmikoBot* bot = reinterpret_cast<UmikoBot*>(&client);
+		if (bot->IsOwner(guildId, memberId))
+			return callback(true);
+
 		unsigned int totalPermissions = 0;
-		for (const Discord::Role& role : reinterpret_cast<UmikoBot*>(&client)->GetRoles(guildId))
+		for (const Discord::Role& role : bot->GetRoles(guildId))
 			for (snowflake_t roleId : member.roles())
 				if (roleId == role.id()) 
 				{
@@ -32,8 +36,12 @@ void Permissions::MatchesPermission(Discord::Client& client, snowflake_t guildId
 	client.getGuildMember(guildId, memberId).then(
 		[&client, guildId, memberId, requiredPermission, callback](const Discord::GuildMember& member)
 	{
+		UmikoBot* bot = reinterpret_cast<UmikoBot*>(&client);
+		if (bot->IsOwner(guildId, memberId))
+			return callback(true);
+
 		unsigned int totalPermissions = 0;
-		for (const Discord::Role& role : reinterpret_cast<UmikoBot*>(&client)->GetRoles(guildId))
+		for (const Discord::Role& role : bot->GetRoles(guildId))
 			for (snowflake_t roleId : member.roles())
 				if (roleId == role.id())
 				{
