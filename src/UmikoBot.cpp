@@ -60,7 +60,7 @@ UmikoBot::UmikoBot(QObject* parent)
 	connect(this, &Client::onGuildCreate,
 		[](const Discord::Guild& guild)
 	{
-		GuildSettings::AddGuild(guild.id());
+		GuildSettings::GetGuildSetting(guild.id()); // only creates if it doesn't exist
 	});
 
 	connect(this, &Client::onReady,
