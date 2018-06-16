@@ -81,7 +81,24 @@ UmikoBot::UmikoBot(QObject* parent)
 	connect(this, &Client::onGuildRoleUpdate,
 		[this](snowflake_t guild_id, const Discord::Role& role)
 	{
-		qDebug("Changed!");
+		for (int i = 0; i < m_guildDatas[guild_id].roles.size(); i++)
+			if (role.id() == m_guildDatas[guild_id].roles[i].id()) 
+			{
+				m_guildDatas[guild_id].roles[i] = role;
+				return;
+			}
+		m_guildDatas[guild_id].roles.push_back(role);
+	});
+
+	connect(this, &Client::onGuildRoleDelete,
+		[this](snowflake_t guild_id, snowflake_t role_id)
+	{
+		for (int i = 0; i < m_guildDatas[guild_id].roles.size(); i++)
+			if (role_id == m_guildDatas[guild_id].roles[i].id())
+			{
+				m_guildDatas[guild_id].roles.erase(m_guildDatas[guild_id].roles.begin() + i);
+				return;
+			}
 	});
 
 	connect(this, &Client::onGuildUpdate,
