@@ -181,6 +181,36 @@ LevelModule::LevelModule()
 			});
 			
 		}
+		else if (args[1] == "remove" && args.size() == 3)
+		{
+			Permissions::ContainsPermission(client, channel.guildId(), message.author().id(), CommandPermission::ADMIN,
+				[args, &client, message, channel](bool result)
+			{
+				GuildSetting* setting = &GuildSettings::GetGuildSetting(channel.guildId());
+				if (!result)
+				{
+					client.createMessage(message.channelId(), "You don't have permissions to use this command");
+					return;
+				}
+
+				bool ok;
+				unsigned int id = args[2].toUInt(&ok);
+				if (!ok)
+				{
+					client.createMessage(message.channelId(), "Invalid id");
+					return;
+				}
+
+				if (id >= setting->ranks.size())
+				{
+					client.createMessage(message.channelId(), "Id not found");
+					return;
+				}
+
+				client.createMessage(message.channelId(), "Deleted rank " + setting->ranks[id].name + " succesfully");
+				setting->ranks.erase(setting->ranks.begin() + id);
+			});
+		}
 		else
 		{
 			printHelp();
@@ -226,18 +256,14 @@ void LevelModule::StatusCommand(QString& result, snowflake_t guild, snowflake_t 
 {
 	GuildSetting s = GuildSettings::GetGuildSetting(guild);
 
-	if (s.ranks.size() > 0) {
-		result += "Rank: ...\n";
-	}
 	unsigned int xp = GetData(guild, user).exp;
-	result += "Total exp: " + QString::number(xp) + "\n";
-	
+
 	unsigned int xpRequirement = LEVELMODULE_EXP_REQUIREMENT;
 	unsigned int level = 1;
 	while (xp > xpRequirement && level < LEVELMODULE_MAXIMUM_LEVEL) {
 		level++;
 		xp -= xpRequirement;
-		xpRequirement *= 1.5;
+		xpRequirement *= LEVELMODULE_EXP_GROWTH;
 	}
 
 	if (level >= LEVELMODULE_MAXIMUM_LEVEL)
@@ -246,6 +272,25 @@ void LevelModule::StatusCommand(QString& result, snowflake_t guild, snowflake_t 
 		level = LEVELMODULE_MAXIMUM_LEVEL;
 		xpRequirement = 0;
 	}
+
+	unsigned int rankLevel = level;
+	QString rank = "";
+	if (s.ranks.size() > 0) {
+		for (int i = 0; i < s.ranks.size() - 1; i++)
+		{
+			if (rankLevel > s.ranks[i].minimumLevel &&  rankLevel < s.ranks[i + 1].minimumLevel)
+			{
+				rank = s.ranks[i].name;
+				break;
+			}
+		}
+	}
+	if (rank == "")
+		rank = s.ranks[s.ranks.size() - 1].name;
+
+	result += "Rank: " + rank + "\n";
+	result += "Total exp: " + QString::number(GetData(guild, user).exp) + "\n";
+
 
 	result += "Level: " + QString::number(level) + "\n";
 	if(xp == 0 && xpRequirement == 0)
