@@ -84,6 +84,12 @@ UmikoBot::UmikoBot(QObject* parent)
 		qDebug("Changed!");
 	});
 
+	connect(this, &Client::onGuildUpdate,
+		[this](const Discord::Guild& guild)
+	{
+		m_guildDatas[guild.id()].ownerId = guild.ownerId();
+	});
+
 	m_commands.push_back({Commands::GLOBAL_STATUS, "status",
 		[this](Discord::Client& client,const Discord::Message& message, const Discord::Channel& channel)
 	{
@@ -248,6 +254,11 @@ const QList<Discord::Role>& UmikoBot::GetRoles(snowflake_t guild)
 	return m_guildDatas[guild].roles;
 }
 
+bool UmikoBot::IsOwner(snowflake_t guild, snowflake_t user)
+{
+	return m_guildDatas[guild].ownerId == user;
+}
+
 void UmikoBot::Save()
 {
 	GuildSettings::Save();
@@ -310,6 +321,7 @@ void UmikoBot::GetGuilds(snowflake_t after)
 				[this, guilds, i](const QList<Discord::Role>& roles)
 			{
 				m_guildDatas[guilds[i].id()].roles = roles;
+				m_guildDatas[guilds[i].id()].ownerId = guilds[i].ownerId();
 				GetGuildMemberInformation(guilds[i].id());
 			});
 		}

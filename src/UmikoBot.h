@@ -22,6 +22,7 @@ struct UserData {
 struct GuildData {
 	QMap<snowflake_t, UserData> userdata;
 	QList<Discord::Role> roles;
+	snowflake_t ownerId;
 };
 
 struct CommandInfo {
@@ -38,6 +39,7 @@ public:
 
 	QString GetNick(snowflake_t guild, snowflake_t user);
 	const QList<Discord::Role>& GetRoles(snowflake_t guild);
+	bool IsOwner(snowflake_t guild, snowflake_t user);
 
 private:
 	void Save();
