@@ -9,6 +9,7 @@ namespace Commands {
 		GLOBAL_HELP,
 
 		LEVEL_MODULE_TOP,
+		LEVEL_MODULE_RANK,
 
 		TIMEZONE_MODULE_TIMEOFFSET,
 	};

@@ -87,15 +87,6 @@ UmikoBot::UmikoBot(QObject* parent)
 	m_commands.push_back({Commands::GLOBAL_STATUS, "status",
 		[this](Discord::Client& client,const Discord::Message& message, const Discord::Channel& channel)
 	{
-		Permissions::ContainsPermission(client, channel.guildId(), message.author().id(), Discord::Permissions::ADMINISTRATOR,
-			[this, channel](bool result)
-		{
-			if(result)
-				createMessage(channel.id(), "Woah, you're an admin");
-			else
-				createMessage(channel.id(), "Woah, you're not an admin");
-		});
-
 		QStringList args = message.content().split(" ");
 		if (args.size() > 1) 
 		{
@@ -277,6 +268,7 @@ void UmikoBot::Load()
 		Command(GLOBAL_HELP),
 
 		Command(LEVEL_MODULE_TOP),
+		Command(LEVEL_MODULE_RANK),
 
 		Command(TIMEZONE_MODULE_TIMEOFFSET)
 	};
@@ -312,7 +304,7 @@ void UmikoBot::GetGuilds(snowflake_t after)
 {
 	auto processGuilds = [this](const QList<Discord::Guild>& guilds)
 	{
-		for (size_t i = 0; i < guilds.size(); i++)
+		for (int i = 0; i < guilds.size(); i++)
 		{
 			getGuildRoles(guilds[i].id()).then(
 				[this, guilds, i](const QList<Discord::Role>& roles)
@@ -339,7 +331,7 @@ void UmikoBot::GetGuildMemberInformation(snowflake_t guild, snowflake_t after)
 {
 	auto processMembers = [this, guild](const QList<Discord::GuildMember>& members)
 	{
-		for (size_t i = 0; i < members.size(); i++)
+		for (int i = 0; i < members.size(); i++)
 		{
 			QString name = members[i].nick();
 			if (name == "")
