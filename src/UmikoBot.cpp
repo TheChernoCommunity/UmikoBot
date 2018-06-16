@@ -338,8 +338,13 @@ void UmikoBot::GetGuilds(snowflake_t after)
 				[this, guilds, i](const QList<Discord::Role>& roles)
 			{
 				m_guildDatas[guilds[i].id()].roles = roles;
-				m_guildDatas[guilds[i].id()].ownerId = guilds[i].ownerId();
 				GetGuildMemberInformation(guilds[i].id());
+			});
+
+			getGuild(guilds[i].id()).then(
+				[this](const Discord::Guild& guild)
+			{
+				m_guildDatas[guild.id()].ownerId = guild.ownerId();
 			});
 		}
 
