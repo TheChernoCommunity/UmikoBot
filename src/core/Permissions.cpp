@@ -52,6 +52,6 @@ void Permissions::MatchesPermission(Discord::Client& client, snowflake_t guildId
 		if ((totalPermissions & requiredPermission) == requiredPermission)
 			return callback(true);
 
-		return callback(true);
+		return callback(false);
 	});
 }
