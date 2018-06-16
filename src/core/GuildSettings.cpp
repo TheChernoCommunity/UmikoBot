@@ -40,9 +40,9 @@ void GuildSettings::Load(const QString& location)
 				}
 			}
 
-			if (current.contains("levelmodule"))
+			if (current.contains("levelModule"))
 			{
-				QJsonObject levelModuleJson = current["levelmodule"].toObject();
+				QJsonObject levelModuleJson = current["levelModule"].toObject();
 				if (levelModuleJson.contains("maximumLevel"))
 					setting.maximumLevel = levelModuleJson["maximumLevel"].toString().toUInt();
 
@@ -50,6 +50,12 @@ void GuildSettings::Load(const QString& location)
 				QStringList ranks = ranksJson.keys();
 				for (const QString& rankName : ranks)
 					setting.ranks.push_back({ rankName, ranksJson[rankName].toString().toUInt() });
+
+				qSort(setting.ranks.begin(), setting.ranks.end(),
+					[](const LevelRank& v1, const LevelRank& v2) -> bool
+				{
+					return v1.minimumLevel < v2.minimumLevel;
+				});
 			}
 
 			s_settings.push_back(setting);
@@ -77,20 +83,17 @@ void GuildSettings::Save()
 			QJsonObject moduleSettings;
 			bool hasModuleSettings = false;
 			for (const QPair<QString, bool>& module : setting.modules)
-			{
 				moduleSettings[module.first] = module.second;
-			}
 
 			current["modules"] = moduleSettings;
-
-			
 		}
+
 		bool levelModuleDefault = true;
 		QJsonObject levelModule;
+		QJsonObject ranks;
 		if (setting.ranks.size() > 0)
 		{
 			levelModuleDefault = false;
-			QJsonObject ranks;
 
 			for (const LevelRank& rank : setting.ranks)
 				ranks[rank.name] = QString::number(rank.minimumLevel);
@@ -112,7 +115,8 @@ void GuildSettings::Save()
 
 	QJsonDocument doc(json);
 
-	file.write(doc.toJson(QJsonDocument::Indented));
+	QString result = doc.toJson(QJsonDocument::Indented);
+	file.write(qPrintable(result));
 	file.close();
 }
 
