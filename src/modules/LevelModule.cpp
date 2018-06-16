@@ -1,5 +1,6 @@
 #include "LevelModule.h"
 #include "UmikoBot.h"
+#include "core/Permissions.h"
 
 LevelModule::LevelModule()
 	: Module("levels", true)
@@ -128,38 +129,57 @@ LevelModule::LevelModule()
 			embed.setDescription(description);
 			client.createMessage(message.channelId(), embed);
 		}
-		else if (args[1] == "add")
+		else if (args[1] == "add" && args.size() > 3)
 		{
-			bool ok;
-			unsigned int minimumLevel = args[2].toUInt(&ok);
-			if (!ok)
+			Permissions::ContainsPermission(client, channel.guildId(), message.author().id(), CommandPermission::ADMIN,
+				[args, &client, message, channel](bool result)
 			{
-				client.createMessage(message.channelId(), "Invalid minimum level");
-				return;
-			}
-			QString name = "";
-			for (int i = 3; i < args.size(); i++)
-			{
-				name += args[i];
-				if (i < args.size() - 1)
-					name += " ";
-			}
-
-			LevelRank rank = { name, minimumLevel };
-
-			setting->ranks.push_back(rank);
-			qSort(setting->ranks.begin(), setting->ranks.end(),
-				[](const LevelRank& v1, const LevelRank& v2) -> bool
-			{
-				return v1.minimumLevel < v2.minimumLevel;
-			});
-
-			for(int i=0; i < setting->ranks.size(); i++)
-				if (setting->ranks[i].name == name)
+				GuildSetting* setting = &GuildSettings::GetGuildSetting(channel.guildId());
+				if (!result)
 				{
-					client.createMessage(message.channelId(), "Added rank " + name + " with id " + QString::number(i));
-					break;
+					client.createMessage(message.channelId(), "You don't have permissions to use this command");
+					return;
 				}
+
+				bool ok;
+				unsigned int minimumLevel = args[2].toUInt(&ok);
+				if (!ok)
+				{
+					client.createMessage(message.channelId(), "Invalid minimum level");
+					return;
+				}
+				QString name = "";
+				for (int i = 3; i < args.size(); i++)
+				{
+					name += args[i];
+					if (i < args.size() - 1)
+						name += " ";
+				}
+
+				LevelRank rank = { name, minimumLevel };
+
+				for (int i = 0; i < setting->ranks.size(); i++)
+					if (setting->ranks[i].minimumLevel == minimumLevel)
+					{
+						client.createMessage(message.channelId(), "Cannot add rank, minimum level already used");
+						return;
+					}
+
+				setting->ranks.push_back(rank);
+				qSort(setting->ranks.begin(), setting->ranks.end(),
+					[](const LevelRank& v1, const LevelRank& v2) -> bool
+				{
+					return v1.minimumLevel < v2.minimumLevel;
+				});
+
+				for (int i = 0; i < setting->ranks.size(); i++)
+					if (setting->ranks[i].name == name)
+					{
+						client.createMessage(message.channelId(), "Added rank " + name + " with id " + QString::number(i));
+						break;
+					}
+			});
+			
 		}
 		else
 		{
