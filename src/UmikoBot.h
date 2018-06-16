@@ -41,6 +41,8 @@ public:
 	const QList<Discord::Role>& GetRoles(snowflake_t guild);
 	bool IsOwner(snowflake_t guild, snowflake_t user);
 
+	QString GetCommandHelp(QString commandName, QString prefix);
+
 private:
 	void Save();
 	void Load();

@@ -175,42 +175,11 @@ UmikoBot::UmikoBot(QObject* parent)
 			if (commandName.startsWith(prefix))
 				commandName = QStringRef(&commandName, prefix.size(), commandName.size() - prefix.size()).toString();
 
-			QString description = "";
-			auto forCommand =
-				[this, &description, &prefix, &commandName](QList<Command> commands) 
-			{
-				for (const Command& command : commands)
-				{
-					if (command.name == commandName) 
-					{
-						CommandInfo& info = m_commandsInfo[command.id];
-						description += "**Command name**: " + commandName + "\n\n";
-						description += info.briefDescription + "\n\n";
-
-						QStringList usages = info.usage.split("\n");
-						description += "**Usage**: \n";
-						if (usages.size() == 0)
-							description += "\t" + prefix + info.usage + "\n";
-						else
-							for (const QString& usage : usages)
-								description += "\t" + prefix + usage + "\n";
-
-						description += "\n" + info.additionalInfo;
-						return true;
-					}
-				}
-				return false;
-			};
-
-			if (!forCommand(m_commands))
-				Q_FOREACH(Module* module, m_modules)
-					if (forCommand(module->GetCommands()))
-						break;
-
 			Discord::Embed embed;
 			embed.setColor(qrand() % 16777216);
 			embed.setTitle("Help " + commandName);
 
+			QString description = GetCommandHelp(commandName, prefix);
 			if (description != "")
 				embed.setDescription(description);
 			else
@@ -274,6 +243,42 @@ const QList<Discord::Role>& UmikoBot::GetRoles(snowflake_t guild)
 bool UmikoBot::IsOwner(snowflake_t guild, snowflake_t user)
 {
 	return m_guildDatas[guild].ownerId == user;
+}
+
+QString UmikoBot::GetCommandHelp(QString commandName, QString prefix)
+{
+	QString description = "";
+	auto forCommand =
+		[this, &description, &prefix, &commandName](QList<Command> commands)
+	{
+		for (const Command& command : commands)
+		{
+			if (command.name == commandName)
+			{
+				CommandInfo& info = m_commandsInfo[command.id];
+				description += "**Command name**: " + commandName + "\n\n";
+				description += info.briefDescription + "\n\n";
+
+				QStringList usages = info.usage.split("\n");
+				description += "**Usage**: \n";
+				if (usages.size() == 0)
+					description += "\t" + prefix + info.usage + "\n";
+				else
+					for (const QString& usage : usages)
+						description += "\t" + prefix + usage + "\n";
+
+				description += "\n" + info.additionalInfo;
+				return true;
+			}
+		}
+		return false;
+	};
+
+	if (!forCommand(m_commands))
+		Q_FOREACH(Module* module, m_modules)
+		if (forCommand(module->GetCommands()))
+			break;
+	return description;
 }
 
 void UmikoBot::Save()
