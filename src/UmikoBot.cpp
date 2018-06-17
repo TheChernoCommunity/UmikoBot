@@ -1,6 +1,7 @@
 #include "UmikoBot.h"
-#include "modules/LevelModule.h"
+#include "core/Permissions.h"
 
+#include "modules/LevelModule.h"
 #include "modules/TimezoneModule.h"
 #include "modules/CurrencyModule.h"
 
@@ -59,7 +60,7 @@ UmikoBot::UmikoBot(QObject* parent)
 	connect(this, &Client::onGuildCreate,
 		[](const Discord::Guild& guild)
 	{
-		GuildSettings::AddGuild(guild.id());
+		GuildSettings::GetGuildSetting(guild.id()); // only creates if it doesn't exist
 	});
 
 	connect(this, &Client::onReady,
@@ -72,9 +73,38 @@ UmikoBot::UmikoBot(QObject* parent)
 		[this](snowflake_t guild, const QList<snowflake_t>& roles, const Discord::User& user, const QString& nick)
 	{
 		if(nick == "")
-			m_nicknames[guild][user.id()] = user.username();
+			m_guildDatas[guild].userdata[user.id()].nickname = user.username();
 		else
-			m_nicknames[guild][user.id()] = nick;
+			m_guildDatas[guild].userdata[user.id()].nickname = nick;
+	});
+
+	connect(this, &Client::onGuildRoleUpdate,
+		[this](snowflake_t guild_id, const Discord::Role& role)
+	{
+		for (int i = 0; i < m_guildDatas[guild_id].roles.size(); i++)
+			if (role.id() == m_guildDatas[guild_id].roles[i].id()) 
+			{
+				m_guildDatas[guild_id].roles[i] = role;
+				return;
+			}
+		m_guildDatas[guild_id].roles.push_back(role);
+	});
+
+	connect(this, &Client::onGuildRoleDelete,
+		[this](snowflake_t guild_id, snowflake_t role_id)
+	{
+		for (int i = 0; i < m_guildDatas[guild_id].roles.size(); i++)
+			if (role_id == m_guildDatas[guild_id].roles[i].id())
+			{
+				m_guildDatas[guild_id].roles.erase(m_guildDatas[guild_id].roles.begin() + i);
+				return;
+			}
+	});
+
+	connect(this, &Client::onGuildUpdate,
+		[this](const Discord::Guild& guild)
+	{
+		m_guildDatas[guild.id()].ownerId = guild.ownerId();
 	});
 
 	m_commands.push_back({Commands::GLOBAL_STATUS, "status",
@@ -85,9 +115,9 @@ UmikoBot::UmikoBot(QObject* parent)
 		{
 			if (args.first() != GuildSettings::GetGuildSetting(channel.guildId()).prefix + "status")
 				return;
-			for (QMap<snowflake_t, QString>::iterator it = m_nicknames[channel.guildId()].begin(); it != m_nicknames[channel.guildId()].end(); it++)
+			for (QMap<snowflake_t, UserData>::iterator it = m_guildDatas[channel.guildId()].userdata.begin(); it != m_guildDatas[channel.guildId()].userdata.end(); it++)
 			{
-				if (it.value() == args.last()) 
+				if (it.value().nickname == args.last()) 
 				{
 					getGuildMember(channel.guildId(), message.author().id()).then(
 						[this, message, channel, it](const Discord::GuildMember& member)
@@ -145,42 +175,11 @@ UmikoBot::UmikoBot(QObject* parent)
 			if (commandName.startsWith(prefix))
 				commandName = QStringRef(&commandName, prefix.size(), commandName.size() - prefix.size()).toString();
 
-			QString description = "";
-			auto forCommand =
-				[this, &description, &prefix, &commandName](QList<Command> commands) 
-			{
-				for (const Command& command : commands)
-				{
-					if (command.name == commandName) 
-					{
-						CommandInfo& info = m_commandsInfo[command.id];
-						description += "**Command name**: " + commandName + "\n\n";
-						description += info.briefDescription + "\n\n";
-
-						QStringList usages = info.usage.split("\n");
-						description += "**Usage**: \n";
-						if (usages.size() == 0)
-							description += "\t" + prefix + info.usage + "\n";
-						else
-							for (const QString& usage : usages)
-								description += "\t" + prefix + usage + "\n";
-
-						description += "\n" + info.additionalInfo;
-						return true;
-					}
-				}
-				return false;
-			};
-
-			if (!forCommand(m_commands))
-				Q_FOREACH(Module* module, m_modules)
-					if (forCommand(module->GetCommands()))
-						break;
-
 			Discord::Embed embed;
 			embed.setColor(qrand() % 16777216);
 			embed.setTitle("Help " + commandName);
 
+			QString description = GetCommandHelp(commandName, prefix);
 			if (description != "")
 				embed.setDescription(description);
 			else
@@ -199,7 +198,7 @@ UmikoBot::UmikoBot(QObject* parent)
 					{
 						QString current = "";
 						current = prefix + command.name + " - " + m_commandsInfo[command.id].briefDescription + "\n";
-						if (description.length() + current.length() < 2000)
+						if (description.length() + current.length() < 1900)
 							description += current;
 						else
 							return true;
@@ -212,6 +211,7 @@ UmikoBot::UmikoBot(QObject* parent)
 						if (forCommand(module->GetCommands()))
 							return;
 			}();
+			description += "\n**Note:** Use " + prefix + "help <command> to get the help for a specific command";
 
 			Discord::Embed embed;
 			embed.setColor(qrand() % 16777216);
@@ -233,7 +233,53 @@ UmikoBot::~UmikoBot()
 
 QString UmikoBot::GetNick(snowflake_t guild, snowflake_t user)
 {
-	return m_nicknames[guild][user];
+	return m_guildDatas[guild].userdata[user].nickname;
+}
+
+const QList<Discord::Role>& UmikoBot::GetRoles(snowflake_t guild)
+{
+	return m_guildDatas[guild].roles;
+}
+
+bool UmikoBot::IsOwner(snowflake_t guild, snowflake_t user)
+{
+	return m_guildDatas[guild].ownerId == user;
+}
+
+QString UmikoBot::GetCommandHelp(QString commandName, QString prefix)
+{
+	QString description = "";
+	auto forCommand =
+		[this, &description, &prefix, &commandName](QList<Command> commands)
+	{
+		for (const Command& command : commands)
+		{
+			if (command.name == commandName)
+			{
+				CommandInfo& info = m_commandsInfo[command.id];
+				description += "**Command name**: " + commandName + "\n\n";
+				description += info.briefDescription + "\n\n";
+
+				QStringList usages = info.usage.split("\n");
+				description += "**Usage**: \n";
+				if (usages.size() == 0)
+					description += "\t" + prefix + info.usage + "\n";
+				else
+					for (const QString& usage : usages)
+						description += "\t" + prefix + usage + "\n";
+
+				description += "\n" + info.additionalInfo;
+				return true;
+			}
+		}
+		return false;
+	};
+
+	if (!forCommand(m_commands))
+		Q_FOREACH(Module* module, m_modules)
+		if (forCommand(module->GetCommands()))
+			break;
+	return description;
 }
 
 void UmikoBot::Save()
@@ -256,6 +302,8 @@ void UmikoBot::Load()
 		Command(GLOBAL_HELP),
 
 		Command(LEVEL_MODULE_TOP),
+		Command(LEVEL_MODULE_RANK),
+		Command(LEVEL_MODULE_MAX_LEVEL),
 
 		Command(TIMEZONE_MODULE_TIMEOFFSET)
 	};
@@ -291,9 +339,20 @@ void UmikoBot::GetGuilds(snowflake_t after)
 {
 	auto processGuilds = [this](const QList<Discord::Guild>& guilds)
 	{
-		for (size_t i = 0; i < guilds.size(); i++)
+		for (int i = 0; i < guilds.size(); i++)
 		{
-			GetGuildsMemberCount(guilds[i].id());
+			getGuildRoles(guilds[i].id()).then(
+				[this, guilds, i](const QList<Discord::Role>& roles)
+			{
+				m_guildDatas[guilds[i].id()].roles = roles;
+				GetGuildMemberInformation(guilds[i].id());
+			});
+
+			getGuild(guilds[i].id()).then(
+				[this](const Discord::Guild& guild)
+			{
+				m_guildDatas[guild.id()].ownerId = guild.ownerId();
+			});
 		}
 
 		if (guilds.size() == 100) //guilds size is equal to the limit
@@ -309,21 +368,21 @@ void UmikoBot::GetGuilds(snowflake_t after)
 		getCurrentUserGuilds(0, after).then(processGuilds);
 }
 
-void UmikoBot::GetGuildsMemberCount(snowflake_t guild, snowflake_t after)
+void UmikoBot::GetGuildMemberInformation(snowflake_t guild, snowflake_t after)
 {
 	auto processMembers = [this, guild](const QList<Discord::GuildMember>& members)
 	{
-		for (size_t i = 0; i < members.size(); i++)
+		for (int i = 0; i < members.size(); i++)
 		{
 			QString name = members[i].nick();
 			if (name == "")
 				name = members[i].user().username();
-			m_nicknames[guild][members[i].user().id()] = name;
+			m_guildDatas[guild].userdata[members[i].user().id()].nickname = name;
 		}
 
 		if (members.size() == 1000) //guilds size is equal to the limit
 		{
-			GetGuildsMemberCount(guild, members[members.size() - 1].user().id());
+			GetGuildMemberInformation(guild, members[members.size() - 1].user().id());
 		}
 		qDebug("Guild ID: %llu, Member count: %i", guild, members.size());
 	};

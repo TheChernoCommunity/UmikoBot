@@ -1,4 +1,5 @@
 #include "GuildSettings.h"
+#include "modules/LevelModule.h"
 
 QList<GuildSetting> GuildSettings::s_settings;
 QString GuildSettings::s_location;
@@ -21,15 +22,8 @@ void GuildSettings::Load(const QString& location)
 		for (const QString& id : guildIds)
 		{
 			QJsonObject current = json.value(id).toObject();
-			GuildSetting setting;
-			setting.id = id.toULongLong();
-			QJsonArray owners = current["owners"].toArray();
-
-			for (const QJsonValue& owner : owners)
-			{
-				setting.owners.push_back(owner.toString().toULongLong());
-			}
-
+			GuildSetting setting = CreateGuildSetting(id.toULongLong());
+			
 			if (current.contains("prefix"))
 			{
 				setting.prefix = current["prefix"].toString();
@@ -44,6 +38,24 @@ void GuildSettings::Load(const QString& location)
 				{
 					setting.modules.push_back({ moduleName, moduleJson[moduleName].toBool() });
 				}
+			}
+
+			if (current.contains("levelModule"))
+			{
+				QJsonObject levelModuleJson = current["levelModule"].toObject();
+				if (levelModuleJson.contains("maximumLevel"))
+					setting.maximumLevel = levelModuleJson["maximumLevel"].toString().toUInt();
+
+				QJsonObject ranksJson = levelModuleJson["ranks"].toObject();
+				QStringList ranks = ranksJson.keys();
+				for (const QString& rankName : ranks)
+					setting.ranks.push_back({ rankName, ranksJson[rankName].toString().toUInt() });
+
+				qSort(setting.ranks.begin(), setting.ranks.end(),
+					[](const LevelRank& v1, const LevelRank& v2) -> bool
+				{
+					return v1.minimumLevel < v2.minimumLevel;
+				});
 			}
 
 			s_settings.push_back(setting);
@@ -63,12 +75,6 @@ void GuildSettings::Save()
 	for (const GuildSetting& setting : s_settings) 
 	{
 		QJsonObject current;
-		QJsonArray owners;
-		for (snowflake_t owner : setting.owners)
-		{
-			owners.append(QString::number(owner));
-		}
-		current["owners"] = owners;
 		if(setting.prefix != "!")
 			current["prefix"] = setting.prefix;
 
@@ -77,19 +83,40 @@ void GuildSettings::Save()
 			QJsonObject moduleSettings;
 			bool hasModuleSettings = false;
 			for (const QPair<QString, bool>& module : setting.modules)
-			{
 				moduleSettings[module.first] = module.second;
-			}
 
 			current["modules"] = moduleSettings;
 		}
+
+		bool levelModuleDefault = true;
+		QJsonObject levelModule;
+		QJsonObject ranks;
+		if (setting.ranks.size() > 0)
+		{
+			levelModuleDefault = false;
+
+			for (const LevelRank& rank : setting.ranks)
+				ranks[rank.name] = QString::number(rank.minimumLevel);
+			
+			levelModule["ranks"] = ranks;
+		}
+
+		if (setting.maximumLevel != LEVELMODULE_MAXIMUM_LEVEL)
+		{
+			levelModuleDefault = false;
+			levelModule["maximumLevel"] = QString::number(setting.maximumLevel);
+		}
+
+		if(!levelModuleDefault)
+			current["levelModule"] = levelModule;
 
 		json[QString::number(setting.id)] = current;
 	}
 
 	QJsonDocument doc(json);
 
-	file.write(doc.toJson(QJsonDocument::Indented));
+	QString result = doc.toJson(QJsonDocument::Indented);
+	file.write(qPrintable(result));
 	file.close();
 }
 
@@ -101,26 +128,13 @@ GuildSetting& GuildSettings::GetGuildSetting(snowflake_t id)
 			return setting;
 	}
 
-	s_settings.append(GuildSetting());
-	s_settings[s_settings.size() - 1].id = id;
+	s_settings.append(CreateGuildSetting(id));
 	return s_settings[s_settings.size() - 1];
 }
 
 void GuildSettings::AddGuild(snowflake_t id)
 {
-	GuildSetting gs = {};
-	gs.id = id;
-	s_settings.push_back(gs);
-}
-
-
-bool GuildSettings::IsOwner(snowflake_t guild, snowflake_t id) 
-{
-	const GuildSetting& setting = GetGuildSetting(guild);
-	for (snowflake_t owner : setting.owners)
-		if (owner == id)
-			return true;
-	return false;
+	s_settings.push_back(CreateGuildSetting(id));
 }
 
 bool GuildSettings::IsModuleEnabled(snowflake_t guild, const QString& moduleName, bool isDefault)
@@ -155,4 +169,13 @@ void GuildSettings::ToggleModule(snowflake_t guild, const QString& moduleName, b
 	if (enabled != isDefault)
 		modules.append({ moduleName, enabled });
 
+}
+
+GuildSetting GuildSettings::CreateGuildSetting(snowflake_t id)
+{
+	GuildSetting s;
+	s.id = id;
+	s.maximumLevel = LEVELMODULE_MAXIMUM_LEVEL;
+	s.prefix = "!";
+	return s;
 }

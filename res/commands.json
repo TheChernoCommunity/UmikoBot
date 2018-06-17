@@ -11,7 +11,17 @@
 	},
 	"LEVEL_MODULE_TOP": {
 		"brief": "Returns the top of a specified user count",
-		"usage": "top <x>",
+		"usage": "top <count>",
+		"additional": ""
+	},
+	"LEVEL_MODULE_RANK": {
+		"brief": "Used to control the ranking system",
+		"usage": "rank <list/add/remove/edit>\nrank list\nrank add <minimumLevel> <name>\nrank remove <id>\nrank edit <id> <level/name> <newlevel/newname>",
+		"additional": "**rank list** returns the list of all the ranks, if any\n**rank add** adds a rank with a minimum level and a name\n**rank remove** removes a rank using an id\n**rank edit** edits a rank using it's id\n\nTo get the id of a rank you must use **rank list**"
+	},
+	"LEVEL_MODULE_MAX_LEVEL": {
+		"brief": "Used to change the ranking system's maximum level",
+		"usage": "setmaxlevel <level>",
 		"additional": ""
 	},
 	"TIMEZONE_MODULE_TIMEOFFSET": {

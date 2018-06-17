@@ -9,13 +9,22 @@
 #include <QFile>
 #include <QDir>
 
+struct LevelRank 
+{
+	QString name;
+	unsigned int minimumLevel;
+};
+
 struct GuildSetting 
 {
 	snowflake_t id;
-	QList<snowflake_t> owners;
 
-	QString prefix = "!";
+	QString prefix;
 	QList<QPair<QString, bool>> modules;
+	
+	// Level system related
+	QList<LevelRank> ranks;
+	unsigned int maximumLevel;
 };
 
 class GuildSettings 
@@ -31,8 +40,8 @@ public:
 
 	static void AddGuild(snowflake_t id);
 
-	static bool IsOwner(snowflake_t guild, snowflake_t id);
-
 	static bool IsModuleEnabled(snowflake_t guild, const QString& moduleName, bool isDefault = true);
 	static void ToggleModule(snowflake_t guild, const QString& moduleName, bool enabled, bool isDefault = true);
+private:
+	static GuildSetting CreateGuildSetting(snowflake_t id);
 };

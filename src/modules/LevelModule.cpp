@@ -1,5 +1,6 @@
 #include "LevelModule.h"
 #include "UmikoBot.h"
+#include "core/Permissions.h"
 
 LevelModule::LevelModule()
 	: Module("levels", true)
@@ -29,19 +30,38 @@ LevelModule::LevelModule()
 		[this](Discord::Client& client, const Discord::Message& message, const Discord::Channel& channel)
 	{
 		QStringList args = message.content().split(' ');
+		GuildSetting s = GuildSettings::GetGuildSetting(channel.guildId());
+		QString prefix = s.prefix;
+
+		if (args.first() != prefix + "top")
+			return;
+
+		
 		if (args.size() == 2) {
 			qSort(m_exp[channel.guildId()].begin(), m_exp[channel.guildId()].end(),
 				[](const LevelModule::GuildLevelData& v1, const LevelModule::GuildLevelData& v2) -> bool
 			{
 				return v1.exp > v2.exp;
 			});
-
 			Discord::Embed embed;
 			embed.setColor(qrand() % 16777216);
 			embed.setTitle("Top " + args.back());
 
 			QString desc = "";
-			for (size_t i = 0; i < args.back().toUInt(); i++) 
+
+			bool ok;
+			int count = args.back().toInt(&ok);
+
+			if (!ok) 
+			{
+				client.createMessage(message.channelId(), "Invalid count");
+				return;
+			}
+
+			if (count > 30)
+				count = 30;
+
+			for (int i = 0; i < count; i++) 
 			{
 				if (i >= m_exp[channel.guildId()].size())
 				{
@@ -52,13 +72,326 @@ LevelModule::LevelModule()
 				LevelModule::GuildLevelData& curr = m_exp[channel.guildId()][i];
 				desc += QString::number(i + 1) + ". ";
 				desc += reinterpret_cast<UmikoBot*>(&client)->GetNick(channel.guildId(), m_exp[channel.guildId()][i].user);
-				desc += " - " + QString::number(curr.exp) + "\n";
+
+				unsigned int xp = GetData(channel.guildId(), m_exp[channel.guildId()][i].user).exp;
+
+				unsigned int xpRequirement = LEVELMODULE_EXP_REQUIREMENT;
+				unsigned int level = 1;
+				while (xp > xpRequirement && level < s.maximumLevel) {
+					level++;
+					xp -= xpRequirement;
+					xpRequirement *= LEVELMODULE_EXP_GROWTH;
+				}
+
+				if (level >= s.maximumLevel)
+					level = s.maximumLevel;
+
+				desc += " - Level " + QString::number(level) + "\n";
 			}
 
 			embed.setDescription(desc);
 
 			client.createMessage(message.channelId(), embed);
 		}
+		else if (args.size() == 3)
+		{
+			qSort(m_exp[channel.guildId()].begin(), m_exp[channel.guildId()].end(),
+				[](const LevelModule::GuildLevelData& v1, const LevelModule::GuildLevelData& v2) -> bool
+			{
+				return v1.exp > v2.exp;
+			});
+
+			bool ok1, ok2;
+			int count1 = args[1].toInt(&ok1);
+			int count2 = args[2].toInt(&ok2);
+
+			if (!ok1 || !ok2)
+			{
+				client.createMessage(message.channelId(), "Invalid count");
+				return;
+			}
+
+			if (count2 - count1 > 30)
+				count2 = count1 + 30;
+
+			Discord::Embed embed;
+			embed.setColor(qrand() % 16777216);
+			embed.setTitle("Top from " + QString::number(count1) + " to " + QString::number(count1 + count2 - 1));
+
+			QString desc = "";
+
+			if (count1 > m_exp[channel.guildId()].size())
+			{
+				client.createMessage(channel.id(), "Not enough members to create the top.");
+				return;
+			}
+
+			for (int i = count1 - 1; i < count1 + count2 - 1; i++)
+			{
+				if (i >= m_exp[channel.guildId()].size())
+				{
+					embed.setTitle("Top from " + QString::number(count1) + " to " + QString::number(i));
+					break;
+				}
+
+				LevelModule::GuildLevelData& curr = m_exp[channel.guildId()][i];
+				desc += QString::number(i + 1) + ". ";
+				desc += reinterpret_cast<UmikoBot*>(&client)->GetNick(channel.guildId(), m_exp[channel.guildId()][i].user);
+
+				unsigned int xp = GetData(channel.guildId(), m_exp[channel.guildId()][i].user).exp;
+
+				unsigned int xpRequirement = LEVELMODULE_EXP_REQUIREMENT;
+				unsigned int level = 1;
+				while (xp > xpRequirement && level < s.maximumLevel) {
+					level++;
+					xp -= xpRequirement;
+					xpRequirement *= LEVELMODULE_EXP_GROWTH;
+				}
+
+				if (level >= s.maximumLevel)
+					level = s.maximumLevel;
+
+				desc += " - Level " + QString::number(level) + "\n";
+			}
+
+			embed.setDescription(desc);
+
+			client.createMessage(message.channelId(), embed);
+		}
+		else
+		{
+			UmikoBot* bot = reinterpret_cast<UmikoBot*>(&client);
+			Discord::Embed embed;
+			embed.setColor(qrand() % 16777216);
+			embed.setTitle("Help top");
+			QString description = bot->GetCommandHelp("top", prefix);
+			embed.setDescription(description);
+			bot->createMessage(message.channelId(), embed);
+		}
+	});
+
+	RegisterCommand(Commands::LEVEL_MODULE_RANK, "rank",
+		[this](Discord::Client& client, const Discord::Message& message, const Discord::Channel& channel)
+	{
+		QStringList args = message.content().split(' ');
+		GuildSetting* setting = &GuildSettings::GetGuildSetting(channel.guildId());
+		QString prefix = setting->prefix;
+
+		auto printHelp = [&client, prefix, message]()
+		{
+			UmikoBot* bot = reinterpret_cast<UmikoBot*>(&client);
+			Discord::Embed embed;
+			embed.setColor(qrand() % 16777216);
+			embed.setTitle("Help rank");
+			QString description = bot->GetCommandHelp("rank", prefix);
+			embed.setDescription(description);
+			bot->createMessage(message.channelId(), embed);
+		};
+		
+		if (args.first() != prefix + "rank")
+			return;
+		
+		if (args.size() < 2)
+		{
+			printHelp();
+			return;
+		}
+
+		if (args.last() == "list" && args.size() == 2)
+		{
+			QList<LevelRank> ranks = setting->ranks;
+			Discord::Embed embed;
+			embed.setColor(qrand() % 16777216);
+			embed.setTitle("Rank list");
+
+			QString description = "";
+			
+			if (ranks.size() == 0)
+				description = "No ranks found!";
+			else
+				for (int i = 0; i < ranks.size(); i++)
+					description += ranks[i].name + " id " + QString::number(i) + " minimum level: " + QString::number(ranks[i].minimumLevel) + "\n";
+			
+			embed.setDescription(description);
+			client.createMessage(message.channelId(), embed);
+		}
+		else if (args[1] == "add" && args.size() > 3)
+			Permissions::ContainsPermission(client, channel.guildId(), message.author().id(), CommandPermission::ADMIN,
+				[args, &client, message, channel](bool result)
+			{
+				GuildSetting* setting = &GuildSettings::GetGuildSetting(channel.guildId());
+				if (!result)
+				{
+					client.createMessage(message.channelId(), "You don't have permissions to use this command.");
+					return;
+				}
+
+				bool ok;
+				unsigned int minimumLevel = args[2].toUInt(&ok);
+				if (!ok)
+				{
+					client.createMessage(message.channelId(), "Invalid minimum level.");
+					return;
+				}
+				QString name = "";
+				for (int i = 3; i < args.size(); i++)
+				{
+					name += args[i];
+					if (i < args.size() - 1)
+						name += " ";
+				}
+
+				LevelRank rank = { name, minimumLevel };
+
+				for (int i = 0; i < setting->ranks.size(); i++)
+					if (setting->ranks[i].minimumLevel == minimumLevel)
+					{
+						client.createMessage(message.channelId(), "Cannot add rank, minimum level already used.");
+						return;
+					}
+
+				setting->ranks.push_back(rank);
+				qSort(setting->ranks.begin(), setting->ranks.end(),
+					[](const LevelRank& v1, const LevelRank& v2) -> bool
+				{
+					return v1.minimumLevel < v2.minimumLevel;
+				});
+
+				for (int i = 0; i < setting->ranks.size(); i++)
+					if (setting->ranks[i].name == name)
+					{
+						client.createMessage(message.channelId(), "Added rank " + name + " with id " + QString::number(i));
+						break;
+					}
+			});
+		else if (args[1] == "remove" && args.size() == 3)
+			Permissions::ContainsPermission(client, channel.guildId(), message.author().id(), CommandPermission::ADMIN,
+				[args, &client, message, channel](bool result)
+			{
+				if (!result)
+				{
+					client.createMessage(message.channelId(), "You don't have permissions to use this command.");
+					return;
+				}
+
+				GuildSetting* setting = &GuildSettings::GetGuildSetting(channel.guildId());
+
+				bool ok;
+				unsigned int id = args[2].toUInt(&ok);
+				if (!ok)
+				{
+					client.createMessage(message.channelId(), "Invalid id.");
+					return;
+				}
+
+				if (id >= setting->ranks.size())
+				{
+					client.createMessage(message.channelId(), "Id not found.");
+					return;
+				}
+
+				client.createMessage(message.channelId(), "Deleted rank " + setting->ranks[id].name + " succesfully.");
+				setting->ranks.erase(setting->ranks.begin() + id);
+			});
+		else if (args[1] == "edit" && args.size() >= 4)
+			Permissions::ContainsPermission(client, channel.guildId(), message.author().id(), CommandPermission::ADMIN,
+				[args, &client, message, channel, printHelp](bool result)
+			{
+				if (!result)
+				{
+					client.createMessage(message.channelId(), "You don't have permissions to use this command.");
+					return;
+				}
+				GuildSetting* setting = &GuildSettings::GetGuildSetting(channel.guildId());
+
+				bool ok;
+				unsigned int id = args[3].toUInt(&ok);
+				if (!ok)
+				{
+					client.createMessage(message.channelId(), "Invalid id.");
+					return;
+				}
+
+				if (id >= setting->ranks.size())
+				{
+					client.createMessage(message.channelId(), "Id not found.");
+					return;
+				}
+
+				LevelRank& rank = setting->ranks[id];
+				if (args[2] == "name")
+				{
+					QString name = "";
+					for (int i = 4; i < args.size(); i++)
+					{
+						name += args[i];
+						if (i < args.size() - 1)
+							name += " ";
+					}
+					rank.name = name;
+					client.createMessage(message.channelId(), "Rank id " + QString::number(id) + " has been succesfully edited.");
+				}
+				else if (args[2] == "level")
+				{
+					bool ok;
+					unsigned int newlevel = args[4].toUInt(&ok);
+					if (!ok)
+					{
+						client.createMessage(message.channelId(), "Invalid new level.");
+						return;
+					}
+
+					rank.minimumLevel = newlevel;
+					client.createMessage(message.channelId(), "Rank id " + QString::number(id) + " has been succesfully edited.");
+				}
+				else
+				{
+					printHelp();
+				}
+			});
+		else
+			printHelp();
+	});
+
+	RegisterCommand(Commands::LEVEL_MODULE_RANK, "setmaxlevel",
+		[this](Discord::Client& client, const Discord::Message& message, const Discord::Channel& channel)
+	{
+		GuildSetting* setting = &GuildSettings::GetGuildSetting(channel.guildId());
+		QStringList args = message.content().split(' ');
+		QString prefix = setting->prefix;
+
+		if (args.first() != prefix + "setmaxlevel")
+			return;
+
+		auto printHelp = [&client, prefix, message]()
+		{
+			UmikoBot* bot = reinterpret_cast<UmikoBot*>(&client);
+			Discord::Embed embed;
+			embed.setColor(qrand() % 16777216);
+			embed.setTitle("Help setmaxlevel");
+			QString description = bot->GetCommandHelp("setmaxlevel", prefix);
+			embed.setDescription(description);
+			bot->createMessage(message.channelId(), embed);
+		};
+
+		if (args.size() == 2) 
+		{
+			Permissions::ContainsPermission(client, channel.guildId(), message.author().id(), CommandPermission::ADMIN,
+				[args, &client, message, channel, printHelp, setting](bool result)
+			{
+				bool ok;
+				unsigned int level = args[1].toUInt(&ok);
+				if (!ok)
+				{
+					client.createMessage(message.channelId(), "Invalid level.");
+					return;
+				}
+				setting->maximumLevel = level;
+				client.createMessage(message.channelId(), "Maximum level set to " + QString::number(level) + " succesfully!");
+			});
+		}
+		else
+			printHelp();
 	});
 }
 
@@ -83,7 +416,7 @@ void LevelModule::OnLoad(const QJsonDocument& doc)
 
 	QStringList guildIds = json.keys();
 
-	for (const QString& guild : guildIds) 
+	for (const QString& guild : guildIds)
 	{
 		snowflake_t guildId = guild.toULongLong();
 
@@ -94,17 +427,55 @@ void LevelModule::OnLoad(const QJsonDocument& doc)
 		for (const QString& user : userids)
 			m_exp[guildId].append({ user.toULongLong(), levels[user].toInt(), 0 });
 	}
-
 }
 
 void LevelModule::StatusCommand(QString& result, snowflake_t guild, snowflake_t user)
 {
-	result += "Rank: ...\n";
+	GuildSetting s = GuildSettings::GetGuildSetting(guild);
+
+	unsigned int xp = GetData(guild, user).exp;
+
+	unsigned int xpRequirement = LEVELMODULE_EXP_REQUIREMENT;
+	unsigned int level = 1;
+	while (xp > xpRequirement && level < s.maximumLevel) {
+		level++;
+		xp -= xpRequirement;
+		xpRequirement *= LEVELMODULE_EXP_GROWTH;
+	}
+
+	if (level >= s.maximumLevel)
+	{
+		xp = 0;
+		level = s.maximumLevel;
+		xpRequirement = 0;
+	}
+
+	unsigned int rankLevel = level;
+	QString rank = "";
+	if (s.ranks.size() > 0) {
+		for (int i = 0; i < s.ranks.size() - 1; i++)
+		{
+			if (rankLevel >= s.ranks[i].minimumLevel && rankLevel < s.ranks[i + 1].minimumLevel)
+			{
+				rank = s.ranks[i].name;
+				break;
+			}
+		}
+	}
+	if (rank == "")
+		rank = s.ranks[s.ranks.size() - 1].name;
+
+	result += "Rank: " + rank + "\n";
 	result += "Total exp: " + QString::number(GetData(guild, user).exp) + "\n";
-	result += "Exp needed for rankup: ./.\n";
+
+
+	result += "Level: " + QString::number(level) + "\n";
+	if(level == s.maximumLevel)
+		result += QString("Exp needed for rankup: Maximum Level\n");
+	else
+		result += QString("Exp needed for rankup: %1/%2\n").arg(QString::number(xp), QString::number(xpRequirement));
 	result += "\n";
 }
-
 
 void LevelModule::OnMessage(Discord::Client& client, const Discord::Message& message) 
 {

@@ -9,10 +9,22 @@ namespace Commands {
 		GLOBAL_HELP,
 
 		LEVEL_MODULE_TOP,
+		LEVEL_MODULE_RANK,
+		LEVEL_MODULE_MAX_LEVEL,
 
 		TIMEZONE_MODULE_TIMEOFFSET,
 	};
 }
+
+struct UserData {
+	QString nickname;
+};
+
+struct GuildData {
+	QMap<snowflake_t, UserData> userdata;
+	QList<Discord::Role> roles;
+	snowflake_t ownerId;
+};
 
 struct CommandInfo {
 	QString briefDescription;
@@ -27,17 +39,21 @@ public:
 	~UmikoBot();
 
 	QString GetNick(snowflake_t guild, snowflake_t user);
+	const QList<Discord::Role>& GetRoles(snowflake_t guild);
+	bool IsOwner(snowflake_t guild, snowflake_t user);
+
+	QString GetCommandHelp(QString commandName, QString prefix);
 
 private:
 	void Save();
 	void Load();
 	void GetGuilds(snowflake_t after = 0);
-	void GetGuildsMemberCount(snowflake_t guild, snowflake_t after = 0);
+	void GetGuildMemberInformation(snowflake_t guild, snowflake_t after = 0);
 
 	QList<Module*> m_modules;
 	QTimer m_timer;
 
-	QMap<snowflake_t, QMap<snowflake_t, QString>> m_nicknames;
+	QMap<snowflake_t,GuildData> m_guildDatas;
 	QList<Command> m_commands;
 	QMap<unsigned int, CommandInfo> m_commandsInfo;
 };
