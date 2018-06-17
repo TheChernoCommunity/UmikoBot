@@ -30,18 +30,19 @@ LevelModule::LevelModule()
 		[this](Discord::Client& client, const Discord::Message& message, const Discord::Channel& channel)
 	{
 		QStringList args = message.content().split(' ');
-		QString prefix = GuildSettings::GetGuildSetting(channel.guildId()).prefix;
+		GuildSetting s = GuildSettings::GetGuildSetting(channel.guildId());
+		QString prefix = s.prefix;
 
 		if (args.first() != prefix + "top")
 			return;
 
+		
 		if (args.size() == 2) {
 			qSort(m_exp[channel.guildId()].begin(), m_exp[channel.guildId()].end(),
 				[](const LevelModule::GuildLevelData& v1, const LevelModule::GuildLevelData& v2) -> bool
 			{
 				return v1.exp > v2.exp;
 			});
-
 			Discord::Embed embed;
 			embed.setColor(qrand() % 16777216);
 			embed.setTitle("Top " + args.back());
@@ -71,7 +72,86 @@ LevelModule::LevelModule()
 				LevelModule::GuildLevelData& curr = m_exp[channel.guildId()][i];
 				desc += QString::number(i + 1) + ". ";
 				desc += reinterpret_cast<UmikoBot*>(&client)->GetNick(channel.guildId(), m_exp[channel.guildId()][i].user);
-				desc += " - " + QString::number(curr.exp) + "\n";
+
+				unsigned int xp = GetData(channel.guildId(), m_exp[channel.guildId()][i].user).exp;
+
+				unsigned int xpRequirement = LEVELMODULE_EXP_REQUIREMENT;
+				unsigned int level = 1;
+				while (xp > xpRequirement && level < s.maximumLevel) {
+					level++;
+					xp -= xpRequirement;
+					xpRequirement *= LEVELMODULE_EXP_GROWTH;
+				}
+
+				if (level >= s.maximumLevel)
+					level = s.maximumLevel;
+
+				desc += " - Level " + QString::number(level) + "\n";
+			}
+
+			embed.setDescription(desc);
+
+			client.createMessage(message.channelId(), embed);
+		}
+		else if (args.size() == 3)
+		{
+			qSort(m_exp[channel.guildId()].begin(), m_exp[channel.guildId()].end(),
+				[](const LevelModule::GuildLevelData& v1, const LevelModule::GuildLevelData& v2) -> bool
+			{
+				return v1.exp > v2.exp;
+			});
+
+			bool ok1, ok2;
+			int count1 = args[1].toInt(&ok1);
+			int count2 = args[2].toInt(&ok2);
+
+			if (!ok1 || !ok2)
+			{
+				client.createMessage(message.channelId(), "Invalid count");
+				return;
+			}
+
+			if (count2 - count1 > 30)
+				count2 = count1 + 30;
+
+			Discord::Embed embed;
+			embed.setColor(qrand() % 16777216);
+			embed.setTitle("Top from " + QString::number(count1) + " to " + QString::number(count1 + count2 - 1));
+
+			QString desc = "";
+
+			if (count1 > m_exp[channel.guildId()].size())
+			{
+				client.createMessage(channel.id(), "Not enough members to create the top.");
+				return;
+			}
+
+			for (int i = count1 - 1; i < count1 + count2 - 1; i++)
+			{
+				if (i >= m_exp[channel.guildId()].size())
+				{
+					embed.setTitle("Top from " + QString::number(count1) + " to " + QString::number(i));
+					break;
+				}
+
+				LevelModule::GuildLevelData& curr = m_exp[channel.guildId()][i];
+				desc += QString::number(i + 1) + ". ";
+				desc += reinterpret_cast<UmikoBot*>(&client)->GetNick(channel.guildId(), m_exp[channel.guildId()][i].user);
+
+				unsigned int xp = GetData(channel.guildId(), m_exp[channel.guildId()][i].user).exp;
+
+				unsigned int xpRequirement = LEVELMODULE_EXP_REQUIREMENT;
+				unsigned int level = 1;
+				while (xp > xpRequirement && level < s.maximumLevel) {
+					level++;
+					xp -= xpRequirement;
+					xpRequirement *= LEVELMODULE_EXP_GROWTH;
+				}
+
+				if (level >= s.maximumLevel)
+					level = s.maximumLevel;
+
+				desc += " - Level " + QString::number(level) + "\n";
 			}
 
 			embed.setDescription(desc);
@@ -390,7 +470,7 @@ void LevelModule::StatusCommand(QString& result, snowflake_t guild, snowflake_t 
 
 
 	result += "Level: " + QString::number(level) + "\n";
-	if(xp == 0 && xpRequirement == 0)
+	if(level == s.maximumLevel)
 		result += QString("Exp needed for rankup: Maximum Level\n");
 	else
 		result += QString("Exp needed for rankup: %1/%2\n").arg(QString::number(xp), QString::number(xpRequirement));
