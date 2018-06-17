@@ -198,7 +198,7 @@ UmikoBot::UmikoBot(QObject* parent)
 					{
 						QString current = "";
 						current = prefix + command.name + " - " + m_commandsInfo[command.id].briefDescription + "\n";
-						if (description.length() + current.length() < 2000)
+						if (description.length() + current.length() < 1900)
 							description += current;
 						else
 							return true;
@@ -211,6 +211,7 @@ UmikoBot::UmikoBot(QObject* parent)
 						if (forCommand(module->GetCommands()))
 							return;
 			}();
+			description += "\n**Note:** Use " + prefix + "help <command> to get the help for a specific command";
 
 			Discord::Embed embed;
 			embed.setColor(qrand() % 16777216);
