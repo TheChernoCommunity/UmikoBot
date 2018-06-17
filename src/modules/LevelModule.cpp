@@ -117,7 +117,7 @@ LevelModule::LevelModule()
 			return;
 		}
 
-		if (args.last() == "list")
+		if (args.last() == "list" && args.size() == 2)
 		{
 			QList<LevelRank> ranks = setting->ranks;
 			Discord::Embed embed;
@@ -136,7 +136,6 @@ LevelModule::LevelModule()
 			client.createMessage(message.channelId(), embed);
 		}
 		else if (args[1] == "add" && args.size() > 3)
-		{
 			Permissions::ContainsPermission(client, channel.guildId(), message.author().id(), CommandPermission::ADMIN,
 				[args, &client, message, channel](bool result)
 			{
@@ -185,10 +184,7 @@ LevelModule::LevelModule()
 						break;
 					}
 			});
-			
-		}
 		else if (args[1] == "remove" && args.size() == 3)
-		{
 			Permissions::ContainsPermission(client, channel.guildId(), message.author().id(), CommandPermission::ADMIN,
 				[args, &client, message, channel](bool result)
 			{
@@ -217,9 +213,7 @@ LevelModule::LevelModule()
 				client.createMessage(message.channelId(), "Deleted rank " + setting->ranks[id].name + " succesfully.");
 				setting->ranks.erase(setting->ranks.begin() + id);
 			});
-		} 
 		else if (args[1] == "edit" && args.size() >= 4)
-		{
 			Permissions::ContainsPermission(client, channel.guildId(), message.author().id(), CommandPermission::ADMIN,
 				[args, &client, message, channel, printHelp](bool result)
 			{
@@ -275,11 +269,49 @@ LevelModule::LevelModule()
 					printHelp();
 				}
 			});
+		else
+			printHelp();
+	});
+
+	RegisterCommand(Commands::LEVEL_MODULE_RANK, "setmaxlevel",
+		[this](Discord::Client& client, const Discord::Message& message, const Discord::Channel& channel)
+	{
+		GuildSetting* setting = &GuildSettings::GetGuildSetting(channel.guildId());
+		QStringList args = message.content().split(' ');
+		QString prefix = setting->prefix;
+
+		if (args.first() != prefix + "setmaxlevel")
+			return;
+
+		auto printHelp = [&client, prefix, message]()
+		{
+			UmikoBot* bot = reinterpret_cast<UmikoBot*>(&client);
+			Discord::Embed embed;
+			embed.setColor(qrand() % 16777216);
+			embed.setTitle("Help setmaxlevel");
+			QString description = bot->GetCommandHelp("setmaxlevel", prefix);
+			embed.setDescription(description);
+			bot->createMessage(message.channelId(), embed);
+		};
+
+		if (args.size() == 2) 
+		{
+			Permissions::ContainsPermission(client, channel.guildId(), message.author().id(), CommandPermission::ADMIN,
+				[args, &client, message, channel, printHelp, setting](bool result)
+			{
+				bool ok;
+				unsigned int level = args[1].toUInt(&ok);
+				if (!ok)
+				{
+					client.createMessage(message.channelId(), "Invalid level.");
+					return;
+				}
+				setting->maximumLevel = level;
+				client.createMessage(message.channelId(), "Maximum level set to " + QString::number(level) + " succesfully!");
+			});
 		}
 		else
-		{
 			printHelp();
-		}
 	});
 }
 
@@ -325,16 +357,16 @@ void LevelModule::StatusCommand(QString& result, snowflake_t guild, snowflake_t 
 
 	unsigned int xpRequirement = LEVELMODULE_EXP_REQUIREMENT;
 	unsigned int level = 1;
-	while (xp > xpRequirement && level < LEVELMODULE_MAXIMUM_LEVEL) {
+	while (xp > xpRequirement && level < s.maximumLevel) {
 		level++;
 		xp -= xpRequirement;
 		xpRequirement *= LEVELMODULE_EXP_GROWTH;
 	}
 
-	if (level >= LEVELMODULE_MAXIMUM_LEVEL)
+	if (level >= s.maximumLevel)
 	{
 		xp = 0;
-		level = LEVELMODULE_MAXIMUM_LEVEL;
+		level = s.maximumLevel;
 		xpRequirement = 0;
 	}
 

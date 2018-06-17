@@ -303,6 +303,7 @@ void UmikoBot::Load()
 
 		Command(LEVEL_MODULE_TOP),
 		Command(LEVEL_MODULE_RANK),
+		Command(LEVEL_MODULE_MAX_LEVEL),
 
 		Command(TIMEZONE_MODULE_TIMEOFFSET)
 	};
