@@ -97,9 +97,6 @@ LevelModule::LevelModule()
 		GuildSetting* setting = &GuildSettings::GetGuildSetting(channel.guildId());
 		QString prefix = setting->prefix;
 
-		if (args.first() != prefix + "rank")
-			return;
-
 		auto printHelp = [&client, prefix, message]()
 		{
 			UmikoBot* bot = reinterpret_cast<UmikoBot*>(&client);
@@ -110,6 +107,15 @@ LevelModule::LevelModule()
 			embed.setDescription(description);
 			bot->createMessage(message.channelId(), embed);
 		};
+		
+		if (args.first() != prefix + "rank")
+			return;
+		
+		if (args.size() < 2)
+		{
+			printHelp();
+			return;
+		}
 
 		if (args.last() == "list")
 		{
@@ -137,7 +143,7 @@ LevelModule::LevelModule()
 				GuildSetting* setting = &GuildSettings::GetGuildSetting(channel.guildId());
 				if (!result)
 				{
-					client.createMessage(message.channelId(), "You don't have permissions to use this command");
+					client.createMessage(message.channelId(), "You don't have permissions to use this command.");
 					return;
 				}
 
@@ -145,7 +151,7 @@ LevelModule::LevelModule()
 				unsigned int minimumLevel = args[2].toUInt(&ok);
 				if (!ok)
 				{
-					client.createMessage(message.channelId(), "Invalid minimum level");
+					client.createMessage(message.channelId(), "Invalid minimum level.");
 					return;
 				}
 				QString name = "";
@@ -161,7 +167,7 @@ LevelModule::LevelModule()
 				for (int i = 0; i < setting->ranks.size(); i++)
 					if (setting->ranks[i].minimumLevel == minimumLevel)
 					{
-						client.createMessage(message.channelId(), "Cannot add rank, minimum level already used");
+						client.createMessage(message.channelId(), "Cannot add rank, minimum level already used.");
 						return;
 					}
 
@@ -186,29 +192,88 @@ LevelModule::LevelModule()
 			Permissions::ContainsPermission(client, channel.guildId(), message.author().id(), CommandPermission::ADMIN,
 				[args, &client, message, channel](bool result)
 			{
-				GuildSetting* setting = &GuildSettings::GetGuildSetting(channel.guildId());
 				if (!result)
 				{
-					client.createMessage(message.channelId(), "You don't have permissions to use this command");
+					client.createMessage(message.channelId(), "You don't have permissions to use this command.");
 					return;
 				}
+
+				GuildSetting* setting = &GuildSettings::GetGuildSetting(channel.guildId());
 
 				bool ok;
 				unsigned int id = args[2].toUInt(&ok);
 				if (!ok)
 				{
-					client.createMessage(message.channelId(), "Invalid id");
+					client.createMessage(message.channelId(), "Invalid id.");
 					return;
 				}
 
 				if (id >= setting->ranks.size())
 				{
-					client.createMessage(message.channelId(), "Id not found");
+					client.createMessage(message.channelId(), "Id not found.");
 					return;
 				}
 
-				client.createMessage(message.channelId(), "Deleted rank " + setting->ranks[id].name + " succesfully");
+				client.createMessage(message.channelId(), "Deleted rank " + setting->ranks[id].name + " succesfully.");
 				setting->ranks.erase(setting->ranks.begin() + id);
+			});
+		} 
+		else if (args[1] == "edit" && args.size() >= 4)
+		{
+			Permissions::ContainsPermission(client, channel.guildId(), message.author().id(), CommandPermission::ADMIN,
+				[args, &client, message, channel, printHelp](bool result)
+			{
+				if (!result)
+				{
+					client.createMessage(message.channelId(), "You don't have permissions to use this command.");
+					return;
+				}
+				GuildSetting* setting = &GuildSettings::GetGuildSetting(channel.guildId());
+
+				bool ok;
+				unsigned int id = args[3].toUInt(&ok);
+				if (!ok)
+				{
+					client.createMessage(message.channelId(), "Invalid id.");
+					return;
+				}
+
+				if (id >= setting->ranks.size())
+				{
+					client.createMessage(message.channelId(), "Id not found.");
+					return;
+				}
+
+				LevelRank& rank = setting->ranks[id];
+				if (args[2] == "name")
+				{
+					QString name = "";
+					for (int i = 4; i < args.size(); i++)
+					{
+						name += args[i];
+						if (i < args.size() - 1)
+							name += " ";
+					}
+					rank.name = name;
+					client.createMessage(message.channelId(), "Rank id " + QString::number(id) + " has been succesfully edited.");
+				}
+				else if (args[2] == "level")
+				{
+					bool ok;
+					unsigned int newlevel = args[4].toUInt(&ok);
+					if (!ok)
+					{
+						client.createMessage(message.channelId(), "Invalid new level.");
+						return;
+					}
+
+					rank.minimumLevel = newlevel;
+					client.createMessage(message.channelId(), "Rank id " + QString::number(id) + " has been succesfully edited.");
+				}
+				else
+				{
+					printHelp();
+				}
 			});
 		}
 		else
@@ -278,7 +343,7 @@ void LevelModule::StatusCommand(QString& result, snowflake_t guild, snowflake_t 
 	if (s.ranks.size() > 0) {
 		for (int i = 0; i < s.ranks.size() - 1; i++)
 		{
-			if (rankLevel > s.ranks[i].minimumLevel &&  rankLevel < s.ranks[i + 1].minimumLevel)
+			if (rankLevel >= s.ranks[i].minimumLevel && rankLevel < s.ranks[i + 1].minimumLevel)
 			{
 				rank = s.ranks[i].name;
 				break;
