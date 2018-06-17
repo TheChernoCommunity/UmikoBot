@@ -104,7 +104,7 @@ void GuildSettings::Save()
 		if (setting.maximumLevel != LEVELMODULE_MAXIMUM_LEVEL)
 		{
 			levelModuleDefault = false;
-			levelModule["maxmimumLevel"] = QString::number(setting.maximumLevel);
+			levelModule["maximumLevel"] = QString::number(setting.maximumLevel);
 		}
 
 		if(!levelModuleDefault)
