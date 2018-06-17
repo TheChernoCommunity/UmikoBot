@@ -11,8 +11,8 @@
 	},
 	"LEVEL_MODULE_TOP": {
 		"brief": "Returns the top of a specified user count",
-		"usage": "top <count>",
-		"additional": ""
+		"usage": "top <count>\ntop <count1> <count2>",
+		"additional": "**top <count1> <count2>** displays the top from count1 to count2"
 	},
 	"LEVEL_MODULE_RANK": {
 		"brief": "Used to control the ranking system",
