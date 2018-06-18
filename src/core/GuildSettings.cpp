@@ -50,7 +50,7 @@ void GuildSettings::Load(const QString& location)
 					setting.growthRate = levelModuleJson["growthRate"].toString().toFloat();
 
 				if (levelModuleJson.contains("expRequirement"))
-					setting.growthRate = levelModuleJson["expRequirement"].toString().toUInt();
+					setting.expRequirement = levelModuleJson["expRequirement"].toString().toUInt();
 
 				QJsonObject ranksJson = levelModuleJson["ranks"].toObject();
 				QStringList ranks = ranksJson.keys();
