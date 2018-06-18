@@ -111,34 +111,88 @@ UmikoBot::UmikoBot(QObject* parent)
 		[this](Discord::Client& client,const Discord::Message& message, const Discord::Channel& channel)
 	{
 		QStringList args = message.content().split(" ");
+
+		auto printStatus = [this](const Discord::Channel& channel, const Discord::Message& message, snowflake_t user, QString nickname) {
+			getGuildMember(channel.guildId(), user).then(
+				[this, message, channel, user, nickname](const Discord::GuildMember& member)
+			{
+				QString status = "";
+				Q_FOREACH(Module* module, m_modules)
+				{
+					module->StatusCommand(status, channel.guildId(), user);
+				}
+
+				Discord::Embed embed;
+				QString icon = "https://cdn.discordapp.com/avatars/" + QString::number(user) + "/" + member.user().avatar() + ".png";
+				embed.setAuthor(Discord::EmbedAuthor(nickname, "", icon));
+				embed.setColor(qrand() % 16777216);
+				embed.setTitle("Status");
+				embed.setDescription(status);
+
+				createMessage(message.channelId(), embed);
+			});
+		};
+
 		if (args.size() > 1) 
 		{
 			if (args.first() != GuildSettings::GetGuildSetting(channel.guildId()).prefix + "status")
 				return;
-			for (QMap<snowflake_t, UserData>::iterator it = m_guildDatas[channel.guildId()].userdata.begin(); it != m_guildDatas[channel.guildId()].userdata.end(); it++)
+			
+
+			QList<Discord::User> mentions = message.mentions();
+			if (mentions.size() > 0)
 			{
-				if (it.value().nickname == args.last()) 
-				{
-					getGuildMember(channel.guildId(), message.author().id()).then(
-						[this, message, channel, it](const Discord::GuildMember& member)
-					{
-						QString status = "";
-						Q_FOREACH(Module* module, m_modules)
-						{
-							module->StatusCommand(status, channel.guildId(), it.key());
-						}
+				printStatus(channel, message, mentions.first().id(), GetNick(channel.guildId(), mentions.first().id()));
+				return;
+			}
 
-						Discord::Embed embed;
-						QString icon = "https://cdn.discordapp.com/avatars/" + QString::number(member.user().id()) + "/" + member.user().avatar() + ".png";
-						embed.setAuthor(Discord::EmbedAuthor(GetNick(channel.guildId(), it.key()), "", icon));
-						embed.setColor(qrand() % 16777216);
-						embed.setTitle("Status");
-						embed.setDescription(status);
+			bool ok;
+			snowflake_t user = args[1].toULongLong(&ok);
 
-						createMessage(message.channelId(), embed);
-					});
+			if (ok)
+			{
+				QString nick = GetNick(channel.guildId(), user);
+				if (nick != "") {
+					printStatus(channel, message, user, nick);
+					return;
 				}
 			}
+
+			QString name = "";
+			for (int i = 1; i < args.size(); i++)
+			{
+				name += args[i];
+				if (i < args.size() - 1)
+					name += " ";
+			}
+			struct Match {
+				snowflake_t user;
+				QString name;
+			} perfectMatch, partialMatch;
+
+			perfectMatch = { 0 };
+			partialMatch = { 0 };
+
+			for (QMap<snowflake_t, UserData>::iterator it = m_guildDatas[channel.guildId()].userdata.begin(); it != m_guildDatas[channel.guildId()].userdata.end(); it++)
+			{
+				if (it.value().nickname == name) 
+				{
+					perfectMatch = { it.key(), it.value().nickname };
+					break;
+				}
+				else if (it.value().nickname.startsWith(name))
+				{
+					partialMatch = { it.key(), it.value().nickname };
+					break;
+				}
+			}
+
+			if (perfectMatch.user != 0)
+				printStatus(channel, message, perfectMatch.user, perfectMatch.name);
+			else if (partialMatch.user != 0)
+				printStatus(channel, message, partialMatch.user, partialMatch.name);
+			else
+				client.createMessage(channel.id(), "Could not find user!");
 		}
 		else
 			getGuildMember(channel.guildId(), message.author().id()).then(

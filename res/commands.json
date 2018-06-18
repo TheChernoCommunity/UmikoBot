@@ -1,8 +1,8 @@
 {
 	"GLOBAL_STATUS": {
 		"brief": "Retrieves status of a user",
-		"usage": "status [name]",
-		"additional": "If no name is specified it returns the status of the person who executes the command"
+		"usage": "status [name/@mention/id]",
+		"additional": "If no name/mention/id is specified it returns the status of the person who executes the command"
 	},
 	"GLOBAL_HELP": {
 		"brief": "Returns the usage of a command",
