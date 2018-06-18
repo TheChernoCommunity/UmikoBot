@@ -9,6 +9,11 @@
 		"usage": "help [page/command]",
 		"additional": ""
 	},
+	"GLOBAL_SET_PREFIX": {
+		"brief": "Sets the prefix of the bot",
+		"usage": "setprefix <newprefix>",
+		"additional": ""
+	},
 	"LEVEL_MODULE_TOP": {
 		"brief": "Returns the top of a specified user count",
 		"usage": "top <count>\ntop <count1> <count2>",

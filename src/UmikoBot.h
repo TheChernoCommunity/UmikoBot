@@ -7,6 +7,7 @@ namespace Commands {
 	enum {
 		GLOBAL_STATUS,
 		GLOBAL_HELP,
+		GLOBAL_SET_PREFIX,
 
 		LEVEL_MODULE_TOP,
 		LEVEL_MODULE_RANK,

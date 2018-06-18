@@ -275,6 +275,37 @@ UmikoBot::UmikoBot(QObject* parent)
 			createMessage(message.channelId(), embed);
 		}
 	}});
+
+	m_commands.push_back({ Commands::GLOBAL_SET_PREFIX, "setprefix",
+		[this](Discord::Client& client, const Discord::Message& message, const Discord::Channel& channel)
+	{
+		Permissions::ContainsPermission(client, channel.guildId(), message.author().id(), CommandPermission::ADMIN,
+			[this, channel, message](bool result)
+		{
+			GuildSetting& s = GuildSettings::GetGuildSetting(channel.guildId());
+			if (!result)
+			{
+				createMessage(channel.id(), "You don't have permissions to use this command.");
+				return;
+			}
+
+			QStringList args = message.content().split(' ');
+			if (args.first() != s.prefix + "setprefix")
+				return;
+
+			QString prefix = "";
+			for (int i = 1; i < args.size(); i++)
+			{
+				prefix += args[i];
+				if (i < args.size() - 1)
+					prefix += " ";
+			}
+
+			s.prefix = prefix;
+
+			createMessage(channel.id(), "Prefix is now set to " + prefix);
+		});
+	}});
 }
 
 UmikoBot::~UmikoBot()
@@ -354,6 +385,7 @@ void UmikoBot::Load()
 	{
 		Command(GLOBAL_STATUS),
 		Command(GLOBAL_HELP),
+		Command(GLOBAL_SET_PREFIX),
 
 		Command(LEVEL_MODULE_TOP),
 		Command(LEVEL_MODULE_RANK),
