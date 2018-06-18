@@ -26,8 +26,18 @@
 	},
 	"LEVEL_MODULE_MAX_LEVEL": {
 		"brief": "Used to change the ranking system's maximum level",
-		"usage": "setmaxlevel <level>",
-		"additional": ""
+		"usage": "setmaxlevel <level>\nsetmaxlevel current",
+		"additional": "**setmaxlevel current** will return the current maximum level"
+	},
+	"LEVEL_MODULE_EXP_REQUIREMENT": {
+		"brief": "Used to change the ranking system's exp requirement",
+		"usage": "setexpreq <exp>\nsetexpreq current",
+		"additional": "**setexpreq current** will return the current exp requirement"
+	},
+	"LEVEL_MODULE_EXP_GROWTH_RATE": {
+		"brief": "Used to change the ranking system's exp growth rate",
+		"usage": "setgrowthrate <rate>\nsetgrowthrate current",
+		"additional": "The rate must be a number above 1\nHow the exp for the levels are calculated is like so:\nCurrentLevel = LastLevel * GrowthRate\n**setgrowthrate current** will return the current exp requirement"
 	},
 	"TIMEZONE_MODULE_TIMEOFFSET": {
 		"brief": "Sets the timezone offset of the user",

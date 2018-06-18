@@ -9,7 +9,7 @@
 
 #define LEVELMODULE_MAXIMUM_LEVEL          100
 #define LEVELMODULE_EXP_REQUIREMENT        100 // per level
-#define LEVELMODULE_EXP_GROWTH             1.12
+#define LEVELMODULE_EXP_GROWTH             1.12f
 
 class LevelModule : public Module
 {
