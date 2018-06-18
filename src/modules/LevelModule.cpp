@@ -140,12 +140,12 @@ LevelModule::LevelModule()
 
 				unsigned int xp = GetData(channel.guildId(), m_exp[channel.guildId()][i].user).exp;
 
-				unsigned int xpRequirement = LEVELMODULE_EXP_REQUIREMENT;
+				unsigned int xpRequirement = s.expRequirement;
 				unsigned int level = 1;
 				while (xp > xpRequirement && level < s.maximumLevel) {
 					level++;
 					xp -= xpRequirement;
-					xpRequirement *= LEVELMODULE_EXP_GROWTH;
+					xpRequirement *= s.growthRate;
 				}
 
 				if (level >= s.maximumLevel)
@@ -435,12 +435,12 @@ void LevelModule::StatusCommand(QString& result, snowflake_t guild, snowflake_t 
 
 	unsigned int xp = GetData(guild, user).exp;
 
-	unsigned int xpRequirement = LEVELMODULE_EXP_REQUIREMENT;
+	unsigned int xpRequirement = s.expRequirement;
 	unsigned int level = 1;
 	while (xp > xpRequirement && level < s.maximumLevel) {
 		level++;
 		xp -= xpRequirement;
-		xpRequirement *= LEVELMODULE_EXP_GROWTH;
+		xpRequirement *= s.growthRate;
 	}
 
 	if (level >= s.maximumLevel)
