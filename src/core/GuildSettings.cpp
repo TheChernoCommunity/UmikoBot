@@ -46,6 +46,12 @@ void GuildSettings::Load(const QString& location)
 				if (levelModuleJson.contains("maximumLevel"))
 					setting.maximumLevel = levelModuleJson["maximumLevel"].toString().toUInt();
 
+				if (levelModuleJson.contains("growthRate"))
+					setting.growthRate = levelModuleJson["growthRate"].toString().toFloat();
+
+				if (levelModuleJson.contains("expRequirement"))
+					setting.expRequirement = levelModuleJson["expRequirement"].toString().toUInt();
+
 				QJsonObject ranksJson = levelModuleJson["ranks"].toObject();
 				QStringList ranks = ranksJson.keys();
 				for (const QString& rankName : ranks)
@@ -105,6 +111,18 @@ void GuildSettings::Save()
 		{
 			levelModuleDefault = false;
 			levelModule["maximumLevel"] = QString::number(setting.maximumLevel);
+		}
+		
+		if (setting.growthRate != LEVELMODULE_EXP_GROWTH)
+		{
+			levelModuleDefault = false;
+			levelModule["growthRate"] = QString::number(setting.growthRate);
+		}
+
+		if (setting.expRequirement != LEVELMODULE_EXP_REQUIREMENT)
+		{
+			levelModuleDefault = false;
+			levelModule["expRequirement"] = QString::number(setting.expRequirement);
 		}
 
 		if(!levelModuleDefault)
@@ -174,8 +192,10 @@ void GuildSettings::ToggleModule(snowflake_t guild, const QString& moduleName, b
 GuildSetting GuildSettings::CreateGuildSetting(snowflake_t id)
 {
 	GuildSetting s;
-	s.id = id;
-	s.maximumLevel = LEVELMODULE_MAXIMUM_LEVEL;
-	s.prefix = "!";
+	s.id               = id;
+	s.maximumLevel     = LEVELMODULE_MAXIMUM_LEVEL;
+	s.expRequirement   = LEVELMODULE_EXP_REQUIREMENT;
+	s.growthRate       = LEVELMODULE_EXP_GROWTH;
+	s.prefix           = "!";
 	return s;
 }

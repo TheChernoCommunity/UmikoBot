@@ -25,6 +25,8 @@ struct GuildSetting
 	// Level system related
 	QList<LevelRank> ranks;
 	unsigned int maximumLevel;
+	unsigned int expRequirement;
+	float growthRate;
 };
 
 class GuildSettings 
