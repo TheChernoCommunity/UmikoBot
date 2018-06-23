@@ -18,7 +18,7 @@ class Module
 {
 public:
 	virtual void OnMessage(Discord::Client& client, const Discord::Message& message);
-	inline bool IsEnabledByDefault() { return m_enabledByDefault; }
+	inline bool IsEnabledByDefault() const { return m_enabledByDefault; }
 
 	void Save() const;
 	void Load();
@@ -26,6 +26,8 @@ public:
 	virtual void StatusCommand(QString& result, snowflake_t guild, snowflake_t user) {}
 
 	QList<Command>& GetCommands() { return m_commands; }
+
+	QString GetName() const { return m_name; }
 
 protected:
 	Module(const QString& name, bool enabledByDefault);
