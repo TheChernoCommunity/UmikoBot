@@ -25,8 +25,8 @@ public:
 
 	virtual void StatusCommand(QString& result, snowflake_t guild, snowflake_t user) {}
 
-	QList<Command>& GetCommands() const { return m_commands; }
-
+	QList<Command> GetCommands() const { return m_commands; }
+	QList<Command>& GetCommands() { return m_commands; }
 	QString GetName() const { return m_name; }
 
 protected:
