@@ -14,6 +14,11 @@
 		"usage": "setprefix <newprefix>",
 		"additional": ""
 	},
+	"GLOBAL_MODULE": {
+		"brief": "Controls all the modules of the bot",
+		"usage": "module <list/enable/disable> [name]",
+		"additional": "**module list** is used to list all the commands, if the name of a module is passed, it will list all the commands of that module\n**module enable** is used to enable a disabled module\n**module disable** is used to disable a module"
+	},
 	"LEVEL_MODULE_TOP": {
 		"brief": "Returns the top of a specified user count",
 		"usage": "top <count>\ntop <count1> <count2>",

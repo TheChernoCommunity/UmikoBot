@@ -306,6 +306,82 @@ UmikoBot::UmikoBot(QObject* parent)
 			createMessage(channel.id(), "Prefix is now set to " + prefix);
 		});
 	}});
+
+	m_commands.push_back({ Commands::GLOBAL_MODULE, "module",
+		[this](Discord::Client& client, const Discord::Message& message, const Discord::Channel& channel)
+	{
+		QStringList args = message.content().split(" ");
+		QString prefix = GuildSettings::GetGuildSetting(channel.guildId()).prefix;
+		if (args.first() != prefix + "module")
+			return;
+
+		auto printHelp = [this, prefix, message]() 
+		{
+			Discord::Embed embed;
+			embed.setColor(qrand() % 16777216);
+			embed.setTitle("Help module");
+			QString description = GetCommandHelp("module", prefix);
+			embed.setDescription(description);
+			createMessage(message.channelId(), embed);
+		};
+
+		if (args.size() > 1 && args[1] == "list")
+		{
+			if (args.size() == 2)
+			{
+				Discord::Embed embed;
+				embed.setColor(qrand() % 16777216);
+				embed.setTitle("Module list");
+
+				QString description = "";
+
+				Q_FOREACH(const Module* module, m_modules)
+				{
+					description += module->GetName() + " - " + (GuildSettings::IsModuleEnabled(channel.guildId(), module->GetName(), module->IsEnabledByDefault()) == true ? "enabled" : "disabled") + QString("\n");
+				}
+
+				embed.setDescription(description);
+				createMessage(message.channelId(), embed);
+			}
+			else if(args.size() == 3)
+			{
+				Discord::Embed embed;
+				embed.setColor(qrand() % 16777216);
+				embed.setTitle("Module command list");
+
+				QString description = "";
+
+				bool found = false;
+
+				Q_FOREACH(const Module* module, m_modules)
+					if (module->GetName() == args.last())
+					{
+						found = true;
+						Q_FOREACH(const Command& command, module->GetCommands())
+							description += prefix + command.name + "\n";
+					}
+
+				if (!found)
+					description = "Module not found.";
+				else if (found && description == "")
+					description = "Module has no commands.";
+				else
+					description += "\n**Note**: Use " + prefix + "help to get the usage of a command.";
+
+				embed.setDescription(description);
+				createMessage(message.channelId(), embed);
+			}
+			else 
+			{
+				printHelp();
+			}
+		}
+		else
+		{
+			printHelp();
+		}
+
+	}});
 }
 
 UmikoBot::~UmikoBot()
@@ -386,6 +462,7 @@ void UmikoBot::Load()
 		Command(GLOBAL_STATUS),
 		Command(GLOBAL_HELP),
 		Command(GLOBAL_SET_PREFIX),
+		Command(GLOBAL_MODULE),
 
 		Command(LEVEL_MODULE_TOP),
 		Command(LEVEL_MODULE_RANK),
