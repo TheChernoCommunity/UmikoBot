@@ -119,7 +119,8 @@ UmikoBot::UmikoBot(QObject* parent)
 				QString status = "";
 				Q_FOREACH(Module* module, m_modules)
 				{
-					module->StatusCommand(status, channel.guildId(), user);
+					if(GuildSettings::IsModuleEnabled(channel.guildId(), module->GetName(), module->IsEnabledByDefault()))
+						module->StatusCommand(status, channel.guildId(), user);
 				}
 
 				Discord::Embed embed;
@@ -201,7 +202,8 @@ UmikoBot::UmikoBot(QObject* parent)
 				QString status = "";
 				Q_FOREACH(Module* module, m_modules)
 				{
-					module->StatusCommand(status, channel.guildId(), message.author().id());
+					if (GuildSettings::IsModuleEnabled(channel.guildId(), module->GetName(), module->IsEnabledByDefault()))
+						module->StatusCommand(status, channel.guildId(), message.author().id());
 				}
 
 				Discord::Embed embed;
@@ -375,6 +377,74 @@ UmikoBot::UmikoBot(QObject* parent)
 			{
 				printHelp();
 			}
+		} 
+		else if (args.size() == 3 && args[1] == "enable")
+		{
+			Permissions::ContainsPermission(client, channel.guildId(), message.author().id(), CommandPermission::ADMIN,
+				[this, printHelp, message, args, channel](bool result)
+			{
+				if (!result)
+				{
+					createMessage(message.channelId(), "You don't have permissions to use this command.");
+					return;
+				}
+
+				bool found = false;
+
+				Q_FOREACH(const Module* module, m_modules)
+					if (module->GetName() == args.last())
+					{
+						if (GuildSettings::IsModuleEnabled(channel.guildId(), args.last(), module->IsEnabledByDefault()))
+						{
+							createMessage(message.channelId(), "Module " + args.last() + " is already enabled");
+							return;
+						}
+						else {
+
+							GuildSettings::ToggleModule(channel.guildId(), args.last(), true, module->IsEnabledByDefault());
+							found = true;
+						}
+					}
+
+				if (!found)
+					createMessage(message.channelId(), "Could not find module " + args.last());
+				else
+					createMessage(message.channelId(), "Enabled module " + args.last());
+			});
+		}
+		else if (args.size() == 3 && args[1] == "disable")
+		{
+			Permissions::ContainsPermission(client, channel.guildId(), message.author().id(), CommandPermission::ADMIN,
+				[this, printHelp, message, args, channel](bool result)
+			{
+				if (!result)
+				{
+					createMessage(message.channelId(), "You don't have permissions to use this command.");
+					return;
+				}
+
+				bool found = false;
+
+				Q_FOREACH(const Module* module, m_modules)
+					if (module->GetName() == args.last())
+					{
+						if (!GuildSettings::IsModuleEnabled(channel.guildId(), args.last(), module->IsEnabledByDefault()))
+						{
+							createMessage(message.channelId(), "Module " + args.last() + " is already disabled");
+							return;
+						}
+						else {
+
+							GuildSettings::ToggleModule(channel.guildId(), args.last(), false, module->IsEnabledByDefault());
+							found = true;
+						}
+					}
+
+				if (!found)
+					createMessage(message.channelId(), "Could not find module " + args.last());
+				else
+					createMessage(message.channelId(), "Disabled module " + args.last());
+			});
 		}
 		else
 		{
