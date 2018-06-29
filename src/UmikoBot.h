@@ -22,6 +22,7 @@ namespace Commands {
 
 struct UserData {
 	QString nickname;
+	QString username;
 };
 
 struct GuildData {
@@ -43,6 +44,8 @@ public:
 	~UmikoBot();
 
 	QString GetNick(snowflake_t guild, snowflake_t user);
+	QString GetUsername(snowflake_t guild, snowflake_t user);
+	QString GetName(snowflake_t guild, snowflake_t user);
 	const QList<Discord::Role>& GetRoles(snowflake_t guild);
 	bool IsOwner(snowflake_t guild, snowflake_t user);
 

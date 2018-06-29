@@ -14,7 +14,7 @@ UmikoBot::UmikoBot(QObject* parent)
 	GuildSettings::Load("settings.json");
 	
 	Load();
-	m_modules.push_back(new LevelModule);
+	m_modules.push_back(new LevelModule(this));
 	m_modules.push_back(new TimezoneModule);
 	m_modules.push_back(new CurrencyModule);
 
@@ -29,7 +29,7 @@ UmikoBot::UmikoBot(QObject* parent)
 	{
 		Save();
 	});
-	m_timer.start();
+	
 
 	connect(this, &Client::onMessageCreate,
 		[this](const Discord::Message& message)
@@ -67,15 +67,14 @@ UmikoBot::UmikoBot(QObject* parent)
 		[this]()
 	{
 		GetGuilds();
+		m_timer.start();
 	});
 
 	connect(this, &Client::onGuildMemberUpdate,
 		[this](snowflake_t guild, const QList<snowflake_t>& roles, const Discord::User& user, const QString& nick)
 	{
-		if(nick == "")
-			m_guildDatas[guild].userdata[user.id()].nickname = user.username();
-		else
-			m_guildDatas[guild].userdata[user.id()].nickname = nick;
+		m_guildDatas[guild].userdata[user.id()].username = user.username();
+		m_guildDatas[guild].userdata[user.id()].nickname = nick;
 	});
 
 	connect(this, &Client::onGuildRoleUpdate,
@@ -105,6 +104,22 @@ UmikoBot::UmikoBot(QObject* parent)
 		[this](const Discord::Guild& guild)
 	{
 		m_guildDatas[guild.id()].ownerId = guild.ownerId();
+	});
+
+	connect(this, &Client::onGuildMemberRemove,
+		[this](snowflake_t guild_id, const Discord::User& user)
+	{
+		for(auto& it = m_guildDatas[guild_id].userdata.begin(); it != m_guildDatas[guild_id].userdata.end(); it++)
+			if (it.key() == user.id()) {
+				m_guildDatas[guild_id].userdata.erase(it);
+				break;
+			}
+	});
+
+	connect(this, &Client::onGuildMemberAdd,
+		[this](const Discord::GuildMember& member, snowflake_t guild_id)
+	{
+		m_guildDatas[guild_id].userdata[member.user().id()].username = member.user().username();
 	});
 
 	m_commands.push_back({Commands::GLOBAL_STATUS, "status",
@@ -143,7 +158,7 @@ UmikoBot::UmikoBot(QObject* parent)
 			QList<Discord::User> mentions = message.mentions();
 			if (mentions.size() > 0)
 			{
-				printStatus(channel, message, mentions.first().id(), GetNick(channel.guildId(), mentions.first().id()));
+				printStatus(channel, message, mentions.first().id(), GetName(channel.guildId(), mentions.first().id()));
 				return;
 			}
 
@@ -152,7 +167,7 @@ UmikoBot::UmikoBot(QObject* parent)
 
 			if (ok)
 			{
-				QString nick = GetNick(channel.guildId(), user);
+				QString nick = GetName(channel.guildId(), user);
 				if (nick != "") {
 					printStatus(channel, message, user, nick);
 					return;
@@ -169,29 +184,46 @@ UmikoBot::UmikoBot(QObject* parent)
 			struct Match {
 				snowflake_t user;
 				QString name;
-			} perfectMatch, partialMatch;
+			} perfectNickMatch, partialNickMatch, perfectNameMatch, partialNameMatch;
 
-			perfectMatch = { 0 };
-			partialMatch = { 0 };
+			perfectNickMatch = { 0 };
+			partialNickMatch = { 0 }; 
+			perfectNameMatch = { 0 };
+			partialNameMatch = { 0 };
 
 			for (QMap<snowflake_t, UserData>::iterator it = m_guildDatas[channel.guildId()].userdata.begin(); it != m_guildDatas[channel.guildId()].userdata.end(); it++)
 			{
 				if (it.value().nickname == name) 
 				{
-					perfectMatch = { it.key(), it.value().nickname };
+					perfectNickMatch = { it.key(), it.value().nickname };
 					break;
 				}
 				else if (it.value().nickname.startsWith(name))
 				{
-					partialMatch = { it.key(), it.value().nickname };
+					partialNickMatch = { it.key(), it.value().nickname };
+					break;
+				}
+
+				if (it.value().username == name)
+				{
+					perfectNameMatch = { it.key(), GetName(channel.guildId(), it.key()) };
+					break;
+				}
+				else if (it.value().username.startsWith(name))
+				{
+					partialNameMatch = { it.key(), GetName(channel.guildId(), it.key()) };
 					break;
 				}
 			}
 
-			if (perfectMatch.user != 0)
-				printStatus(channel, message, perfectMatch.user, perfectMatch.name);
-			else if (partialMatch.user != 0)
-				printStatus(channel, message, partialMatch.user, partialMatch.name);
+			if (perfectNickMatch.user != 0)
+				printStatus(channel, message, perfectNickMatch.user, perfectNickMatch.name);
+			else if (perfectNameMatch.user != 0)
+				printStatus(channel, message, perfectNameMatch.user, perfectNameMatch.name);
+			else if (partialNickMatch.user != 0)
+				printStatus(channel, message, partialNickMatch.user, partialNickMatch.name);
+			else if (partialNameMatch.user != 0)
+				printStatus(channel, message, partialNameMatch.user, partialNameMatch.name);
 			else
 				client.createMessage(channel.id(), "Could not find user!");
 		}
@@ -208,7 +240,7 @@ UmikoBot::UmikoBot(QObject* parent)
 
 				Discord::Embed embed;
 				QString icon = "https://cdn.discordapp.com/avatars/" + QString::number(member.user().id()) + "/" + member.user().avatar() + ".png";
-				embed.setAuthor(Discord::EmbedAuthor(GetNick(channel.guildId(), message.author().id()), "", icon));
+				embed.setAuthor(Discord::EmbedAuthor(GetName(channel.guildId(), message.author().id()), "", icon));
 				embed.setColor(qrand() % 16777216);
 				embed.setTitle("Status");
 				embed.setDescription(status);
@@ -467,6 +499,18 @@ QString UmikoBot::GetNick(snowflake_t guild, snowflake_t user)
 	return m_guildDatas[guild].userdata[user].nickname;
 }
 
+QString UmikoBot::GetUsername(snowflake_t guild, snowflake_t user)
+{
+	return m_guildDatas[guild].userdata[user].username;
+}
+
+QString UmikoBot::GetName(snowflake_t guild, snowflake_t user)
+{
+	if (m_guildDatas[guild].userdata[user].nickname != "")
+		return m_guildDatas[guild].userdata[user].nickname;
+	return m_guildDatas[guild].userdata[user].username;
+}
+
 const QList<Discord::Role>& UmikoBot::GetRoles(snowflake_t guild)
 {
 	return m_guildDatas[guild].roles;
@@ -609,10 +653,8 @@ void UmikoBot::GetGuildMemberInformation(snowflake_t guild, snowflake_t after)
 	{
 		for (int i = 0; i < members.size(); i++)
 		{
-			QString name = members[i].nick();
-			if (name == "")
-				name = members[i].user().username();
-			m_guildDatas[guild].userdata[members[i].user().id()].nickname = name;
+			m_guildDatas[guild].userdata[members[i].user().id()].nickname = members[i].nick();
+			m_guildDatas[guild].userdata[members[i].user().id()].username = members[i].user().username();
 		}
 
 		if (members.size() == 1000) //guilds size is equal to the limit

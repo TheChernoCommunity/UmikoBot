@@ -10,11 +10,12 @@
 #define LEVELMODULE_MAXIMUM_LEVEL          100
 #define LEVELMODULE_EXP_REQUIREMENT        100 // per level
 #define LEVELMODULE_EXP_GROWTH             1.12f
+class UmikoBot;
 
 class LevelModule : public Module
 {
 public:
-	LevelModule();
+	LevelModule(UmikoBot* client);
 
 	void OnSave(QJsonDocument& doc) const override;
 	void OnLoad(const QJsonDocument& doc) override;
@@ -33,5 +34,8 @@ private:
 	GuildLevelData GetData(snowflake_t guild, snowflake_t user);
 
 	mutable QMap<snowflake_t, QList<GuildLevelData>> m_exp;
+	mutable QMap<snowflake_t, QList<GuildLevelData>> m_backupexp;
 	QTimer m_timer;
+
+	UmikoBot* m_client;
 };

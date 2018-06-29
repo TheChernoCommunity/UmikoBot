@@ -2,8 +2,8 @@
 #include "UmikoBot.h"
 #include "core/Permissions.h"
 
-LevelModule::LevelModule()
-	: Module("levels", true)
+LevelModule::LevelModule(UmikoBot* client)
+	: Module("levels", true), m_client(client)
 {
 	m_timer.setInterval(/*300 */ 1000);
 	QObject::connect(&m_timer, &QTimer::timeout, 
@@ -71,7 +71,7 @@ LevelModule::LevelModule()
 
 				LevelModule::GuildLevelData& curr = m_exp[channel.guildId()][i];
 				desc += QString::number(i + 1) + ". ";
-				desc += reinterpret_cast<UmikoBot*>(&client)->GetNick(channel.guildId(), m_exp[channel.guildId()][i].user);
+				desc += reinterpret_cast<UmikoBot*>(&client)->GetName(channel.guildId(), m_exp[channel.guildId()][i].user);
 
 				unsigned int xp = GetData(channel.guildId(), m_exp[channel.guildId()][i].user).exp;
 
@@ -136,7 +136,7 @@ LevelModule::LevelModule()
 
 				LevelModule::GuildLevelData& curr = m_exp[channel.guildId()][i];
 				desc += QString::number(i + 1) + ". ";
-				desc += reinterpret_cast<UmikoBot*>(&client)->GetNick(channel.guildId(), m_exp[channel.guildId()][i].user);
+				desc += reinterpret_cast<UmikoBot*>(&client)->GetName(channel.guildId(), m_exp[channel.guildId()][i].user);
 
 				unsigned int xp = GetData(channel.guildId(), m_exp[channel.guildId()][i].user).exp;
 
@@ -498,15 +498,69 @@ LevelModule::LevelModule()
 void LevelModule::OnSave(QJsonDocument& doc) const
 {
 	QJsonObject json;
-	for (auto it = m_exp.begin(); it != m_exp.end(); it++) {
-		QJsonObject level;
+	QJsonObject levels;
+	QJsonObject backups;
 
-		for (const GuildLevelData& user : it.value()) {
-			level[QString::number(user.user)] = user.exp;
+	for (auto it = m_exp.begin(); it != m_exp.end(); it++)
+		for (int i = 0; i < it.value().size(); i++) 
+			if (m_client->GetName(it.key(), it.value()[i].user) == "")
+			{
+				bool found = false;
+				for (GuildLevelData& data : m_backupexp[it.key()])
+					if (data.user == it.value()[i].user) {
+						data.exp += it.value()[i].exp;
+						found = true;
+						break;
+					}
+
+				if (!found)
+					m_backupexp[it.key()].append(it.value()[i]);
+
+				it.value().erase(it.value().begin() + i);
+			}
+
+	for (auto it = m_backupexp.begin(); it != m_backupexp.end(); it++)
+		for (int i = 0; i < it.value().size(); i++)
+			if (m_client->GetName(it.key(), it.value()[i].user) != "")
+			{
+				bool found = false;
+				for (GuildLevelData& data : m_exp[it.key()])
+					if (data.user == it.value()[i].user) {
+						data.exp += it.value()[i].exp;
+						found = true;
+						break;
+					}
+				
+				if (!found)
+					m_exp[it.key()].append(it.value()[i]);
+
+				it.value().erase(it.value().begin() + i);
+			}
+
+	if(m_exp.size() > 0)
+		for (auto it = m_exp.begin(); it != m_exp.end(); it++) 
+		{
+			QJsonObject level;
+
+			for (int i = 0; i < it.value().size(); i++)
+				level[QString::number(it.value()[i].user)] = it.value()[i].exp;
+
+			levels[QString::number(it.key())] = level;
 		}
-		json[QString::number(it.key())] = level;
-	}
 
+	if(m_backupexp.size() > 0)
+		for (auto it = m_backupexp.begin(); it != m_backupexp.end(); it++)
+		{
+			QJsonObject backup;
+
+			for (int i = 0; i < it.value().size(); i++)
+				backup[QString::number(it.value()[i].user)] = it.value()[i].exp;
+
+			backups[QString::number(it.key())] = backup;
+		}
+
+	json["levels"] = levels;
+	json["backups"] = backups;
 	doc.setObject(json);
 }
 
@@ -514,18 +568,23 @@ void LevelModule::OnLoad(const QJsonDocument& doc)
 {
 	QJsonObject json = doc.object();
 
-	QStringList guildIds = json.keys();
+	QJsonObject backups = json["backups"].toObject();
+	QJsonObject levels = json["levels"].toObject();
+
+	QStringList guildIds = levels.keys();
 
 	for (const QString& guild : guildIds)
 	{
 		snowflake_t guildId = guild.toULongLong();
 
-		QJsonObject levels = json[guild].toObject();
+		QJsonObject level = levels[guild].toObject();
+		QJsonObject backup = backups[guild].toObject();
 
-		QStringList userids = levels.keys();
+		for (const QString& user : level.keys())
+			m_exp[guildId].append({ user.toULongLong(), level[user].toInt(), 0 });
 
-		for (const QString& user : userids)
-			m_exp[guildId].append({ user.toULongLong(), levels[user].toInt(), 0 });
+		for (const QString& user : backup.keys())
+			m_backupexp[guildId].append({ user.toULongLong(), backup[user].toInt(), 0 });
 	}
 }
 
