@@ -385,6 +385,11 @@ LevelModule::LevelModule(UmikoBot* client)
 			Permissions::ContainsPermission(client, channel.guildId(), message.author().id(), CommandPermission::ADMIN,
 				[args, &client, message, channel, printHelp, setting](bool result)
 			{
+				if (!result)
+				{
+					client.createMessage(message.channelId(), "You don't have permissions to use this command.");
+					return;
+				}
 				bool ok;
 				unsigned int level = args[1].toUInt(&ok);
 				if (!ok)
@@ -432,6 +437,11 @@ LevelModule::LevelModule(UmikoBot* client)
 			Permissions::ContainsPermission(client, channel.guildId(), message.author().id(), CommandPermission::ADMIN,
 				[args, &client, message, channel, printHelp, setting](bool result)
 			{
+				if (!result)
+				{
+					client.createMessage(message.channelId(), "You don't have permissions to use this command.");
+					return;
+				}
 				bool ok;
 				unsigned int expReq = args[1].toUInt(&ok);
 				if (!ok)
@@ -479,6 +489,11 @@ LevelModule::LevelModule(UmikoBot* client)
 			Permissions::ContainsPermission(client, channel.guildId(), message.author().id(), CommandPermission::ADMIN,
 				[args, &client, message, channel, printHelp, setting](bool result)
 			{
+				if (!result)
+				{
+					client.createMessage(message.channelId(), "You don't have permissions to use this command.");
+					return;
+				}
 				bool ok;
 				float growthRate = args[1].toFloat(&ok);
 				if (!ok || growthRate < 1)
@@ -488,6 +503,50 @@ LevelModule::LevelModule(UmikoBot* client)
 				}
 				setting->growthRate = growthRate;
 				client.createMessage(message.channelId(), "Growth rate set to " + QString::number(growthRate) + " succesfully!");
+			});
+		}
+		else
+			printHelp();
+	});
+
+	RegisterCommand(Commands::LEVEL_MODULE_EXP_GIVE, "givexp",
+		[this](Discord::Client& client, const Discord::Message& message, const Discord::Channel& channel)
+	{
+		QString prefix = GuildSettings::GetGuildSetting(channel.guildId()).prefix;
+		QStringList args = message.content().split(' ');
+
+		if (args.first() != prefix + "givexp")
+			return;
+
+		auto printHelp = [&client, prefix, message]()
+		{
+			UmikoBot* bot = reinterpret_cast<UmikoBot*>(&client);
+			Discord::Embed embed;
+			embed.setColor(qrand() % 16777216);
+			embed.setTitle("Help givexp");
+			QString description = bot->GetCommandHelp("givexp", prefix);
+			embed.setDescription(description);
+			bot->createMessage(message.channelId(), embed);
+		};
+
+		if (args.size() >= 2)
+		{
+			Permissions::ContainsPermission(client, channel.guildId(), message.author().id(), CommandPermission::ADMIN,
+				[this, args, &client, message, channel, printHelp](bool result)
+			{
+				if (!result)
+				{
+					client.createMessage(message.channelId(), "You don't have permissions to use this command.");
+					return;
+				}
+				unsigned int exp = 0;
+
+				if (args[1].endsWith("L"))
+				{
+					QStringRef substring(&args[1], 0, args[1].size() - 1);
+					unsigned int levels = substring.toUInt();
+				}
+				
 			});
 		}
 		else
@@ -620,11 +679,11 @@ void LevelModule::StatusCommand(QString& result, snowflake_t guild, snowflake_t 
 				break;
 			}
 		}
+		if (rank == "")
+			rank = s.ranks[s.ranks.size() - 1].name;
+		result += "Rank: " + rank + "\n";
 	}
-	if (rank == "")
-		rank = s.ranks[s.ranks.size() - 1].name;
 
-	result += "Rank: " + rank + "\n";
 	result += "Total exp: " + QString::number(GetData(guild, user).exp) + "\n";
 
 
