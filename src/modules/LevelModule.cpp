@@ -2,8 +2,8 @@
 #include "UmikoBot.h"
 #include "core/Permissions.h"
 
-LevelModule::LevelModule()
-	: Module("levels", true)
+LevelModule::LevelModule(UmikoBot* client)
+	: Module("levels", true), m_client(client)
 {
 	m_timer.setInterval(/*300 */ 1000);
 	QObject::connect(&m_timer, &QTimer::timeout, 
@@ -71,16 +71,16 @@ LevelModule::LevelModule()
 
 				LevelModule::GuildLevelData& curr = m_exp[channel.guildId()][i];
 				desc += QString::number(i + 1) + ". ";
-				desc += reinterpret_cast<UmikoBot*>(&client)->GetNick(channel.guildId(), m_exp[channel.guildId()][i].user);
+				desc += reinterpret_cast<UmikoBot*>(&client)->GetName(channel.guildId(), m_exp[channel.guildId()][i].user);
 
 				unsigned int xp = GetData(channel.guildId(), m_exp[channel.guildId()][i].user).exp;
 
-				unsigned int xpRequirement = LEVELMODULE_EXP_REQUIREMENT;
+				unsigned int xpRequirement = s.expRequirement;
 				unsigned int level = 1;
 				while (xp > xpRequirement && level < s.maximumLevel) {
 					level++;
 					xp -= xpRequirement;
-					xpRequirement *= LEVELMODULE_EXP_GROWTH;
+					xpRequirement *= s.growthRate;
 				}
 
 				if (level >= s.maximumLevel)
@@ -136,7 +136,7 @@ LevelModule::LevelModule()
 
 				LevelModule::GuildLevelData& curr = m_exp[channel.guildId()][i];
 				desc += QString::number(i + 1) + ". ";
-				desc += reinterpret_cast<UmikoBot*>(&client)->GetNick(channel.guildId(), m_exp[channel.guildId()][i].user);
+				desc += reinterpret_cast<UmikoBot*>(&client)->GetName(channel.guildId(), m_exp[channel.guildId()][i].user);
 
 				unsigned int xp = GetData(channel.guildId(), m_exp[channel.guildId()][i].user).exp;
 
@@ -385,6 +385,11 @@ LevelModule::LevelModule()
 			Permissions::ContainsPermission(client, channel.guildId(), message.author().id(), CommandPermission::ADMIN,
 				[args, &client, message, channel, printHelp, setting](bool result)
 			{
+				if (!result)
+				{
+					client.createMessage(message.channelId(), "You don't have permissions to use this command.");
+					return;
+				}
 				bool ok;
 				unsigned int level = args[1].toUInt(&ok);
 				if (!ok)
@@ -432,6 +437,11 @@ LevelModule::LevelModule()
 			Permissions::ContainsPermission(client, channel.guildId(), message.author().id(), CommandPermission::ADMIN,
 				[args, &client, message, channel, printHelp, setting](bool result)
 			{
+				if (!result)
+				{
+					client.createMessage(message.channelId(), "You don't have permissions to use this command.");
+					return;
+				}
 				bool ok;
 				unsigned int expReq = args[1].toUInt(&ok);
 				if (!ok)
@@ -479,6 +489,11 @@ LevelModule::LevelModule()
 			Permissions::ContainsPermission(client, channel.guildId(), message.author().id(), CommandPermission::ADMIN,
 				[args, &client, message, channel, printHelp, setting](bool result)
 			{
+				if (!result)
+				{
+					client.createMessage(message.channelId(), "You don't have permissions to use this command.");
+					return;
+				}
 				bool ok;
 				float growthRate = args[1].toFloat(&ok);
 				if (!ok || growthRate < 1)
@@ -493,20 +508,164 @@ LevelModule::LevelModule()
 		else
 			printHelp();
 	});
+
+	RegisterCommand(Commands::LEVEL_MODULE_EXP_GIVE, "givexp",
+		[this](Discord::Client& client, const Discord::Message& message, const Discord::Channel& channel)
+	{
+		GuildSetting s = GuildSettings::GetGuildSetting(channel.guildId());
+		QString prefix = s.prefix;
+		QStringList args = message.content().split(' ');
+
+		if (args.first() != prefix + "givexp")
+			return;
+
+		auto printHelp = [&client, prefix, message]()
+		{
+			UmikoBot* bot = reinterpret_cast<UmikoBot*>(&client);
+			Discord::Embed embed;
+			embed.setColor(qrand() % 16777216);
+			embed.setTitle("Help givexp");
+			QString description = bot->GetCommandHelp("givexp", prefix);
+			embed.setDescription(description);
+			bot->createMessage(message.channelId(), embed);
+		};
+
+		if (args.size() >= 3)
+		{
+			Permissions::ContainsPermission(client, channel.guildId(), message.author().id(), CommandPermission::ADMIN,
+				[this, args, &client, message, channel, printHelp, s](bool result)
+			{
+				if (!result)
+				{
+					client.createMessage(message.channelId(), "You don't have permissions to use this command.");
+					return;
+				}
+
+				snowflake_t userId = static_cast<UmikoBot*>(&client)->GetUserFromArg(channel.guildId(), args, 2);
+
+				if (userId == 0) {
+					client.createMessage(message.channelId(), "Could not find user!");
+					return;
+				}
+
+				LevelModule::GuildLevelData* levelData;
+
+				for (int i = 0; i < m_exp[channel.guildId()].size(); i++) 
+				{
+					if (m_exp[channel.guildId()][i].user == userId)
+						levelData = &m_exp[channel.guildId()][i];
+				}
+
+				ExpLevelData userRes = ExpToLevel(channel.guildId(), levelData->exp);
+
+				unsigned int exp = levelData->exp;
+				
+				if (userRes.level == s.maximumLevel) {
+					client.createMessage(message.channelId(), "User is already maximum level!");
+					return;
+				}
+
+				if (args[1].endsWith("L"))
+				{
+					QStringRef substring(&args[1], 0, args[1].size() - 1);
+					unsigned int levels = substring.toUInt();
+
+					if (userRes.level + levels >= s.maximumLevel) {
+						exp = s.expRequirement * (pow(s.growthRate, s.maximumLevel) - 1) / (s.growthRate - 1);
+						levels = 0;
+					}
+
+					for (int i = 0; i < levels; i++) {
+						exp += userRes.xpRequirement;
+						userRes.xpRequirement *= s.growthRate;
+					}
+					
+				}
+				else 
+				{
+					exp += args[1].toUInt();
+					ExpLevelData newRes = ExpToLevel(channel.guildId(), exp);
+					if (newRes.level >= s.maximumLevel) {
+						exp = s.expRequirement * (pow(s.growthRate, s.maximumLevel) - 1) / (s.growthRate - 1);
+					}
+				}
+				levelData->exp = exp;
+
+				client.createMessage(message.channelId(), "Succesfully given " + static_cast<UmikoBot*>(&client)->GetName(channel.guildId(), userId) + " exp");
+
+			});
+		}
+		else
+			printHelp();
+	});
 }
 
 void LevelModule::OnSave(QJsonDocument& doc) const
 {
 	QJsonObject json;
-	for (auto it = m_exp.begin(); it != m_exp.end(); it++) {
-		QJsonObject level;
+	QJsonObject levels;
+	QJsonObject backups;
 
-		for (const GuildLevelData& user : it.value()) {
-			level[QString::number(user.user)] = user.exp;
+	for (auto it = m_exp.begin(); it != m_exp.end(); it++)
+		for (int i = 0; i < it.value().size(); i++) 
+			if (m_client->GetName(it.key(), it.value()[i].user) == "")
+			{
+				bool found = false;
+				for (GuildLevelData& data : m_backupexp[it.key()])
+					if (data.user == it.value()[i].user) {
+						data.exp += it.value()[i].exp;
+						found = true;
+						break;
+					}
+
+				if (!found)
+					m_backupexp[it.key()].append(it.value()[i]);
+
+				it.value().erase(it.value().begin() + i);
+			}
+
+	for (auto it = m_backupexp.begin(); it != m_backupexp.end(); it++)
+		for (int i = 0; i < it.value().size(); i++)
+			if (m_client->GetName(it.key(), it.value()[i].user) != "")
+			{
+				bool found = false;
+				for (GuildLevelData& data : m_exp[it.key()])
+					if (data.user == it.value()[i].user) {
+						data.exp += it.value()[i].exp;
+						found = true;
+						break;
+					}
+				
+				if (!found)
+					m_exp[it.key()].append(it.value()[i]);
+
+				it.value().erase(it.value().begin() + i);
+			}
+
+	if(m_exp.size() > 0)
+		for (auto it = m_exp.begin(); it != m_exp.end(); it++) 
+		{
+			QJsonObject level;
+
+			for (int i = 0; i < it.value().size(); i++)
+				level[QString::number(it.value()[i].user)] = it.value()[i].exp;
+
+			levels[QString::number(it.key())] = level;
 		}
-		json[QString::number(it.key())] = level;
-	}
 
+	if(m_backupexp.size() > 0)
+		for (auto it = m_backupexp.begin(); it != m_backupexp.end(); it++)
+		{
+			QJsonObject backup;
+
+			for (int i = 0; i < it.value().size(); i++)
+				backup[QString::number(it.value()[i].user)] = it.value()[i].exp;
+
+			backups[QString::number(it.key())] = backup;
+		}
+
+	json["levels"] = levels;
+	json["backups"] = backups;
 	doc.setObject(json);
 }
 
@@ -514,19 +673,51 @@ void LevelModule::OnLoad(const QJsonDocument& doc)
 {
 	QJsonObject json = doc.object();
 
-	QStringList guildIds = json.keys();
+	QJsonObject backups = json["backups"].toObject();
+	QJsonObject levels = json["levels"].toObject();
+
+	QStringList guildIds = levels.keys();
 
 	for (const QString& guild : guildIds)
 	{
 		snowflake_t guildId = guild.toULongLong();
 
-		QJsonObject levels = json[guild].toObject();
+		QJsonObject level = levels[guild].toObject();
+		QJsonObject backup = backups[guild].toObject();
 
-		QStringList userids = levels.keys();
+		for (const QString& user : level.keys())
+			m_exp[guildId].append({ user.toULongLong(), level[user].toInt(), 0 });
 
-		for (const QString& user : userids)
-			m_exp[guildId].append({ user.toULongLong(), levels[user].toInt(), 0 });
+		for (const QString& user : backup.keys())
+			m_backupexp[guildId].append({ user.toULongLong(), backup[user].toInt(), 0 });
 	}
+}
+
+ExpLevelData LevelModule::ExpToLevel(snowflake_t guild, unsigned int exp)
+{
+	GuildSetting s = GuildSettings::GetGuildSetting(guild);
+
+	ExpLevelData res;
+
+	res.xpRequirement = s.expRequirement;
+	res.level = 1;
+	res.exp = exp;
+
+	while (res.exp > res.xpRequirement && res.level < s.maximumLevel)
+	{
+		res.level++;
+		res.exp -= res.xpRequirement;
+		res.xpRequirement *= s.growthRate;
+	}
+
+	if (res.level >= s.maximumLevel)
+	{
+		res.exp = 0;
+		res.level = s.maximumLevel;
+		res.xpRequirement = 0;
+	}
+
+	return res;
 }
 
 void LevelModule::StatusCommand(QString& result, snowflake_t guild, snowflake_t user)
@@ -535,22 +726,9 @@ void LevelModule::StatusCommand(QString& result, snowflake_t guild, snowflake_t 
 
 	unsigned int xp = GetData(guild, user).exp;
 
-	unsigned int xpRequirement = s.expRequirement;
-	unsigned int level = 1;
-	while (xp > xpRequirement && level < s.maximumLevel) {
-		level++;
-		xp -= xpRequirement;
-		xpRequirement *= s.growthRate;
-	}
+	ExpLevelData res = ExpToLevel(guild, xp);
 
-	if (level >= s.maximumLevel)
-	{
-		xp = 0;
-		level = s.maximumLevel;
-		xpRequirement = 0;
-	}
-
-	unsigned int rankLevel = level;
+	unsigned int rankLevel = res.level;
 	QString rank = "";
 	if (s.ranks.size() > 0) {
 		for (int i = 0; i < s.ranks.size() - 1; i++)
@@ -561,19 +739,19 @@ void LevelModule::StatusCommand(QString& result, snowflake_t guild, snowflake_t 
 				break;
 			}
 		}
+		if (rank == "")
+			rank = s.ranks[s.ranks.size() - 1].name;
+		result += "Rank: " + rank + "\n";
 	}
-	if (rank == "")
-		rank = s.ranks[s.ranks.size() - 1].name;
 
-	result += "Rank: " + rank + "\n";
 	result += "Total exp: " + QString::number(GetData(guild, user).exp) + "\n";
 
 
-	result += "Level: " + QString::number(level) + "\n";
-	if(level == s.maximumLevel)
+	result += "Level: " + QString::number(res.level) + "\n";
+	if(res.level == s.maximumLevel)
 		result += QString("Exp needed for rankup: Maximum Level\n");
 	else
-		result += QString("Exp needed for rankup: %1/%2\n").arg(QString::number(xp), QString::number(xpRequirement));
+		result += QString("Exp needed for rankup: %1/%2\n").arg(QString::number(res.exp), QString::number(res.xpRequirement));
 	result += "\n";
 }
 
@@ -584,6 +762,9 @@ void LevelModule::OnMessage(Discord::Client& client, const Discord::Message& mes
 	client.getChannel(message.channelId()).then(
 		[this, message](const Discord::Channel& channel) 
 	{
+		if (!GuildSettings::IsModuleEnabled(channel.guildId(), GetName(), IsEnabledByDefault()))
+			return;
+
 		if (message.author().bot())
 			return;
 

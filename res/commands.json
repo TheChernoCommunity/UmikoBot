@@ -14,6 +14,11 @@
 		"usage": "setprefix <newprefix>",
 		"additional": ""
 	},
+	"GLOBAL_MODULE": {
+		"brief": "Controls all the modules of the bot",
+		"usage": "module <list/enable/disable> [name]",
+		"additional": "**module list** is used to list all the commands, if the name of a module is passed, it will list all the commands of that module\n**module enable** is used to enable a disabled module\n**module disable** is used to disable a module"
+	},
 	"LEVEL_MODULE_TOP": {
 		"brief": "Returns the top of a specified user count",
 		"usage": "top <count>\ntop <count1> <count2>",
@@ -38,6 +43,11 @@
 		"brief": "Used to change the ranking system's exp growth rate",
 		"usage": "setgrowthrate <rate>\nsetgrowthrate current",
 		"additional": "The rate must be a number above 1\nHow the exp for the levels are calculated is like so:\nCurrentLevel = LastLevel * GrowthRate\n**setgrowthrate current** will return the current exp requirement"
+	},
+	"LEVEL_MODULE_EXP_GIVE": {
+		"brief": "Used to give exp to a user",
+		"usage": "givexp <amount>[L] <user>",
+		"additional": "**givexp 50L user** will give 50 levels of experience to that user\n**givexp 50 user**, will give 50 exp points to that user"
 	},
 	"TIMEZONE_MODULE_TIMEOFFSET": {
 		"brief": "Sets the timezone offset of the user",
