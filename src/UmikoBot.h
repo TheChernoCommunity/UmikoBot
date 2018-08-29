@@ -15,6 +15,8 @@ namespace Commands {
 		LEVEL_MODULE_MAX_LEVEL,
 		LEVEL_MODULE_EXP_REQUIREMENT,
 		LEVEL_MODULE_EXP_GROWTH_RATE,
+		LEVEL_MODULE_EXP_GIVE,
+		LEVEL_MODULE_EXP_TAKE,
 
 		TIMEZONE_MODULE_TIMEOFFSET,
 	};
@@ -46,6 +48,9 @@ public:
 	QString GetNick(snowflake_t guild, snowflake_t user);
 	QString GetUsername(snowflake_t guild, snowflake_t user);
 	QString GetName(snowflake_t guild, snowflake_t user);
+	
+	snowflake_t GetUserFromArg(snowflake_t guild, QStringList args, int startIndex);
+
 	const QList<Discord::Role>& GetRoles(snowflake_t guild);
 	bool IsOwner(snowflake_t guild, snowflake_t user);
 

@@ -162,70 +162,12 @@ UmikoBot::UmikoBot(QObject* parent)
 				return;
 			}
 
-			bool ok;
-			snowflake_t user = args[1].toULongLong(&ok);
+			snowflake_t result;
 
-			if (ok)
-			{
-				QString nick = GetName(channel.guildId(), user);
-				if (nick != "") {
-					printStatus(channel, message, user, nick);
-					return;
-				}
-			}
-
-			QString name = "";
-			for (int i = 1; i < args.size(); i++)
-			{
-				name += args[i];
-				if (i < args.size() - 1)
-					name += " ";
-			}
-			struct Match {
-				snowflake_t user;
-				QString name;
-			} perfectNickMatch, partialNickMatch, perfectNameMatch, partialNameMatch;
-
-			perfectNickMatch = { 0 };
-			partialNickMatch = { 0 }; 
-			perfectNameMatch = { 0 };
-			partialNameMatch = { 0 };
-
-			for (QMap<snowflake_t, UserData>::iterator it = m_guildDatas[channel.guildId()].userdata.begin(); it != m_guildDatas[channel.guildId()].userdata.end(); it++)
-			{
-				if (it.value().nickname == name) 
-				{
-					perfectNickMatch = { it.key(), it.value().nickname };
-					break;
-				}
-				else if (it.value().nickname.startsWith(name))
-				{
-					partialNickMatch = { it.key(), it.value().nickname };
-					break;
-				}
-
-				if (it.value().username == name)
-				{
-					perfectNameMatch = { it.key(), GetName(channel.guildId(), it.key()) };
-					break;
-				}
-				else if (it.value().username.startsWith(name))
-				{
-					partialNameMatch = { it.key(), GetName(channel.guildId(), it.key()) };
-					break;
-				}
-			}
-
-			if (perfectNickMatch.user != 0)
-				printStatus(channel, message, perfectNickMatch.user, perfectNickMatch.name);
-			else if (perfectNameMatch.user != 0)
-				printStatus(channel, message, perfectNameMatch.user, perfectNameMatch.name);
-			else if (partialNickMatch.user != 0)
-				printStatus(channel, message, partialNickMatch.user, partialNickMatch.name);
-			else if (partialNameMatch.user != 0)
-				printStatus(channel, message, partialNameMatch.user, partialNameMatch.name);
-			else
+			if ((result = GetUserFromArg(channel.guildId(), args, 1)) == 0) 
 				client.createMessage(channel.id(), "Could not find user!");
+			else 
+				printStatus(channel, message, result, GetName(channel.guildId(), result));
 		}
 		else
 			getGuildMember(channel.guildId(), message.author().id()).then(
@@ -511,6 +453,74 @@ QString UmikoBot::GetName(snowflake_t guild, snowflake_t user)
 	return m_guildDatas[guild].userdata[user].username;
 }
 
+snowflake_t UmikoBot::GetUserFromArg(snowflake_t guild, QStringList args, int startIndex) {
+	bool ok;
+	snowflake_t user = args[startIndex].toULongLong(&ok);
+
+	if (ok)
+	{
+		QString nick = GetName(guild, user);
+		if (nick != "") {
+			return user;
+		}
+	}
+
+	QString name = "";
+	for (int i = startIndex; i < args.size(); i++)
+	{
+		name += args[i];
+		if (i < args.size() - 1)
+			name += " ";
+	}
+
+	struct Match {
+		snowflake_t user;
+		QString name;
+	} perfectNickMatch, partialNickMatch, perfectNameMatch, partialNameMatch;
+
+	perfectNickMatch = { 0 };
+	partialNickMatch = { 0 };
+	perfectNameMatch = { 0 };
+	partialNameMatch = { 0 };
+
+	for (QMap<snowflake_t, UserData>::iterator it = m_guildDatas[guild].userdata.begin(); it != m_guildDatas[guild].userdata.end(); it++)
+	{
+		if (it.value().nickname == name)
+		{
+			perfectNickMatch = { it.key(), it.value().nickname };
+			break;
+		}
+		else if (it.value().nickname.startsWith(name))
+		{
+			partialNickMatch = { it.key(), it.value().nickname };
+			break;
+		}
+
+		if (it.value().username == name)
+		{
+			perfectNameMatch = { it.key(), GetName(guild, it.key()) };
+			break;
+		}
+		else if (it.value().username.startsWith(name))
+		{
+			partialNameMatch = { it.key(), GetName(guild, it.key()) };
+			break;
+		}
+	}
+
+	if (perfectNickMatch.user != 0)
+		return perfectNickMatch.user;
+	else if (perfectNameMatch.user != 0)
+		return perfectNameMatch.user;
+	else if (partialNickMatch.user != 0)
+		return partialNickMatch.user;
+	else if (partialNameMatch.user != 0)
+		return partialNameMatch.user;
+	else
+		return 0;
+}
+
+
 const QList<Discord::Role>& UmikoBot::GetRoles(snowflake_t guild)
 {
 	return m_guildDatas[guild].roles;
@@ -583,6 +593,7 @@ void UmikoBot::Load()
 		Command(LEVEL_MODULE_MAX_LEVEL),
 		Command(LEVEL_MODULE_EXP_REQUIREMENT),
 		Command(LEVEL_MODULE_EXP_GROWTH_RATE),
+		Command(LEVEL_MODULE_EXP_GIVE),
 
 		Command(TIMEZONE_MODULE_TIMEOFFSET)
 	};
