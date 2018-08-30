@@ -1,6 +1,8 @@
 #include "GuildSettings.h"
 #include "modules/LevelModule.h"
 
+#include "Logger.h"
+
 QList<GuildSetting> GuildSettings::s_settings;
 QString GuildSettings::s_location;
 
@@ -8,7 +10,7 @@ void GuildSettings::Load(const QString& location)
 {
 	s_location = "configs/" + location;
 
-	qDebug("%s", qPrintable(s_location));
+	ULog(ulog::Severity::Debug, UFString("Configuration file found, loading from: %s", qPrintable(s_location)));
 
 	QFile file(s_location);
 	if (file.open(QIODevice::ReadOnly))
