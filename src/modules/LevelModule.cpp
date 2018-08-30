@@ -284,7 +284,7 @@ LevelModule::LevelModule(UmikoBot* client)
 					return;
 				}
 
-				if (id >= setting->ranks.size())
+				if (id >= (unsigned int)setting->ranks.size())
 				{
 					client.createMessage(message.channelId(), "Id not found.");
 					return;
@@ -312,7 +312,7 @@ LevelModule::LevelModule(UmikoBot* client)
 					return;
 				}
 
-				if (id >= setting->ranks.size())
+				if (id >= (unsigned int)setting->ranks.size())
 				{
 					client.createMessage(message.channelId(), "Id not found.");
 					return;
@@ -575,7 +575,7 @@ LevelModule::LevelModule(UmikoBot* client)
 						levels = 0;
 					}
 
-					for (int i = 0; i < levels; i++) {
+					for (unsigned int i = 0; i < levels; i++) {
 						exp += userRes.xpRequirement;
 						userRes.xpRequirement *= s.growthRate;
 					}

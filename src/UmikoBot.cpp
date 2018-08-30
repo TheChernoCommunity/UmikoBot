@@ -5,9 +5,15 @@
 #include "modules/TimezoneModule.h"
 #include "modules/CurrencyModule.h"
 
+#include "Logger.h"
+
 UmikoBot::UmikoBot(QObject* parent)
 	: Client("umiko-bot", parent)
 {
+	UStartLogger("umiko.log");
+	USetThreadName("Main");
+	ULog(ulog::Severity::Debug, "Starting bot...");
+
 	if (!QDir("configs").exists())
 		QDir().mkdir("configs");
 
@@ -434,6 +440,9 @@ UmikoBot::~UmikoBot()
 
 	for (Module* module : m_modules)
 		delete module;
+
+	ULog(ulog::Severity::Debug, "Bot Terminating...");
+	UStopLogger();
 }
 
 QString UmikoBot::GetNick(snowflake_t guild, snowflake_t user)
@@ -619,7 +628,7 @@ void UmikoBot::Load()
 	}
 	else
 	{
-		qDebug("%s", "Could not open commands.json");
+		ULog(ulog::Severity::Warning, "Could not open commands.json");
 		// Decide if we should generate them on the fly or something
 		// or just terminate the bot
 	}
@@ -649,7 +658,7 @@ void UmikoBot::GetGuilds(snowflake_t after)
 		{
 			GetGuilds(guilds[guilds.size() - 1].id());
 		}
-		qDebug("Guild count: %llu", guilds.size());
+		ULog(ulog::Severity::Debug, UFString("Guild count: %llu", guilds.size()));
 	};
 
 	if (after == 0)
@@ -672,7 +681,9 @@ void UmikoBot::GetGuildMemberInformation(snowflake_t guild, snowflake_t after)
 		{
 			GetGuildMemberInformation(guild, members[members.size() - 1].user().id());
 		}
-		qDebug("Guild ID: %llu, Member count: %i", guild, members.size());
+
+		ULog(ulog::Severity::Debug, UFString("Guild ID: %llu", guild));
+		ULog(ulog::Severity::Debug, UFString("Member count: %i", members.size()));
 	};
 
 	if (after == 0)
