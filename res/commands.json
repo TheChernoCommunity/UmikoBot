@@ -49,6 +49,11 @@
 		"usage": "givexp <amount>[L] <user>",
 		"additional": "**givexp 50L user** will give 50 levels of experience to that user\n**givexp 50 user**, will give 50 exp points to that user"
 	},
+	"LEVEL_MODULE_EXP_TAKE": {
+		"brief": "Used to take exp from a user",
+		"usage": "takexp <amount>[L] <user>",
+		"additional": "**takexp 50L user** will take 50 levels of experience from that user\n**takexp 50 user**, will take 50 exp points from that user"
+	},
 	"TIMEZONE_MODULE_TIMEOFFSET": {
 		"brief": "Sets the timezone offset of the user",
 		"usage": "timeoffset <offset>",
