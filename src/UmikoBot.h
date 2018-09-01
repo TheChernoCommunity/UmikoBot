@@ -37,6 +37,7 @@ struct CommandInfo {
 	QString briefDescription;
 	QString usage;
 	QString additionalInfo;
+	bool adminPermission;
 };
 
 class UmikoBot : public Discord::Client

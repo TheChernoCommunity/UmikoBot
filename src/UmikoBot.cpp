@@ -225,36 +225,55 @@ UmikoBot::UmikoBot(QObject* parent)
 		}
 		else
 		{
-			QString description = "";
-			[this, &prefix, &description]() {
-				auto forCommand =
-					[this, &description, &prefix](QList<Command> commands) 
-				{
-					for (const Command& command : commands)
+			Permissions::ContainsPermission(*this, channel.guildId(), message.author().id(), CommandPermission::ADMIN,
+				[this, prefix, message, channel](bool result)
+			{
+				QString description = "";
+				[this, &prefix, &description, result, channel, message]() {
+					auto forCommand =
+						[this, &description, &prefix, result, channel, message](QList<Command> commands) -> bool
 					{
-						QString current = "";
-						current = prefix + command.name + " - " + m_commandsInfo[command.id].briefDescription + "\n";
-						if (description.length() + current.length() < 1900)
-							description += current;
-						else
-							return true;
-					}
-					return false;
-				};
+						
+							for (const Command& command : commands)
+							{
+								if (result) {
+									QString current = "";
+									current = prefix + command.name + " - " + m_commandsInfo[command.id].briefDescription + "\n";
+									if (description.length() + current.length() < 1900)
+										description += current;
+									else
+										return true;
+								}
+								else {
+									if (m_commandsInfo[command.id].adminPermission == true)
+										continue;
 
-				if (!forCommand(m_commands))
-					Q_FOREACH(Module* module, m_modules)
-						if (forCommand(module->GetCommands()))
-							return;
-			}();
-			description += "\n**Note:** Use " + prefix + "help <command> to get the help for a specific command";
+									QString current = "";
+									current = prefix + command.name + " - " + m_commandsInfo[command.id].briefDescription + "\n";
+									if (description.length() + current.length() < 1900)
+										description += current;
+									else
+										return true;
+								}
+							}
+							return false;
+						
+					};
 
-			Discord::Embed embed;
-			embed.setColor(qrand() % 16777216);
-			embed.setTitle("Help");
-			embed.setDescription(description);
+					if (!forCommand(m_commands))
+						Q_FOREACH(Module* module, m_modules)
+							if (forCommand(module->GetCommands()))
+								return;
+				}();
+				description += "\n**Note:** Use " + prefix + "help <command> to get the help for a specific command";
 
-			createMessage(message.channelId(), embed);
+				Discord::Embed embed;
+				embed.setColor(qrand() % 16777216);
+				embed.setTitle("Help");
+				embed.setDescription(description);
+
+				createMessage(message.channelId(), embed);
+			});
 		}
 	}});
 
@@ -623,6 +642,7 @@ void UmikoBot::Load()
 			info.briefDescription = current["brief"].toString();
 			info.usage = current["usage"].toString();
 			info.additionalInfo = current["additional"].toString();
+			info.adminPermission = current["admin"].toBool();
 
 			m_commandsInfo[commandIds[identifier]] = info;
 		}
