@@ -13,11 +13,12 @@ private:
 	void OnSave(QJsonDocument& doc) const override;
 	void OnLoad(const QJsonDocument& doc) override;
 
-	bool TimeFromString(const QString& string, QDateTime* outTime) const;
+	static QPair<int, bool> UtcOffsetFromString(const QString& string);
+	static QString StringFromUtcOffset(int offset);
 
 	struct Setting
 	{
-		QDateTime time;
+		int secondsFromUtc;
 	};
 
 	QMap<snowflake_t, Setting> m_settings;

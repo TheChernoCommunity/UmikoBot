@@ -11,21 +11,27 @@ TimezoneModule::TimezoneModule()
 		if (arguments.count() == 2)
 		{
 			Setting& setting = m_settings[message.author().id()];
-			if (TimeFromString(arguments[1], &setting.time))
-				client.createMessage(message.channelId(), "Timezone set to " + setting.time.timeZoneAbbreviation());
+			auto offsetResult = UtcOffsetFromString(arguments[1]);
+			if (offsetResult.second)
+			{
+				setting.secondsFromUtc = offsetResult.first;
+				client.createMessage(message.channelId(), "Timezone set to " + StringFromUtcOffset(setting.secondsFromUtc));
+			}
 			else
+			{
 				client.createMessage(message.channelId(), "Invalid time format");
+			}
 
-			qDebug() << m_settings[message.author().id()].time.offsetFromUtc();
+			qDebug() << m_settings[message.author().id()].secondsFromUtc;
 		}
 	});
 }
 
 void TimezoneModule::StatusCommand(QString& result, snowflake_t guild, snowflake_t user)
 {
-	result += "Time offset: " + m_settings[user].time.timeZoneAbbreviation() + "\n";
-	QString time = m_settings[user].time.time().toString("");
-	result += "Current time: " + time + "\n";
+	const int secondsFromUtc = m_settings[user].secondsFromUtc;
+	result += "Time offset: " + StringFromUtcOffset(secondsFromUtc) + "\n";
+	result += "Current time: " + QDateTime::currentDateTimeUtc().addSecs(secondsFromUtc).toString("hh':'mm") + "\n";
 	result += "\n";
 }
 
@@ -36,7 +42,7 @@ void TimezoneModule::OnSave(QJsonDocument& doc) const
 	for (auto it = m_settings.begin(); it != m_settings.end(); ++it)
 	{
 		QJsonObject obj;
-		obj["timezone"] = it->time.toString("hh':'mm");
+		obj["timezone"] = it->secondsFromUtc;
 
 		docObj[QString::number(it.key())] = obj;
 	}
@@ -53,39 +59,60 @@ void TimezoneModule::OnLoad(const QJsonDocument& doc)
 		const QJsonObject obj = it.value().toObject();
 		Setting& setting = m_settings[it.key().toULongLong()];
 
-		TimeFromString(obj["timezone"].toString(), &setting.time);
+		setting.secondsFromUtc = UtcOffsetFromString(obj["timezone"].toString()).first;
 	}
 }
 
-bool TimezoneModule::TimeFromString(const QString& string, QDateTime* outTime) const
+QPair<int, bool> TimezoneModule::UtcOffsetFromString(const QString& string)
 {
+	auto clamp = [](int v, int mini, int maxi) { return (v < mini) ? mini : (v > maxi) ? maxi : v; };
+
 	QStringList units = string.split(':');
-	int offset = 0;
-	bool sign = false;
-	bool ok = true;
-
-	// Hours and sign
-	if (units.count() > 0)
+	switch (units.size())
 	{
-		sign = units[0][0] == '-';
-		offset += (units[0].toUInt(&ok) * 3600);
+		case 1:
+		{
+			bool ok;
+			int h = units[0].toInt(&ok);
+			if (!ok)
+				return qMakePair(0, false);
+			h = clamp(h, -23, 23);
+
+			return qMakePair(h * 3600, true);
+		}
+
+		case 2:
+		{
+			bool ok;
+			int h = units[0].toInt(&ok);
+			if (!ok)
+				return qMakePair(0, false);
+			h = clamp(h, -23, 23);
+
+			int m = units[1].toInt(&ok);
+			if (!ok || m < 0)
+				return qMakePair(h * 3600, true);
+			m = clamp(m, 0, 59);
+			if (h < 0)
+				m *= -1;
+
+			return qMakePair(h * 3600 + m * 60, true);
+		}
+
+		default:
+			return qMakePair(0, false);
 	}
+}
 
-	// Minutes
-	if (units.count() > 1)
-		offset += (units[1].toUInt(&ok) * 60);
-
-	// Seconds
-	if (units.count() > 2)
-		offset += (units[2].toUInt(&ok));
-
-	if (ok)
+QString TimezoneModule::StringFromUtcOffset(int offset)
+{
+	if (offset < 0)
 	{
-		outTime->setTimeSpec(Qt::UTC);
-		outTime->setUtcOffset(sign ? -offset : offset);
-		outTime->addSecs(sign ? -offset : offset);
-		return true;
+		offset *= -1;
+		return QString::asprintf("UTC-%02d:%02d", offset / 3600, (offset % 3600) / 60);
 	}
-
-	return false;
+	else
+	{
+		return QString::asprintf("UTC+%02d:%02d", offset / 3600, (offset % 3600) / 60);
+	}
 }
