@@ -27,6 +27,11 @@ struct GuildSetting
 	unsigned int maximumLevel;
 	unsigned int expRequirement;
 	float growthRate;
+	QList<snowflake_t> levelWhitelistedChannels;
+	QList<snowflake_t> levelBlacklistedChannels;
+
+	QList<snowflake_t> outputWhitelistedChannels;
+	QList<snowflake_t> outputBlacklistedChannels;
 };
 
 class GuildSettings 

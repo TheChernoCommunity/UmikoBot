@@ -66,6 +66,35 @@ void GuildSettings::Load(const QString& location)
 				});
 			}
 
+			if (current.contains("behaviourModule"))
+			{
+				QJsonObject behaviourModuleJson = current["behaviourModule"].toObject();
+
+				if (behaviourModuleJson.contains("levelBehaviourChannels"))
+				{
+					QJsonObject levelBehaviourChannelsJson = behaviourModuleJson["levelBehaviourChannels"].toObject();
+					QStringList levelBehaviourChannels = levelBehaviourChannelsJson.keys();
+					for (const QString& channel : levelBehaviourChannels)
+						if (levelBehaviourChannelsJson[channel].toBool() == true)
+							setting.levelWhitelistedChannels.push_back(channel.toULongLong());
+						
+						else 
+							setting.levelBlacklistedChannels.push_back(channel.toULongLong());
+				}
+
+				if (behaviourModuleJson.contains("outputBehaviourChannels"))
+				{
+					QJsonObject outputBehaviourChannelsJson = behaviourModuleJson["outputBehaviourChannels"].toObject();
+					QStringList outputBehaviourChannels = outputBehaviourChannelsJson.keys();
+					for (const QString& channel : outputBehaviourChannels)
+						if (outputBehaviourChannelsJson[channel].toBool() == true)
+							setting.outputWhitelistedChannels.push_back(channel.toULongLong());
+
+						else
+							setting.outputBlacklistedChannels.push_back(channel.toULongLong());
+				}
+			}
+
 			s_settings.push_back(setting);
 		}
 
@@ -129,6 +158,29 @@ void GuildSettings::Save()
 
 		if(!levelModuleDefault)
 			current["levelModule"] = levelModule;
+
+		bool behaviourModuleDefault = true;
+		QJsonObject behaviourModule;
+		if (setting.levelWhitelistedChannels.size() > 0) 
+		{
+			QJsonObject levelBehaviourChannels;
+			QJsonObject outputBehaviourChannels;
+			
+			for (snowflake_t channel : setting.levelWhitelistedChannels)
+				levelBehaviourChannels[QString::number(channel)] = true;
+
+			for (snowflake_t channel : setting.levelBlacklistedChannels)
+				levelBehaviourChannels[QString::number(channel)] = false;
+
+			for (snowflake_t channel : setting.outputWhitelistedChannels)
+				outputBehaviourChannels[QString::number(channel)] = true;
+
+			for (snowflake_t channel : setting.outputBlacklistedChannels)
+				outputBehaviourChannels[QString::number(channel)] = false;
+
+			behaviourModule["levelBehaviourChannels"] = levelBehaviourChannels;
+			behaviourModule["outputBehaviourChannels"] = outputBehaviourChannels;
+		}
 
 		json[QString::number(setting.id)] = current;
 	}
