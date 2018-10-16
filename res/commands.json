@@ -73,7 +73,7 @@
 	},
 	"LEVEL_MODULE_BLOCK_EXP": {
 		"brief": "Controls the exp gain of the bot on specific channels",
-		"usage": "blockexp <whitelist/blacklist>",
+		"usage": "blockxp <whitelist/blacklist>",
 		"additional": "",
 		"admin": true
 	},
