@@ -262,6 +262,23 @@ bool GuildSettings::OutputAllowed(snowflake_t guild, snowflake_t channel)
 	return true;
 }
 
+bool GuildSettings::ExpAllowed(snowflake_t guild, snowflake_t channel)
+{
+	GuildSetting s = GuildSettings::GetGuildSetting(guild);
+	if (s.levelWhitelistedChannels.size() > 0) {
+		for (int i = 0; i < s.levelWhitelistedChannels.size(); i++)
+			if (s.levelWhitelistedChannels[i] == channel)
+				return true;
+		return false;
+	}
+	if (s.levelBlacklistedChannels.size() > 0)
+		for (int i = 0; i < s.levelBlacklistedChannels.size(); i++)
+			if (s.levelBlacklistedChannels[i] == channel)
+				return false;
+	return true;
+}
+
+
 GuildSetting GuildSettings::CreateGuildSetting(snowflake_t id)
 {
 	GuildSetting s;
