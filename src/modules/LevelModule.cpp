@@ -697,6 +697,97 @@ LevelModule::LevelModule(UmikoBot* client)
 		else
 			printHelp();
 	});
+
+	RegisterCommand(Commands::LEVEL_MODULE_BLOCK_EXP, "blockxp",
+		[this](Discord::Client& client, const Discord::Message& message, const Discord::Channel& channel)
+	{
+		GuildSetting s = GuildSettings::GetGuildSetting(channel.guildId());
+		QString prefix = s.prefix;
+		QStringList args = message.content().split(' ');
+
+		if (args.first() != prefix + "blockxp")
+			return;
+
+		auto printHelp = [&client, prefix, message]()
+		{
+			UmikoBot* bot = reinterpret_cast<UmikoBot*>(&client);
+			Discord::Embed embed;
+			embed.setColor(qrand() % 16777216);
+			embed.setTitle("Help blockxp");
+			QString description = bot->GetCommandHelp("blockxp", prefix);
+			embed.setDescription(description);
+			bot->createMessage(message.channelId(), embed);
+		};
+
+		if (args.size() > 1 && args[1] == "whitelist")
+		{
+			Permissions::ContainsPermission(client, channel.guildId(), message.author().id(), CommandPermission::ADMIN,
+				[this, &client, printHelp, message, args, channel](bool result)
+			{
+				if (!result)
+				{
+					client.createMessage(message.channelId(), "You don't have permissions to use this command.");
+					return;
+				}
+
+				GuildSetting& s = GuildSettings::GetGuildSetting(channel.guildId());
+				for (int i = 0; i < s.levelBlacklistedChannels.size(); i++) {
+					if (s.levelBlacklistedChannels[i] == channel.id())
+					{
+						s.levelBlacklistedChannels.erase(s.levelBlacklistedChannels.begin() + i);
+						client.createMessage(message.channelId(), "Channel removed from blacklisted!");
+						return;
+					}
+				}
+
+				for (int i = 0; i < s.levelWhitelistedChannels.size(); i++) {
+					if (s.levelWhitelistedChannels[i] == channel.id())
+					{
+						client.createMessage(message.channelId(), "Channel is already whitelisted!");
+						return;
+					}
+				}
+
+				s.levelWhitelistedChannels.push_back(channel.id());
+				client.createMessage(message.channelId(), "Channel has been whitelisted!");
+			});
+		}
+		else if (args.size() > 1 && args[1] == "blacklist")
+		{
+			Permissions::ContainsPermission(client, channel.guildId(), message.author().id(), CommandPermission::ADMIN,
+				[this, &client, printHelp, message, args, channel](bool result)
+			{
+				if (!result)
+				{
+					client.createMessage(message.channelId(), "You don't have permissions to use this command.");
+					return;
+				}
+
+				GuildSetting& s = GuildSettings::GetGuildSetting(channel.guildId());
+				for (int i = 0; i < s.levelWhitelistedChannels.size(); i++) {
+					if (s.levelWhitelistedChannels[i] == channel.id())
+					{
+						s.levelWhitelistedChannels.erase(s.levelWhitelistedChannels.begin() + i);
+						client.createMessage(message.channelId(), "Channel removed from whitelisted!");
+						return;
+					}
+				}
+
+				for (int i = 0; i < s.levelBlacklistedChannels.size(); i++) {
+					if (s.levelBlacklistedChannels[i] == channel.id())
+					{
+						client.createMessage(message.channelId(), "Channel is already blacklisted!");
+						return;
+					}
+				}
+
+				s.levelBlacklistedChannels.push_back(channel.id());
+				client.createMessage(message.channelId(), "Channel has been blacklisted!");
+			});
+		}
+		else
+			printHelp();
+	});
 }
 
 void LevelModule::OnSave(QJsonDocument& doc) const
@@ -867,12 +958,13 @@ void LevelModule::OnMessage(Discord::Client& client, const Discord::Message& mes
 		if (message.author().bot())
 			return;
 
-		for (GuildLevelData& data : m_exp[channel.guildId()]) {
-			if (data.user == message.author().id()) {
-				data.messageCount++;
-				return;
+		if(GuildSettings::ExpAllowed(channel.guildId(), channel.id()))
+			for (GuildLevelData& data : m_exp[channel.guildId()]) {
+				if (data.user == message.author().id()) {
+					data.messageCount++;
+					return;
+				}
 			}
-		}
 
 		m_exp[channel.guildId()].append({ message.author().id(), 0, 1 });
 	});
