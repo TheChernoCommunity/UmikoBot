@@ -5,7 +5,7 @@
 LevelModule::LevelModule(UmikoBot* client)
 	: Module("levels", true), m_client(client)
 {
-	m_timer.setInterval(/*300 */ 1000);
+	m_timer.setInterval(300 * 1000);
 	QObject::connect(&m_timer, &QTimer::timeout, 
 		[this]()
 	{

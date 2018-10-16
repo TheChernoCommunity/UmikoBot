@@ -29,7 +29,7 @@ UmikoBot::UmikoBot(QObject* parent)
 		module->Load();
 	}
 
-	m_timer.setInterval(/*60 * 60 */ 1000);
+	m_timer.setInterval(60 * 60 * 1000);
 	QObject::connect(&m_timer, &QTimer::timeout, 
 		[this]()
 	{
