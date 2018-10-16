@@ -1,7 +1,7 @@
 #include "CurrencyModule.h"
 
 CurrencyModule::CurrencyModule()
-	: Module("currency", true)
+	: Module("currency", false)
 {
 }
 

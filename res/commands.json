@@ -2,56 +2,85 @@
 	"GLOBAL_STATUS": {
 		"brief": "Retrieves status of a user",
 		"usage": "status [name/@mention/id]",
-		"additional": "If no name/mention/id is specified it returns the status of the person who executes the command"
+		"additional": "If no name/mention/id is specified it returns the status of the person who executes the command",
+		"admin": false
 	},
 	"GLOBAL_HELP": {
 		"brief": "Returns the usage of a command",
 		"usage": "help [page/command]",
-		"additional": ""
+		"additional": "",
+		"admin": false
 	},
 	"GLOBAL_SET_PREFIX": {
 		"brief": "Sets the prefix of the bot",
 		"usage": "setprefix <newprefix>",
-		"additional": ""
+		"additional": "",
+		"admin": true
 	},
 	"GLOBAL_MODULE": {
 		"brief": "Controls all the modules of the bot",
 		"usage": "module <list/enable/disable> [name]",
-		"additional": "**module list** is used to list all the commands, if the name of a module is passed, it will list all the commands of that module\n**module enable** is used to enable a disabled module\n**module disable** is used to disable a module"
+		"additional": "**module list** is used to list all the commands, if the name of a module is passed, it will list all the commands of that module\n**module enable** is used to enable a disabled module\n**module disable** is used to disable a module",
+		"admin": true
+	},
+	"GLOBAL_OUTPUT": {
+		"brief": "Controls the output of the bot",
+		"usage": "output <whitelist/blacklist>",
+		"additional": "",
+		"admin": true
 	},
 	"LEVEL_MODULE_TOP": {
 		"brief": "Returns the top of a specified user count",
 		"usage": "top <count>\ntop <count1> <count2>",
-		"additional": "**top <count1> <count2>** displays the top from count1 to count2"
+		"additional": "**top <count1> <count2>** displays the top from count1 to count2",
+		"admin": false
 	},
 	"LEVEL_MODULE_RANK": {
 		"brief": "Used to control the ranking system",
 		"usage": "rank <list/add/remove/edit>\nrank list\nrank add <minimumLevel> <name>\nrank remove <id>\nrank edit <id> <level/name> <newlevel/newname>",
-		"additional": "**rank list** returns the list of all the ranks, if any\n**rank add** adds a rank with a minimum level and a name\n**rank remove** removes a rank using an id\n**rank edit** edits a rank using it's id\n\nTo get the id of a rank you must use **rank list**"
+		"additional": "**rank list** returns the list of all the ranks, if any\n**rank add** adds a rank with a minimum level and a name\n**rank remove** removes a rank using an id\n**rank edit** edits a rank using it's id\n\nTo get the id of a rank you must use **rank list**",
+		"admin": true
 	},
 	"LEVEL_MODULE_MAX_LEVEL": {
 		"brief": "Used to change the ranking system's maximum level",
 		"usage": "setmaxlevel <level>\nsetmaxlevel current",
-		"additional": "**setmaxlevel current** will return the current maximum level"
+		"additional": "**setmaxlevel current** will return the current maximum level",
+		"admin": true
 	},
 	"LEVEL_MODULE_EXP_REQUIREMENT": {
 		"brief": "Used to change the ranking system's exp requirement",
 		"usage": "setexpreq <exp>\nsetexpreq current",
-		"additional": "**setexpreq current** will return the current exp requirement"
+		"additional": "**setexpreq current** will return the current exp requirement",
+		"admin": true
 	},
 	"LEVEL_MODULE_EXP_GROWTH_RATE": {
 		"brief": "Used to change the ranking system's exp growth rate",
 		"usage": "setgrowthrate <rate>\nsetgrowthrate current",
-		"additional": "The rate must be a number above 1\nHow the exp for the levels are calculated is like so:\nCurrentLevel = LastLevel * GrowthRate\n**setgrowthrate current** will return the current exp requirement"
+		"additional": "The rate must be a number above 1\nHow the exp for the levels are calculated is like so:\nCurrentLevel = LastLevel * GrowthRate\n**setgrowthrate current** will return the current exp requirement",
+		"admin": true
 	},
 	"LEVEL_MODULE_EXP_GIVE": {
 		"brief": "Used to give exp to a user",
 		"usage": "givexp <amount>[L] <user>",
-		"additional": "**givexp 50L user** will give 50 levels of experience to that user\n**givexp 50 user**, will give 50 exp points to that user"
+		"additional": "**givexp 50L user** will give 50 levels of experience to that user\n**givexp 50 user**, will give 50 exp points to that user",
+		"admin": true
+	},
+	"LEVEL_MODULE_EXP_TAKE": {
+		"brief": "Used to take exp from a user",
+		"usage": "takexp <amount>[L] <user>",
+		"additional": "**takexp 50L user** will take 50 levels of experience from that user\n**takexp 50 user**, will take 50 exp points from that user",
+		"admin": true
+	},
+	"LEVEL_MODULE_BLOCK_EXP": {
+		"brief": "Controls the exp gain of the bot on specific channels",
+		"usage": "blockxp <whitelist/blacklist>",
+		"additional": "",
+		"admin": true
 	},
 	"TIMEZONE_MODULE_TIMEOFFSET": {
 		"brief": "Sets the timezone offset of the user",
 		"usage": "timeoffset <offset>",
-		"additional": "Where offset is the timezone offset from **UTC**\nIf your timezone is UTC+3 then your offset is +3"
+		"additional": "Where offset is the timezone offset from **UTC**\nIf your timezone is UTC+3 then your offset is +3",
+		"admin": false
 	}
 }

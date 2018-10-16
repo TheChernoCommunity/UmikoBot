@@ -558,7 +558,8 @@ LevelModule::LevelModule(UmikoBot* client)
 
 				ExpLevelData userRes = ExpToLevel(channel.guildId(), levelData->exp);
 
-				unsigned int exp = levelData->exp;
+				int finalExp = levelData->exp;
+				int addedExp = 0;
 				
 				if (userRes.level == s.maximumLevel) {
 					client.createMessage(message.channelId(), "User is already maximum level!");
@@ -571,28 +572,217 @@ LevelModule::LevelModule(UmikoBot* client)
 					unsigned int levels = substring.toUInt();
 
 					if (userRes.level + levels >= s.maximumLevel) {
-						exp = s.expRequirement * (pow(s.growthRate, s.maximumLevel) - 1) / (s.growthRate - 1);
-						levels = 0;
+						finalExp = s.expRequirement * (pow(s.growthRate, s.maximumLevel) - 1) / (s.growthRate - 1);
 					}
-
-					for (unsigned int i = 0; i < levels; i++) {
-						exp += userRes.xpRequirement;
-						userRes.xpRequirement *= s.growthRate;
+					else
+					{
+						for (unsigned int i = 0; i < levels; i++) {
+							addedExp += userRes.xpRequirement;
+							userRes.xpRequirement *= s.growthRate;
+						}
+						finalExp += addedExp;
 					}
 					
 				}
 				else 
 				{
-					exp += args[1].toUInt();
-					ExpLevelData newRes = ExpToLevel(channel.guildId(), exp);
+					addedExp += args[1].toUInt();
+					ExpLevelData newRes = ExpToLevel(channel.guildId(), addedExp + finalExp);
 					if (newRes.level >= s.maximumLevel) {
-						exp = s.expRequirement * (pow(s.growthRate, s.maximumLevel) - 1) / (s.growthRate - 1);
+						finalExp = s.expRequirement * (pow(s.growthRate, s.maximumLevel) - 1) / (s.growthRate - 1);
 					}
 				}
-				levelData->exp = exp;
+				levelData->exp = finalExp;
 
-				client.createMessage(message.channelId(), "Succesfully given " + static_cast<UmikoBot*>(&client)->GetName(channel.guildId(), userId) + " exp");
+				client.createMessage(message.channelId(), "Succesfully given " + static_cast<UmikoBot*>(&client)->GetName(channel.guildId(), userId) + " " + QString::number(addedExp) + " exp");
 
+			});
+		}
+		else
+			printHelp();
+	});
+
+	RegisterCommand(Commands::LEVEL_MODULE_EXP_TAKE, "takexp",
+		[this](Discord::Client& client, const Discord::Message& message, const Discord::Channel& channel)
+	{
+		GuildSetting s = GuildSettings::GetGuildSetting(channel.guildId());
+		QString prefix = s.prefix;
+		QStringList args = message.content().split(' ');
+
+		if (args.first() != prefix + "takexp")
+			return;
+
+		auto printHelp = [&client, prefix, message]()
+		{
+			UmikoBot* bot = reinterpret_cast<UmikoBot*>(&client);
+			Discord::Embed embed;
+			embed.setColor(qrand() % 16777216);
+			embed.setTitle("Help takexp");
+			QString description = bot->GetCommandHelp("takexp", prefix);
+			embed.setDescription(description);
+			bot->createMessage(message.channelId(), embed);
+		};
+
+		if (args.size() >= 3)
+		{
+			Permissions::ContainsPermission(client, channel.guildId(), message.author().id(), CommandPermission::ADMIN,
+				[this, args, &client, message, channel, printHelp, s](bool result)
+			{
+				if (!result)
+				{
+					client.createMessage(message.channelId(), "You don't have permissions to use this command.");
+					return;
+				}
+
+				snowflake_t userId = static_cast<UmikoBot*>(&client)->GetUserFromArg(channel.guildId(), args, 2);
+
+				if (userId == 0) {
+					client.createMessage(message.channelId(), "Could not find user!");
+					return;
+				}
+
+				LevelModule::GuildLevelData* levelData;
+
+				for (int i = 0; i < m_exp[channel.guildId()].size(); i++)
+				{
+					if (m_exp[channel.guildId()][i].user == userId)
+						levelData = &m_exp[channel.guildId()][i];
+				}
+
+				ExpLevelData userRes = ExpToLevel(channel.guildId(), levelData->exp);
+
+				int finalExp = levelData->exp;
+				int subtractedExp = 0;
+
+				if (userRes.level == 0) {
+					client.createMessage(message.channelId(), "User is already minimum level!");
+					return;
+				}
+
+				if (args[1].endsWith("L"))
+				{
+					QStringRef substring(&args[1], 0, args[1].size() - 1);
+					unsigned int levels = substring.toUInt();
+
+					if (userRes.level - levels < 0) 
+					{
+						subtractedExp = levelData->exp;
+						finalExp = 0;
+					}
+					else {
+						userRes.xpRequirement /= s.growthRate;
+						for (unsigned int i = 0; i < levels; i++)
+						{
+							subtractedExp += userRes.xpRequirement;
+							userRes.xpRequirement /= s.growthRate;
+						}
+					}
+
+				}
+				else
+				{
+					subtractedExp += args[1].toUInt();
+				}
+				if (finalExp - subtractedExp < 0)
+					finalExp = 0;
+				else
+					finalExp -= subtractedExp;
+
+				levelData->exp = finalExp;
+
+				client.createMessage(message.channelId(), "Succesfully taken " + QString::number(subtractedExp) + " exp from " + static_cast<UmikoBot*>(&client)->GetName(channel.guildId(), userId));
+
+			});
+		}
+		else
+			printHelp();
+	});
+
+	RegisterCommand(Commands::LEVEL_MODULE_BLOCK_EXP, "blockxp",
+		[this](Discord::Client& client, const Discord::Message& message, const Discord::Channel& channel)
+	{
+		GuildSetting s = GuildSettings::GetGuildSetting(channel.guildId());
+		QString prefix = s.prefix;
+		QStringList args = message.content().split(' ');
+
+		if (args.first() != prefix + "blockxp")
+			return;
+
+		auto printHelp = [&client, prefix, message]()
+		{
+			UmikoBot* bot = reinterpret_cast<UmikoBot*>(&client);
+			Discord::Embed embed;
+			embed.setColor(qrand() % 16777216);
+			embed.setTitle("Help blockxp");
+			QString description = bot->GetCommandHelp("blockxp", prefix);
+			embed.setDescription(description);
+			bot->createMessage(message.channelId(), embed);
+		};
+
+		if (args.size() > 1 && args[1] == "whitelist")
+		{
+			Permissions::ContainsPermission(client, channel.guildId(), message.author().id(), CommandPermission::ADMIN,
+				[this, &client, printHelp, message, args, channel](bool result)
+			{
+				if (!result)
+				{
+					client.createMessage(message.channelId(), "You don't have permissions to use this command.");
+					return;
+				}
+
+				GuildSetting& s = GuildSettings::GetGuildSetting(channel.guildId());
+				for (int i = 0; i < s.levelBlacklistedChannels.size(); i++) {
+					if (s.levelBlacklistedChannels[i] == channel.id())
+					{
+						s.levelBlacklistedChannels.erase(s.levelBlacklistedChannels.begin() + i);
+						client.createMessage(message.channelId(), "Channel removed from blacklisted!");
+						return;
+					}
+				}
+
+				for (int i = 0; i < s.levelWhitelistedChannels.size(); i++) {
+					if (s.levelWhitelistedChannels[i] == channel.id())
+					{
+						client.createMessage(message.channelId(), "Channel is already whitelisted!");
+						return;
+					}
+				}
+
+				s.levelWhitelistedChannels.push_back(channel.id());
+				client.createMessage(message.channelId(), "Channel has been whitelisted!");
+			});
+		}
+		else if (args.size() > 1 && args[1] == "blacklist")
+		{
+			Permissions::ContainsPermission(client, channel.guildId(), message.author().id(), CommandPermission::ADMIN,
+				[this, &client, printHelp, message, args, channel](bool result)
+			{
+				if (!result)
+				{
+					client.createMessage(message.channelId(), "You don't have permissions to use this command.");
+					return;
+				}
+
+				GuildSetting& s = GuildSettings::GetGuildSetting(channel.guildId());
+				for (int i = 0; i < s.levelWhitelistedChannels.size(); i++) {
+					if (s.levelWhitelistedChannels[i] == channel.id())
+					{
+						s.levelWhitelistedChannels.erase(s.levelWhitelistedChannels.begin() + i);
+						client.createMessage(message.channelId(), "Channel removed from whitelisted!");
+						return;
+					}
+				}
+
+				for (int i = 0; i < s.levelBlacklistedChannels.size(); i++) {
+					if (s.levelBlacklistedChannels[i] == channel.id())
+					{
+						client.createMessage(message.channelId(), "Channel is already blacklisted!");
+						return;
+					}
+				}
+
+				s.levelBlacklistedChannels.push_back(channel.id());
+				client.createMessage(message.channelId(), "Channel has been blacklisted!");
 			});
 		}
 		else
@@ -714,7 +904,7 @@ ExpLevelData LevelModule::ExpToLevel(snowflake_t guild, unsigned int exp)
 	{
 		res.exp = 0;
 		res.level = s.maximumLevel;
-		res.xpRequirement = 0;
+		//res.xpRequirement = 0;
 	}
 
 	return res;
@@ -768,12 +958,13 @@ void LevelModule::OnMessage(Discord::Client& client, const Discord::Message& mes
 		if (message.author().bot())
 			return;
 
-		for (GuildLevelData& data : m_exp[channel.guildId()]) {
-			if (data.user == message.author().id()) {
-				data.messageCount++;
-				return;
+		if(GuildSettings::ExpAllowed(channel.guildId(), channel.id()))
+			for (GuildLevelData& data : m_exp[channel.guildId()]) {
+				if (data.user == message.author().id()) {
+					data.messageCount++;
+					return;
+				}
 			}
-		}
 
 		m_exp[channel.guildId()].append({ message.author().id(), 0, 1 });
 	});

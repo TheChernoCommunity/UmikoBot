@@ -9,6 +9,7 @@ namespace Commands {
 		GLOBAL_HELP,
 		GLOBAL_SET_PREFIX,
 		GLOBAL_MODULE,
+		GLOBAL_OUTPUT,
 
 		LEVEL_MODULE_TOP,
 		LEVEL_MODULE_RANK,
@@ -17,6 +18,7 @@ namespace Commands {
 		LEVEL_MODULE_EXP_GROWTH_RATE,
 		LEVEL_MODULE_EXP_GIVE,
 		LEVEL_MODULE_EXP_TAKE,
+		LEVEL_MODULE_BLOCK_EXP,
 
 		TIMEZONE_MODULE_TIMEOFFSET,
 	};
@@ -37,6 +39,7 @@ struct CommandInfo {
 	QString briefDescription;
 	QString usage;
 	QString additionalInfo;
+	bool adminPermission;
 };
 
 class UmikoBot : public Discord::Client

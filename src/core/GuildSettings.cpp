@@ -66,6 +66,34 @@ void GuildSettings::Load(const QString& location)
 				});
 			}
 
+			if (current.contains("behaviourModule"))
+			{
+				QJsonObject behaviourModuleJson = current["behaviourModule"].toObject();
+
+				if (behaviourModuleJson.contains("levelBehaviourChannels"))
+				{
+					QJsonObject levelBehaviourChannelsJson = behaviourModuleJson["levelBehaviourChannels"].toObject();
+					QStringList levelBehaviourChannels = levelBehaviourChannelsJson.keys();
+					for (const QString& channel : levelBehaviourChannels)
+						if (levelBehaviourChannelsJson[channel].toBool() == true)
+							setting.levelWhitelistedChannels.push_back(channel.toULongLong());
+						
+						else 
+							setting.levelBlacklistedChannels.push_back(channel.toULongLong());
+				}
+
+				if (behaviourModuleJson.contains("outputBehaviourChannels"))
+				{
+					QJsonObject outputBehaviourChannelsJson = behaviourModuleJson["outputBehaviourChannels"].toObject();
+					QStringList outputBehaviourChannels = outputBehaviourChannelsJson.keys();
+					for (const QString& channel : outputBehaviourChannels)
+						if (outputBehaviourChannelsJson[channel].toBool() == true)
+							setting.outputWhitelistedChannels.push_back(channel.toULongLong());
+						else
+							setting.outputBlacklistedChannels.push_back(channel.toULongLong());
+				}
+			}
+
 			s_settings.push_back(setting);
 		}
 
@@ -130,6 +158,33 @@ void GuildSettings::Save()
 		if(!levelModuleDefault)
 			current["levelModule"] = levelModule;
 
+		bool behaviourModuleDefault = true;
+		QJsonObject behaviourModule;
+		if (setting.levelWhitelistedChannels.size() > 0 || setting.levelBlacklistedChannels.size() > 0 || setting.outputBlacklistedChannels.size() > 0 || setting.outputWhitelistedChannels.size() > 0) 
+		{
+			QJsonObject levelBehaviourChannels;
+			QJsonObject outputBehaviourChannels;
+			
+			for (snowflake_t channel : setting.levelWhitelistedChannels)
+				levelBehaviourChannels[QString::number(channel)] = true;
+
+			for (snowflake_t channel : setting.levelBlacklistedChannels)
+				levelBehaviourChannels[QString::number(channel)] = false;
+
+			for (snowflake_t channel : setting.outputWhitelistedChannels)
+				outputBehaviourChannels[QString::number(channel)] = true;
+
+			for (snowflake_t channel : setting.outputBlacklistedChannels)
+				outputBehaviourChannels[QString::number(channel)] = false;
+
+			behaviourModule["levelBehaviourChannels"] = levelBehaviourChannels;
+			behaviourModule["outputBehaviourChannels"] = outputBehaviourChannels;
+			behaviourModuleDefault = false;
+		}
+
+		if (!behaviourModuleDefault)
+			current["behaviourModule"] = behaviourModule;
+
 		json[QString::number(setting.id)] = current;
 	}
 
@@ -190,6 +245,39 @@ void GuildSettings::ToggleModule(snowflake_t guild, const QString& moduleName, b
 		modules.append({ moduleName, enabled });
 
 }
+
+bool GuildSettings::OutputAllowed(snowflake_t guild, snowflake_t channel)
+{
+	GuildSetting s = GuildSettings::GetGuildSetting(guild);
+	if (s.outputWhitelistedChannels.size() > 0) {
+		for (int i = 0; i < s.outputWhitelistedChannels.size(); i++)
+			if (s.outputWhitelistedChannels[i] == channel)
+				return true;
+		return false;
+	}
+	if (s.outputBlacklistedChannels.size() > 0)
+		for (int i = 0; i < s.outputBlacklistedChannels.size(); i++)
+			if (s.outputBlacklistedChannels[i] == channel)
+				return false;
+	return true;
+}
+
+bool GuildSettings::ExpAllowed(snowflake_t guild, snowflake_t channel)
+{
+	GuildSetting s = GuildSettings::GetGuildSetting(guild);
+	if (s.levelWhitelistedChannels.size() > 0) {
+		for (int i = 0; i < s.levelWhitelistedChannels.size(); i++)
+			if (s.levelWhitelistedChannels[i] == channel)
+				return true;
+		return false;
+	}
+	if (s.levelBlacklistedChannels.size() > 0)
+		for (int i = 0; i < s.levelBlacklistedChannels.size(); i++)
+			if (s.levelBlacklistedChannels[i] == channel)
+				return false;
+	return true;
+}
+
 
 GuildSetting GuildSettings::CreateGuildSetting(snowflake_t id)
 {

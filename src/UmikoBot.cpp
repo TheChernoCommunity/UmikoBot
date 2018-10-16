@@ -53,7 +53,7 @@ UmikoBot::UmikoBot(QObject* parent)
 			{
 				Q_FOREACH(const Command& command, m_commands)
 				{
-					if (message.content().startsWith(setting.prefix + command.name))
+					if (message.content().startsWith(setting.prefix + command.name) && (command.name == "output" || GuildSettings::OutputAllowed(channel.guildId(), channel.id())))
 					{
 						command.callback(*this, message, channel);
 					}
@@ -225,36 +225,55 @@ UmikoBot::UmikoBot(QObject* parent)
 		}
 		else
 		{
-			QString description = "";
-			[this, &prefix, &description]() {
-				auto forCommand =
-					[this, &description, &prefix](QList<Command> commands) 
-				{
-					for (const Command& command : commands)
+			Permissions::ContainsPermission(*this, channel.guildId(), message.author().id(), CommandPermission::ADMIN,
+				[this, prefix, message, channel](bool result)
+			{
+				QString description = "";
+				[this, &prefix, &description, result, channel, message]() {
+					auto forCommand =
+						[this, &description, &prefix, result, channel, message](QList<Command> commands) -> bool
 					{
-						QString current = "";
-						current = prefix + command.name + " - " + m_commandsInfo[command.id].briefDescription + "\n";
-						if (description.length() + current.length() < 1900)
-							description += current;
-						else
-							return true;
-					}
-					return false;
-				};
+						
+							for (const Command& command : commands)
+							{
+								if (result) {
+									QString current = "";
+									current = prefix + command.name + " - " + m_commandsInfo[command.id].briefDescription + "\n";
+									if (description.length() + current.length() < 1900)
+										description += current;
+									else
+										return true;
+								}
+								else {
+									if (m_commandsInfo[command.id].adminPermission == true)
+										continue;
 
-				if (!forCommand(m_commands))
-					Q_FOREACH(Module* module, m_modules)
-						if (forCommand(module->GetCommands()))
-							return;
-			}();
-			description += "\n**Note:** Use " + prefix + "help <command> to get the help for a specific command";
+									QString current = "";
+									current = prefix + command.name + " - " + m_commandsInfo[command.id].briefDescription + "\n";
+									if (description.length() + current.length() < 1900)
+										description += current;
+									else
+										return true;
+								}
+							}
+							return false;
+						
+					};
 
-			Discord::Embed embed;
-			embed.setColor(qrand() % 16777216);
-			embed.setTitle("Help");
-			embed.setDescription(description);
+					if (!forCommand(m_commands))
+						Q_FOREACH(Module* module, m_modules)
+							if (forCommand(module->GetCommands()))
+								return;
+				}();
+				description += "\n**Note:** Use " + prefix + "help <command> to get the help for a specific command";
 
-			createMessage(message.channelId(), embed);
+				Discord::Embed embed;
+				embed.setColor(qrand() % 16777216);
+				embed.setTitle("Help");
+				embed.setDescription(description);
+
+				createMessage(message.channelId(), embed);
+			});
 		}
 	}});
 
@@ -432,6 +451,95 @@ UmikoBot::UmikoBot(QObject* parent)
 		}
 
 	}});
+
+	m_commands.push_back({Commands::GLOBAL_OUTPUT, "output",
+		[this](Discord::Client& client, const Discord::Message& message, const Discord::Channel& channel)
+	{
+		QStringList args = message.content().split(" ");
+		QString prefix = GuildSettings::GetGuildSetting(channel.guildId()).prefix;
+		if (args.first() != prefix + "output")
+			return;
+
+		auto printHelp = [this, prefix, message]()
+		{
+			Discord::Embed embed;
+			embed.setColor(qrand() % 16777216);
+			embed.setTitle("Help output");
+			QString description = GetCommandHelp("output", prefix);
+			embed.setDescription(description);
+			createMessage(message.channelId(), embed);
+		};
+		if (args.size() > 1 && args[1] == "whitelist")
+		{
+			Permissions::ContainsPermission(client, channel.guildId(), message.author().id(), CommandPermission::ADMIN,
+				[this, printHelp, message, args, channel](bool result)
+			{
+				if (!result)
+				{
+					createMessage(message.channelId(), "You don't have permissions to use this command.");
+					return;
+				}
+
+				GuildSetting& s = GuildSettings::GetGuildSetting(channel.guildId());
+				for (int i = 0; i < s.outputBlacklistedChannels.size(); i++) {
+					if (s.outputBlacklistedChannels[i] == channel.id())
+					{
+						s.outputBlacklistedChannels.erase(s.outputBlacklistedChannels.begin() + i);
+						createMessage(message.channelId(), "Channel removed from blacklisted!");
+
+						return;
+					}
+				}
+
+				for (int i = 0; i < s.outputWhitelistedChannels.size(); i++) {
+					if (s.outputWhitelistedChannels[i] == channel.id())
+					{
+						createMessage(message.channelId(), "Channel is already whitelisted!");
+						return;
+					}
+				}
+
+				s.outputWhitelistedChannels.push_back(channel.id());
+				createMessage(message.channelId(), "Channel has been whitelisted!");
+
+			});
+		}
+		else if (args.size() > 1 && args[1] == "blacklist")
+		{
+			Permissions::ContainsPermission(client, channel.guildId(), message.author().id(), CommandPermission::ADMIN,
+				[this, printHelp, message, args, channel](bool result)
+			{
+				if (!result)
+				{
+					createMessage(message.channelId(), "You don't have permissions to use this command.");
+					return;
+				}
+
+				GuildSetting& s = GuildSettings::GetGuildSetting(channel.guildId());
+				for (int i = 0; i < s.outputWhitelistedChannels.size(); i++) {
+					if (s.outputWhitelistedChannels[i] == channel.id())
+					{
+						s.outputWhitelistedChannels.erase(s.outputWhitelistedChannels.begin() + i);
+						createMessage(message.channelId(), "Channel removed from whitelisted!");
+						return;
+					}
+				}
+
+				for (int i = 0; i < s.outputBlacklistedChannels.size(); i++) {
+					if (s.outputBlacklistedChannels[i] == channel.id())
+					{
+						createMessage(message.channelId(), "Channel is already blacklisted!");
+						return;
+					}
+				}
+
+				s.outputBlacklistedChannels.push_back(channel.id());
+				createMessage(message.channelId(), "Channel has been blacklisted!");
+			});
+		}
+		else
+			printHelp();
+	} });
 }
 
 UmikoBot::~UmikoBot()
@@ -596,6 +704,7 @@ void UmikoBot::Load()
 		Command(GLOBAL_HELP),
 		Command(GLOBAL_SET_PREFIX),
 		Command(GLOBAL_MODULE),
+		Command(GLOBAL_OUTPUT),
 
 		Command(LEVEL_MODULE_TOP),
 		Command(LEVEL_MODULE_RANK),
@@ -603,6 +712,8 @@ void UmikoBot::Load()
 		Command(LEVEL_MODULE_EXP_REQUIREMENT),
 		Command(LEVEL_MODULE_EXP_GROWTH_RATE),
 		Command(LEVEL_MODULE_EXP_GIVE),
+		Command(LEVEL_MODULE_EXP_TAKE),
+		Command(LEVEL_MODULE_BLOCK_EXP),
 
 		Command(TIMEZONE_MODULE_TIMEOFFSET)
 	};
@@ -622,6 +733,7 @@ void UmikoBot::Load()
 			info.briefDescription = current["brief"].toString();
 			info.usage = current["usage"].toString();
 			info.additionalInfo = current["additional"].toString();
+			info.adminPermission = current["admin"].toBool();
 
 			m_commandsInfo[commandIds[identifier]] = info;
 		}

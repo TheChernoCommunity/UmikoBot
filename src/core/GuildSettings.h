@@ -27,6 +27,11 @@ struct GuildSetting
 	unsigned int maximumLevel;
 	unsigned int expRequirement;
 	float growthRate;
+	QList<snowflake_t> levelWhitelistedChannels;
+	QList<snowflake_t> levelBlacklistedChannels;
+
+	QList<snowflake_t> outputWhitelistedChannels;
+	QList<snowflake_t> outputBlacklistedChannels;
 };
 
 class GuildSettings 
@@ -44,6 +49,9 @@ public:
 
 	static bool IsModuleEnabled(snowflake_t guild, const QString& moduleName, bool isDefault = true);
 	static void ToggleModule(snowflake_t guild, const QString& moduleName, bool enabled, bool isDefault = true);
+
+	static bool OutputAllowed(snowflake_t guild, snowflake_t channel);
+	static bool ExpAllowed(snowflake_t guild, snowflake_t channel);
 private:
 	static GuildSetting CreateGuildSetting(snowflake_t id);
 };

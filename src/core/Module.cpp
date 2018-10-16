@@ -16,7 +16,7 @@ void Module::OnMessage(Discord::Client& client, const Discord::Message& message)
 	{
 		GuildSetting setting = GuildSettings::GetGuildSetting(channel.guildId());
 		if (channel.guildId() != 0 && !message.author().bot()) // DM
-			if (GuildSettings::IsModuleEnabled(channel.guildId(), m_name, m_enabledByDefault))
+			if (GuildSettings::IsModuleEnabled(channel.guildId(), m_name, m_enabledByDefault) && GuildSettings::OutputAllowed(channel.guildId(), channel.id()))
 			{
 				for (const Command& command : m_commands)
 				{
