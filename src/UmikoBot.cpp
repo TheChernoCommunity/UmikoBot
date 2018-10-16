@@ -53,7 +53,7 @@ UmikoBot::UmikoBot(QObject* parent)
 			{
 				Q_FOREACH(const Command& command, m_commands)
 				{
-					if (message.content().startsWith(setting.prefix + command.name))
+					if (message.content().startsWith(setting.prefix + command.name) && (command.name == "output" || GuildSettings::OutputAllowed(channel.guildId(), channel.id())))
 					{
 						command.callback(*this, message, channel);
 					}
@@ -451,6 +451,95 @@ UmikoBot::UmikoBot(QObject* parent)
 		}
 
 	}});
+
+	m_commands.push_back({Commands::GLOBAL_OUTPUT, "output",
+		[this](Discord::Client& client, const Discord::Message& message, const Discord::Channel& channel)
+	{
+		QStringList args = message.content().split(" ");
+		QString prefix = GuildSettings::GetGuildSetting(channel.guildId()).prefix;
+		if (args.first() != prefix + "output")
+			return;
+
+		auto printHelp = [this, prefix, message]()
+		{
+			Discord::Embed embed;
+			embed.setColor(qrand() % 16777216);
+			embed.setTitle("Help output");
+			QString description = GetCommandHelp("output", prefix);
+			embed.setDescription(description);
+			createMessage(message.channelId(), embed);
+		};
+		if (args.size() > 1 && args[1] == "whitelist")
+		{
+			Permissions::ContainsPermission(client, channel.guildId(), message.author().id(), CommandPermission::ADMIN,
+				[this, printHelp, message, args, channel](bool result)
+			{
+				if (!result)
+				{
+					createMessage(message.channelId(), "You don't have permissions to use this command.");
+					return;
+				}
+
+				GuildSetting& s = GuildSettings::GetGuildSetting(channel.guildId());
+				for (int i = 0; i < s.outputBlacklistedChannels.size(); i++) {
+					if (s.outputBlacklistedChannels[i] == channel.id())
+					{
+						s.outputBlacklistedChannels.erase(s.outputBlacklistedChannels.begin() + i);
+						createMessage(message.channelId(), "Channel removed from blacklisted!");
+
+						return;
+					}
+				}
+
+				for (int i = 0; i < s.outputWhitelistedChannels.size(); i++) {
+					if (s.outputWhitelistedChannels[i] == channel.id())
+					{
+						createMessage(message.channelId(), "Channel is already whitelisted!");
+						return;
+					}
+				}
+
+				s.outputWhitelistedChannels.push_back(channel.id());
+				createMessage(message.channelId(), "Channel has been whitelisted!");
+
+			});
+		}
+		else if (args.size() > 1 && args[1] == "blacklist")
+		{
+			Permissions::ContainsPermission(client, channel.guildId(), message.author().id(), CommandPermission::ADMIN,
+				[this, printHelp, message, args, channel](bool result)
+			{
+				if (!result)
+				{
+					createMessage(message.channelId(), "You don't have permissions to use this command.");
+					return;
+				}
+
+				GuildSetting& s = GuildSettings::GetGuildSetting(channel.guildId());
+				for (int i = 0; i < s.outputWhitelistedChannels.size(); i++) {
+					if (s.outputWhitelistedChannels[i] == channel.id())
+					{
+						s.outputWhitelistedChannels.erase(s.outputWhitelistedChannels.begin() + i);
+						createMessage(message.channelId(), "Channel removed from whitelisted!");
+						return;
+					}
+				}
+
+				for (int i = 0; i < s.outputBlacklistedChannels.size(); i++) {
+					if (s.outputBlacklistedChannels[i] == channel.id())
+					{
+						createMessage(message.channelId(), "Channel is already blacklisted!");
+						return;
+					}
+				}
+
+				s.outputBlacklistedChannels.push_back(channel.id());
+				createMessage(message.channelId(), "Channel has been blacklisted!");
+			});
+		}
+		else
+			printHelp();
+	} });
 }
 
 UmikoBot::~UmikoBot()
@@ -615,6 +704,7 @@ void UmikoBot::Load()
 		Command(GLOBAL_HELP),
 		Command(GLOBAL_SET_PREFIX),
 		Command(GLOBAL_MODULE),
+		Command(GLOBAL_OUTPUT),
 
 		Command(LEVEL_MODULE_TOP),
 		Command(LEVEL_MODULE_RANK),
