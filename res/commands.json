@@ -23,6 +23,12 @@
 		"additional": "**module list** is used to list all the commands, if the name of a module is passed, it will list all the commands of that module\n**module enable** is used to enable a disabled module\n**module disable** is used to disable a module",
 		"admin": true
 	},
+	"GLOBAL_OUTPUT": {
+		"brief": "Controls the output of the bot",
+		"usage": "output <whitelist/blacklist>",
+		"additional": "",
+		"admin": true
+	},
 	"LEVEL_MODULE_TOP": {
 		"brief": "Returns the top of a specified user count",
 		"usage": "top <count>\ntop <count1> <count2>",
@@ -63,6 +69,12 @@
 		"brief": "Used to take exp from a user",
 		"usage": "takexp <amount>[L] <user>",
 		"additional": "**takexp 50L user** will take 50 levels of experience from that user\n**takexp 50 user**, will take 50 exp points from that user",
+		"admin": true
+	},
+	"LEVEL_MODULE_BLOCK_EXP": {
+		"brief": "Controls the exp gain of the bot on specific channels",
+		"usage": "blockexp <whitelist/blacklist>",
+		"additional": "",
 		"admin": true
 	},
 	"TIMEZONE_MODULE_TIMEOFFSET": {
