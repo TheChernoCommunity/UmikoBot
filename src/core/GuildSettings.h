@@ -49,6 +49,8 @@ public:
 
 	static bool IsModuleEnabled(snowflake_t guild, const QString& moduleName, bool isDefault = true);
 	static void ToggleModule(snowflake_t guild, const QString& moduleName, bool enabled, bool isDefault = true);
+
+	static bool OutputAllowed(snowflake_t guild, snowflake_t channel);
 private:
 	static GuildSetting CreateGuildSetting(snowflake_t id);
 };

@@ -89,7 +89,6 @@ void GuildSettings::Load(const QString& location)
 					for (const QString& channel : outputBehaviourChannels)
 						if (outputBehaviourChannelsJson[channel].toBool() == true)
 							setting.outputWhitelistedChannels.push_back(channel.toULongLong());
-
 						else
 							setting.outputBlacklistedChannels.push_back(channel.toULongLong());
 				}
@@ -161,7 +160,7 @@ void GuildSettings::Save()
 
 		bool behaviourModuleDefault = true;
 		QJsonObject behaviourModule;
-		if (setting.levelWhitelistedChannels.size() > 0) 
+		if (setting.levelWhitelistedChannels.size() > 0 || setting.levelBlacklistedChannels.size() > 0 || setting.outputBlacklistedChannels.size() > 0 || setting.outputWhitelistedChannels.size() > 0) 
 		{
 			QJsonObject levelBehaviourChannels;
 			QJsonObject outputBehaviourChannels;
@@ -180,7 +179,11 @@ void GuildSettings::Save()
 
 			behaviourModule["levelBehaviourChannels"] = levelBehaviourChannels;
 			behaviourModule["outputBehaviourChannels"] = outputBehaviourChannels;
+			behaviourModuleDefault = false;
 		}
+
+		if (!behaviourModuleDefault)
+			current["behaviourModule"] = behaviourModule;
 
 		json[QString::number(setting.id)] = current;
 	}
@@ -241,6 +244,22 @@ void GuildSettings::ToggleModule(snowflake_t guild, const QString& moduleName, b
 	if (enabled != isDefault)
 		modules.append({ moduleName, enabled });
 
+}
+
+bool GuildSettings::OutputAllowed(snowflake_t guild, snowflake_t channel)
+{
+	GuildSetting s = GuildSettings::GetGuildSetting(guild);
+	if (s.outputWhitelistedChannels.size() > 0) {
+		for (int i = 0; i < s.outputWhitelistedChannels.size(); i++)
+			if (s.outputWhitelistedChannels[i] == channel)
+				return true;
+		return false;
+	}
+	if (s.outputBlacklistedChannels.size() > 0)
+		for (int i = 0; i < s.outputBlacklistedChannels.size(); i++)
+			if (s.outputBlacklistedChannels[i] == channel)
+				return false;
+	return true;
 }
 
 GuildSetting GuildSettings::CreateGuildSetting(snowflake_t id)
