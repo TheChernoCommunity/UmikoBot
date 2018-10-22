@@ -1,32 +1,20 @@
 #!/bin/bash
 
 PREMAKE_VERSION="5.0.0-alpha12"
-uname_s=$(uname -s)
-uname_m=$(uname -m)
-os=""
-machine_type=""
+os=$(uname -s)
+machine=$(uname -m)
 
 # Linux system
-if [ "$uname_s" == "Linux" ]; then
+if [ "$os" == "Linux" ]; then
 	os="linux"
 
 # Max OS X system
-elif [ "$uname_s" == "Darwin" ]; then
+elif [ "$os" == "Darwin" ]; then
 	os="osx"
 
 # Assume Windows
 else
 	os="windows"
-fi
-
-
-# x64 machine
-if [ "$uname_m" == "x86_64" ]; then
-	machine_type="x64"
-
-# x86 machine
-else
-	machine_type="x86"
 fi
 
 
@@ -47,7 +35,7 @@ if [ "$os" == "windows" ]; then
 
 	# Qt (x64) directory
 	qtdir_x64=""
-	if [ "$machine_type" == "x64" ]; then
+	if [ "$machine" == "x64" ]; then
 		echo -n "Enter your local Qt (x64) directory and press ENTER: "
 		read -e qtdir_x64
 		echo -n $qtdir_x64 >"tmp/.qtdir_x64"
@@ -63,7 +51,7 @@ if [ "$os" == "windows" ]; then
 
 	# OpenSSL (x64) directory
 	ssldir_x64=""
-	if [ "$machine_type" == "x64" ]; then
+	if [ "$machine" == "x64" ]; then
 		echo -n "Enter your local OpenSSL (x64) directory and press ENTER: "
 		read -e ssldir_x64
 		echo -n $ssldir_x64 >"tmp/.ssldir_x64"
@@ -119,7 +107,7 @@ if [ "$os" == "windows" ]; then
 # Linux setup
 elif [ "$os" == "linux" ]; then
 	# Determine whether we need to build from source or not
-	if [ "$arch" == "x86_64" ]; then
+	if [ "$machine" == "x86_64" ]; then
 		# Download premake executable
 		$(curl -L -o "tmp/premake5.tar.gz" "https://github.com/premake/premake-core/releases/download/v$PREMAKE_VERSION/premake-$PREMAKE_VERSION-linux.tar.gz")
 		$(tar -xvzf "tmp/premake5.tar.gz" -C "pmk")
@@ -140,4 +128,7 @@ elif [ "$os" == "osx" ]; then
 	$(curl -L -o "tmp/premake5.tar.gz" "https://github.com/premake/premake-core/releases/download/v$PREMAKE_VERSION/premake-$PREMAKE_VERSION-macosx.tar.gz")
 	$(tar -xvzf "tmp/premake5.tar.gz" -C "pmk")
 fi
+
+
+# Init or update submodules
 git submodule update --init
