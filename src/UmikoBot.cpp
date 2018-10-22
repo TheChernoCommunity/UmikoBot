@@ -115,7 +115,7 @@ UmikoBot::UmikoBot(QObject* parent)
 	connect(this, &Client::onGuildMemberRemove,
 		[this](snowflake_t guild_id, const Discord::User& user)
 	{
-		for(auto& it = m_guildDatas[guild_id].userdata.begin(); it != m_guildDatas[guild_id].userdata.end(); it++)
+		for(auto it = m_guildDatas[guild_id].userdata.begin(); it != m_guildDatas[guild_id].userdata.end(); it++)
 			if (it.key() == user.id()) {
 				m_guildDatas[guild_id].userdata.erase(it);
 				break;

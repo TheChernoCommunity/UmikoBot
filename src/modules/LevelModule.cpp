@@ -2,6 +2,8 @@
 #include "UmikoBot.h"
 #include "core/Permissions.h"
 
+#include <QtMath>
+
 LevelModule::LevelModule(UmikoBot* client)
 	: Module("levels", true), m_client(client)
 {
@@ -572,7 +574,7 @@ LevelModule::LevelModule(UmikoBot* client)
 					unsigned int levels = substring.toUInt();
 
 					if (userRes.level + levels >= s.maximumLevel) {
-						finalExp = s.expRequirement * (pow(s.growthRate, s.maximumLevel) - 1) / (s.growthRate - 1);
+						finalExp = s.expRequirement * (qPow(s.growthRate, s.maximumLevel) - 1) / (s.growthRate - 1);
 					}
 					else
 					{
