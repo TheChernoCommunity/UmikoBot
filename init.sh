@@ -35,7 +35,7 @@ if [ "$os" == "windows" ]; then
 
 	# Qt (x64) directory
 	qtdir_x64=""
-	if [ "$machine" == "x64" ]; then
+	if [ "$machine" == "x86_64" ]; then
 		echo -n "Enter your local Qt (x64) directory and press ENTER: "
 		read -e qtdir_x64
 		echo -n $qtdir_x64 >"tmp/.qtdir_x64"
@@ -51,7 +51,7 @@ if [ "$os" == "windows" ]; then
 
 	# OpenSSL (x64) directory
 	ssldir_x64=""
-	if [ "$machine" == "x64" ]; then
+	if [ "$machine" == "x86_64" ]; then
 		echo -n "Enter your local OpenSSL (x64) directory and press ENTER: "
 		read -e ssldir_x64
 		echo -n $ssldir_x64 >"tmp/.ssldir_x64"
