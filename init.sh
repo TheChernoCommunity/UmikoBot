@@ -61,6 +61,7 @@ if [ "$os" == "windows" ]; then
 	# Copy Qt (x86) DLLs
 	if [ -n "$qtdir_x86" ]; then
 		$(cp "$qtdir_x86/plugins/platforms/qwindows.dll" "bin/x86/")
+		$(cp "$qtdir_x86/plugins/platforms/qwindowsd.dll" "bin/x86/")
 		$(cp "$qtdir_x86/bin/Qt5Core.dll" "bin/x86/")
 		$(cp "$qtdir_x86/bin/Qt5Cored.dll" "bin/x86/")
 		$(cp "$qtdir_x86/bin/Qt5Gui.dll" "bin/x86/")
@@ -76,6 +77,7 @@ if [ "$os" == "windows" ]; then
 	# Copy Qt (x64) DLLs
 	if [ -n "$qtdir_x64" ]; then
 		$(cp "$qtdir_x64/plugins/platforms/qwindows.dll" "bin/x64/")
+		$(cp "$qtdir_x64/plugins/platforms/qwindowsd.dll" "bin/x64/")
 		$(cp "$qtdir_x64/bin/Qt5Core.dll" "bin/x64/")
 		$(cp "$qtdir_x64/bin/Qt5Cored.dll" "bin/x64/")
 		$(cp "$qtdir_x64/bin/Qt5Gui.dll" "bin/x64/")
