@@ -59,7 +59,7 @@ void TimezoneModule::OnLoad(const QJsonDocument& doc)
 		const QJsonObject obj = it.value().toObject();
 		Setting& setting = m_settings[it.key().toULongLong()];
 
-		setting.secondsFromUtc = UtcOffsetFromString(obj["timezone"].toString()).first;
+		setting.secondsFromUtc = obj["timezone"].toInt();
 	}
 }
 
