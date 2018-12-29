@@ -936,14 +936,10 @@ void LevelModule::StatusCommand(QString& result, snowflake_t guild, snowflake_t 
 		result += "Rank: " + rank + "\n";
 	}
 
-	result += "Total exp: " + QString::number(GetData(guild, user).exp) + "\n";
-
-
 	result += "Level: " + QString::number(res.level) + "\n";
-	if(res.level == s.maximumLevel)
-		result += QString("Exp needed for rankup: Maximum Level\n");
-	else
-		result += QString("Exp needed for rankup: %1/%2\n").arg(QString::number(res.exp), QString::number(res.xpRequirement));
+	result += "Total XP: " + QString::number(GetData(guild, user).exp) + "\n";
+	if(res.level < s.maximumLevel)
+		result += QString("XP until next level: %1\n").arg(res.xpRequirement - res.exp);
 	result += "\n";
 }
 
