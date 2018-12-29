@@ -17,6 +17,8 @@ struct Command
 class Module
 {
 public:
+	virtual ~Module();
+
 	virtual void OnMessage(Discord::Client& client, const Discord::Message& message);
 	inline bool IsEnabledByDefault() const { return m_enabledByDefault; }
 
