@@ -31,6 +31,7 @@ LevelModule::LevelModule(UmikoBot* client)
 	RegisterCommand(Commands::LEVEL_MODULE_TOP, "top",
 		[this](Discord::Client& client, const Discord::Message& message, const Discord::Channel& channel)
 	{
+		auto& exp = m_exp[channel.guildId()];
 		QStringList args = message.content().split(' ');
 		GuildSetting s = GuildSettings::GetGuildSetting(channel.guildId());
 		QString prefix = s.prefix;
@@ -40,8 +41,8 @@ LevelModule::LevelModule(UmikoBot* client)
 
 		
 		if (args.size() == 2) {
-			qSort(m_exp[channel.guildId()].begin(), m_exp[channel.guildId()].end(),
-				[](const LevelModule::GuildLevelData& v1, const LevelModule::GuildLevelData& v2) -> bool
+			qSort(exp.begin(), exp.end(),
+				[](const LevelModule::GuildLevelData& v1, const LevelModule::GuildLevelData& v2)
 			{
 				return v1.exp > v2.exp;
 			});
@@ -65,17 +66,17 @@ LevelModule::LevelModule(UmikoBot* client)
 
 			for (int i = 0; i < count; i++) 
 			{
-				if (i >= m_exp[channel.guildId()].size())
+				if (i >= exp.size())
 				{
 					embed.setTitle("Top " + QString::number(i));
 					break;
 				}
 
-				LevelModule::GuildLevelData& curr = m_exp[channel.guildId()][i];
+				LevelModule::GuildLevelData& curr = exp[i];
 				desc += QString::number(i + 1) + ". ";
-				desc += reinterpret_cast<UmikoBot*>(&client)->GetName(channel.guildId(), m_exp[channel.guildId()][i].user);
+				desc += reinterpret_cast<UmikoBot*>(&client)->GetName(channel.guildId(), exp[i].user);
 
-				unsigned int xp = GetData(channel.guildId(), m_exp[channel.guildId()][i].user).exp;
+				unsigned int xp = GetData(channel.guildId(), exp[i].user).exp;
 
 				unsigned int xpRequirement = s.expRequirement;
 				unsigned int level = 1;
@@ -97,7 +98,7 @@ LevelModule::LevelModule(UmikoBot* client)
 		}
 		else if (args.size() == 3)
 		{
-			qSort(m_exp[channel.guildId()].begin(), m_exp[channel.guildId()].end(),
+			qSort(exp.begin(), exp.end(),
 				[](const LevelModule::GuildLevelData& v1, const LevelModule::GuildLevelData& v2) -> bool
 			{
 				return v1.exp > v2.exp;
@@ -122,7 +123,7 @@ LevelModule::LevelModule(UmikoBot* client)
 
 			QString desc = "";
 
-			if (count1 > m_exp[channel.guildId()].size())
+			if (count1 > exp.size())
 			{
 				client.createMessage(channel.id(), "Not enough members to create the top.");
 				return;
@@ -130,17 +131,17 @@ LevelModule::LevelModule(UmikoBot* client)
 
 			for (int i = count1 - 1; i < count1 + count2 - 1; i++)
 			{
-				if (i >= m_exp[channel.guildId()].size())
+				if (i >= exp.size())
 				{
 					embed.setTitle("Top from " + QString::number(count1) + " to " + QString::number(i));
 					break;
 				}
 
-				LevelModule::GuildLevelData& curr = m_exp[channel.guildId()][i];
+				LevelModule::GuildLevelData& curr = exp[i];
 				desc += QString::number(i + 1) + ". ";
-				desc += reinterpret_cast<UmikoBot*>(&client)->GetName(channel.guildId(), m_exp[channel.guildId()][i].user);
+				desc += reinterpret_cast<UmikoBot*>(&client)->GetName(channel.guildId(), exp[i].user);
 
-				unsigned int xp = GetData(channel.guildId(), m_exp[channel.guildId()][i].user).exp;
+				unsigned int xp = GetData(channel.guildId(), exp[i].user).exp;
 
 				unsigned int xpRequirement = s.expRequirement;
 				unsigned int level = 1;
@@ -537,6 +538,8 @@ LevelModule::LevelModule(UmikoBot* client)
 			Permissions::ContainsPermission(client, channel.guildId(), message.author().id(), CommandPermission::ADMIN,
 				[this, args, &client, message, channel, printHelp, s](bool result)
 			{
+				auto& exp = m_exp[channel.guildId()];
+
 				if (!result)
 				{
 					client.createMessage(message.channelId(), "You don't have permissions to use this command.");
@@ -552,10 +555,10 @@ LevelModule::LevelModule(UmikoBot* client)
 
 				LevelModule::GuildLevelData* levelData;
 
-				for (int i = 0; i < m_exp[channel.guildId()].size(); i++) 
+				for (int i = 0; i < exp.size(); i++) 
 				{
-					if (m_exp[channel.guildId()][i].user == userId)
-						levelData = &m_exp[channel.guildId()][i];
+					if (exp[i].user == userId)
+						levelData = &exp[i];
 				}
 
 				ExpLevelData userRes = ExpToLevel(channel.guildId(), levelData->exp);
@@ -630,6 +633,8 @@ LevelModule::LevelModule(UmikoBot* client)
 			Permissions::ContainsPermission(client, channel.guildId(), message.author().id(), CommandPermission::ADMIN,
 				[this, args, &client, message, channel, printHelp, s](bool result)
 			{
+				auto& exp = m_exp[channel.guildId()];
+
 				if (!result)
 				{
 					client.createMessage(message.channelId(), "You don't have permissions to use this command.");
@@ -645,10 +650,10 @@ LevelModule::LevelModule(UmikoBot* client)
 
 				LevelModule::GuildLevelData* levelData;
 
-				for (int i = 0; i < m_exp[channel.guildId()].size(); i++)
+				for (int i = 0; i < exp.size(); i++)
 				{
-					if (m_exp[channel.guildId()][i].user == userId)
-						levelData = &m_exp[channel.guildId()][i];
+					if (exp[i].user == userId)
+						levelData = &exp[i];
 				}
 
 				ExpLevelData userRes = ExpToLevel(channel.guildId(), levelData->exp);
@@ -950,6 +955,8 @@ void LevelModule::OnMessage(Discord::Client& client, const Discord::Message& mes
 	client.getChannel(message.channelId()).then(
 		[this, message](const Discord::Channel& channel) 
 	{
+		auto& exp = m_exp[channel.guildId()];
+
 		if (!GuildSettings::IsModuleEnabled(channel.guildId(), GetName(), IsEnabledByDefault()))
 			return;
 
@@ -957,14 +964,14 @@ void LevelModule::OnMessage(Discord::Client& client, const Discord::Message& mes
 			return;
 
 		if(GuildSettings::ExpAllowed(channel.guildId(), channel.id()))
-			for (GuildLevelData& data : m_exp[channel.guildId()]) {
+			for (GuildLevelData& data : exp) {
 				if (data.user == message.author().id()) {
 					data.messageCount++;
 					return;
 				}
 			}
 
-		m_exp[channel.guildId()].append({ message.author().id(), 0, 1 });
+		exp.append({ message.author().id(), 0, 1 });
 	});
 }
 
