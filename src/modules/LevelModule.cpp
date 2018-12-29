@@ -963,13 +963,15 @@ void LevelModule::OnMessage(Discord::Client& client, const Discord::Message& mes
 		if (message.author().bot())
 			return;
 
-		if(GuildSettings::ExpAllowed(channel.guildId(), channel.id()))
-			for (GuildLevelData& data : exp) {
-				if (data.user == message.author().id()) {
-					data.messageCount++;
-					return;
-				}
+		if(!GuildSettings::ExpAllowed(channel.guildId(), channel.id()))
+			return;
+
+		for (GuildLevelData& data : exp) {
+			if (data.user == message.author().id()) {
+				data.messageCount++;
+				return;
 			}
+		}
 
 		exp.append({ message.author().id(), 0, 1 });
 	});
