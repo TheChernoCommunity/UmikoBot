@@ -801,5 +801,5 @@ void UmikoBot::GetGuildMemberInformation(snowflake_t guild, snowflake_t after)
 	if (after == 0)
 		listGuildMembers(guild, 1000).then(processMembers);
 	else
-		listGuildMembers(guild, after, 1000).then(processMembers);
+		listGuildMembers(guild, 1000, after).then(processMembers);
 }
