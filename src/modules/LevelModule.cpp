@@ -925,6 +925,23 @@ void LevelModule::StatusCommand(QString& result, snowflake_t guild, snowflake_t 
 
 	ExpLevelData res = ExpToLevel(guild, xp);
 
+	// Sort to get leaderboard index
+	auto& exp = m_exp[guild];
+	qSort(exp.begin(), exp.end(),
+			[](const LevelModule::GuildLevelData& v1, const LevelModule::GuildLevelData& v2)
+		{
+			return v1.exp > v2.exp;
+		});
+	int leaderboardIndex = -1;
+	for (int i = 0; i < exp.size(); ++i)
+	{
+		if (exp.at(i).user == user)
+		{
+			leaderboardIndex = i;
+			break;
+		}
+	}
+
 	unsigned int rankLevel = res.level;
 	QString rank = "";
 	if (s.ranks.size() > 0) {
@@ -938,7 +955,14 @@ void LevelModule::StatusCommand(QString& result, snowflake_t guild, snowflake_t 
 		}
 		if (rank == "")
 			rank = s.ranks[s.ranks.size() - 1].name;
-		result += "Rank: " + rank + "\n";
+
+		if (leaderboardIndex >= 0)
+			result += "Rank: " + rank + " (#" + QString::number(leaderboardIndex + 1) + ")\n";
+		else
+			result += "Rank: " + rank + "\n";
+	}
+	else if (leaderboardIndex >= 0) {
+		result += "Rank: #" + QString::number(leaderboardIndex + 1) + "\n";
 	}
 
 	result += "Level: " + QString::number(res.level) + "\n";
