@@ -18,7 +18,7 @@ LevelModule::LevelModule(UmikoBot* client)
 				if (data.messageCount > 0) 
 				{
 					data.messageCount = 0;
-					data.exp += qrand() % 31 + 15;
+					data.exp += 10 + qrand() % 6;
 				}
 			}
 		}
