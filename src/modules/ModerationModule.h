@@ -12,7 +12,7 @@ private:
 	void OnSave(QJsonDocument& doc) const override;
 	void OnLoad(const QJsonDocument& doc) override;
 
-	struct BannableKeyword
+	struct BannedKeyword
 	{
 		QString text;
 		int deleteMessageDays;
@@ -20,10 +20,10 @@ private:
 
 	struct Settings
 	{
-		Settings() : bannableKeywordMinLength(8) {}
+		Settings() : bannedKeywordMinLength(8) {}
 
-		QList<BannableKeyword> bannableKeywords;
-		int bannableKeywordMinLength;
+		QList<BannedKeyword> bannedKeywords;
+		int bannedKeywordMinLength;
 	};
 
 	QMap<snowflake_t, Settings> m_settings;
