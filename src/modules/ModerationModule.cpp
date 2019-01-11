@@ -6,11 +6,43 @@ Q_CONSTEXPR char g_addBannedKeyword[] = "addbanword";
 Q_CONSTEXPR char g_removeBannedKeyword[] = "rmbanword";
 Q_CONSTEXPR char g_listBannedKeywords[] = "listbanwords";
 Q_CONSTEXPR char g_setBannedKeywordMinLength[] = "setbanwordminlen";
+Q_CONSTEXPR char g_setLogChannel[] = "setlogchannel";
 Q_CONSTEXPR int g_bannedKeywordAbsoluteMinimumLength = 4;
 
-ModerationModule::ModerationModule()
+ModerationModule::ModerationModule(Discord::Client* client)
 	: Module("moderation", true)
 {
+	QObject::connect(client, &Discord::Client::onMessageDelete,
+		[this, client](snowflake_t messageId, snowflake_t channelId)
+		{
+			client->getChannel(channelId).then(
+				[this, client, messageId](const Discord::Channel& channel)
+				{
+					client->getChannelMessage(channel.id(), messageId).then(
+						[this, client, channel](const Discord::Message& message)
+						{
+							Settings& settings = m_settings[channel.guildId()];
+							if (settings.logChannelId == 0)
+								return;
+
+							Discord::Embed embed;
+							embed.setColor(0xff0000);
+							embed.setDescription(message.content());
+							embed.setTitle("Message Deleted");
+
+							Discord::EmbedAuthor author;
+							author.setName(message.author().username());
+							author.setIconUrl(QString("https://cdn.discordapp.com/avatars/%1/%2.png").arg(message.author().id()).arg(message.author().avatar()));
+							embed.setAuthor(author);
+
+							client->createMessage(settings.logChannelId, embed);
+						}
+					);
+				}
+			);
+		}
+	);
+
 	RegisterCommand(Commands::MODERATION_ADD_BANNABLE_KEYWORD, g_addBannedKeyword,
 		[this](Discord::Client& client, const Discord::Message& message, const Discord::Channel& channel)
 		{
@@ -40,17 +72,12 @@ ModerationModule::ModerationModule()
 						return;
 					}
 
-					const QString& keywordText = args[2];
-					if (keywordText.size() < settings.bannedKeywordMinLength)
-					{
-						client.createMessage(channel.id(), QString("The word '%1' is too short to be banned! Consider using the '%2' command to lower the limit.").arg(keywordText).arg(g_setBannedKeywordMinLength));
-						return;
-					}
-
 					BannedKeyword kw{};
-					kw.text = keywordText;
+					kw.text = args[2];
 					kw.deleteMessageDays = deleteMessageDays;
 					settings.bannedKeywords.append(kw);
+
+					client.createMessage(channel.id(), QString("Added '%1' to banned keywords.").arg(kw.text));
 				}
 			);
 		}
@@ -124,18 +151,12 @@ ModerationModule::ModerationModule()
 		}
 	);
 
-	RegisterCommand(Commands::MODERATION_SET_BANNABLE_KEYWORD_MINIMUM_LENGTH, g_setBannedKeywordMinLength,
+	RegisterCommand(Commands::MODERATION_SET_LOG_CHANNEL, g_setLogChannel,
 		[this](Discord::Client& client, const Discord::Message& message, const Discord::Channel& channel)
 		{
 			Permissions::MatchesPermission(client, channel.guildId(), message.author().id(), CommandPermission::ADMIN,
-				[this, &client, channel, message](bool hasPermission)
+				[this, &client, message, channel](bool hasPermission)
 				{
-					if (!hasPermission)
-					{
-						client.createMessage(channel.id(), "You don't have the permission to use that command");
-						return;
-					}
-
 					Settings& settings = m_settings[channel.guildId()];
 
 					QStringList args = message.content().split(' ');
@@ -146,14 +167,16 @@ ModerationModule::ModerationModule()
 					}
 
 					bool ok = false;
-					int bannedKeywordMinimumLength = args[1].toInt(&ok);
-					if (!ok || bannedKeywordMinimumLength < g_bannedKeywordAbsoluteMinimumLength || bannedKeywordMinimumLength > 2000)
+					snowflake_t logChannelId = args[1].toULongLong(&ok);
+					if (!ok || logChannelId == 0)
 					{
-						client.createMessage(channel.id(), "First argument (banned-keyword-maximum-length) must be an integer between 4 and 2000.");
+						client.createMessage(channel.id(), "First argument (log-channel-id) must be a valid channel ID");
 						return;
 					}
 
-					settings.bannedKeywordMinLength = bannedKeywordMinimumLength;
+					settings.logChannelId = logChannelId;
+
+					client.createMessage(channel.id(), QString("Channel '%1' is now the log channel.").arg(logChannelId));
 				}
 			);
 		}
@@ -184,7 +207,7 @@ void ModerationModule::OnSave(QJsonDocument& doc) const
 	for (auto it = m_settings.begin(); it != m_settings.end(); ++it)
 	{
 		QJsonObject obj;
-		obj["banned_keyword_min_length"] = it->bannedKeywordMinLength;
+		obj["log_channel_id"] = QString::number(it->logChannelId);
 
 		QJsonArray bannedKeywordsArray;
 		Q_FOREACH(const BannedKeyword& keyword, it->bannedKeywords)
@@ -211,7 +234,7 @@ void ModerationModule::OnLoad(const QJsonDocument& doc)
 	{
 		const QJsonObject obj = it.value().toObject();
 		Settings& settings = m_settings[it.key().toULongLong()];
-		settings.bannedKeywordMinLength = obj.value("banned_keyword_min_length").toInt(g_bannedKeywordAbsoluteMinimumLength);
+		settings.logChannelId = obj.value("log_channel_id").toString().toULongLong();
 
 		const QJsonArray keywordsArray = obj.value("banned_keywords").toArray();
 		for (QJsonValue keyword : keywordsArray)

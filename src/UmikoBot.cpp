@@ -24,7 +24,7 @@ UmikoBot::UmikoBot(QObject* parent)
 	m_modules.push_back(new LevelModule(this));
 	m_modules.push_back(new TimezoneModule);
 	m_modules.push_back(new CurrencyModule);
-	m_modules.push_back(new ModerationModule);
+	m_modules.push_back(new ModerationModule(this));
 
 	Q_FOREACH(Module* module, m_modules)
 	{

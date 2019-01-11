@@ -4,7 +4,7 @@
 class ModerationModule : public Module
 {
 public:
-	ModerationModule();
+	ModerationModule(Discord::Client* client);
 
 	void OnMessage(Discord::Client& client, const Discord::Channel& channel, const Discord::Message& message) override;
 
@@ -20,10 +20,10 @@ private:
 
 	struct Settings
 	{
-		Settings() : bannedKeywordMinLength(8) {}
+		Settings() : logChannelId(0) {}
 
 		QList<BannedKeyword> bannedKeywords;
-		int bannedKeywordMinLength;
+		snowflake_t logChannelId;
 	};
 
 	QMap<snowflake_t, Settings> m_settings;
