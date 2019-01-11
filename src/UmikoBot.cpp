@@ -4,6 +4,7 @@
 #include "modules/LevelModule.h"
 #include "modules/TimezoneModule.h"
 #include "modules/CurrencyModule.h"
+#include "modules/ModerationModule.h"
 
 #include "Logger.h"
 
@@ -23,6 +24,7 @@ UmikoBot::UmikoBot(QObject* parent)
 	m_modules.push_back(new LevelModule(this));
 	m_modules.push_back(new TimezoneModule);
 	m_modules.push_back(new CurrencyModule);
+	m_modules.push_back(new ModerationModule);
 
 	Q_FOREACH(Module* module, m_modules)
 	{
