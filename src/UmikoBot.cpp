@@ -40,14 +40,14 @@ UmikoBot::UmikoBot(QObject* parent)
 	connect(this, &Client::onMessageCreate,
 		[this](const Discord::Message& message)
 	{
-		Q_FOREACH(Module* module, m_modules)
-		{
-			module->OnMessage(*this, message);
-		}
-
 		getChannel(message.channelId()).then(
 			[this, message](const Discord::Channel& channel)
 		{
+			Q_FOREACH(Module* module, m_modules)
+			{
+				module->OnMessage(*this, channel, message);
+			}
+
 			GuildSetting setting = GuildSettings::GetGuildSetting(channel.guildId());
 			if (channel.guildId() != 0 && !message.author().bot()) // DM
 			{

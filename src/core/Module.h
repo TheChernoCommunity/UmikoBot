@@ -19,7 +19,7 @@ class Module
 public:
 	virtual ~Module();
 
-	virtual void OnMessage(Discord::Client& client, const Discord::Message& message);
+	virtual void OnMessage(Discord::Client& client, const Discord::Channel& channel, const Discord::Message& message);
 	inline bool IsEnabledByDefault() const { return m_enabledByDefault; }
 
 	void Save() const;

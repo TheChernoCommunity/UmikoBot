@@ -29,7 +29,7 @@ public:
 
 	ExpLevelData ExpToLevel(snowflake_t guild, unsigned int exp);
 
-	void OnMessage(Discord::Client& client, const Discord::Message& message) override;
+	void OnMessage(Discord::Client& client, const Discord::Channel& channel, const Discord::Message& message) override;
 
 	void StatusCommand(QString& result, snowflake_t guild, snowflake_t user) override;
 

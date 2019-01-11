@@ -972,33 +972,29 @@ void LevelModule::StatusCommand(QString& result, snowflake_t guild, snowflake_t 
 	result += "\n";
 }
 
-void LevelModule::OnMessage(Discord::Client& client, const Discord::Message& message) 
+void LevelModule::OnMessage(Discord::Client& client, const Discord::Channel& channel, const Discord::Message& message)
 {
-	Module::OnMessage(client, message);
+	Module::OnMessage(client, channel, message);
 
-	client.getChannel(message.channelId()).then(
-		[this, message](const Discord::Channel& channel) 
-	{
-		auto& exp = m_exp[channel.guildId()];
+	auto& exp = m_exp[channel.guildId()];
 
-		if (!GuildSettings::IsModuleEnabled(channel.guildId(), GetName(), IsEnabledByDefault()))
+	if (!GuildSettings::IsModuleEnabled(channel.guildId(), GetName(), IsEnabledByDefault()))
+		return;
+
+	if (message.author().bot())
+		return;
+
+	if(!GuildSettings::ExpAllowed(channel.guildId(), channel.id()))
+		return;
+
+	for (GuildLevelData& data : exp) {
+		if (data.user == message.author().id()) {
+			data.messageCount++;
 			return;
-
-		if (message.author().bot())
-			return;
-
-		if(!GuildSettings::ExpAllowed(channel.guildId(), channel.id()))
-			return;
-
-		for (GuildLevelData& data : exp) {
-			if (data.user == message.author().id()) {
-				data.messageCount++;
-				return;
-			}
 		}
+	}
 
-		exp.append({ message.author().id(), 0, 1 });
-	});
+	exp.append({ message.author().id(), 0, 1 });
 }
 
 LevelModule::GuildLevelData LevelModule::GetData(snowflake_t guild, snowflake_t user)

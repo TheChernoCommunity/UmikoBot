@@ -5,11 +5,11 @@ CurrencyModule::CurrencyModule()
 {
 }
 
-void CurrencyModule::OnMessage(Discord::Client& client, const Discord::Message& message)
+void CurrencyModule::OnMessage(Discord::Client& client, const Discord::Channel& channel, const Discord::Message& message)
 {
 	m_settings[message.author().id()].currency += 5 + qrand() % 5;
 
-	Module::OnMessage(client, message);
+	Module::OnMessage(client, channel, message);
 }
 
 void CurrencyModule::StatusCommand(QString& result, snowflake_t guild, snowflake_t user)
