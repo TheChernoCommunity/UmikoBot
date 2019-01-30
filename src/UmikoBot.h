@@ -59,6 +59,9 @@ public:
 
 	QString GetCommandHelp(QString commandName, QString prefix);
 
+private slots:
+	void OnDisconnected();
+
 private:
 	void Save();
 	void Load();

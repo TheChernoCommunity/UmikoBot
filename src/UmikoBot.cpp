@@ -36,6 +36,7 @@ UmikoBot::UmikoBot(QObject* parent)
 		Save();
 	});
 	
+	connect(&getGatewaySocket(), &Discord::GatewaySocket::disconnected, this, &UmikoBot::OnDisconnected);
 
 	connect(this, &Client::onMessageCreate,
 		[this](const Discord::Message& message)
@@ -682,6 +683,11 @@ QString UmikoBot::GetCommandHelp(QString commandName, QString prefix)
 		if (forCommand(module->GetCommands()))
 			break;
 	return description;
+}
+
+void UmikoBot::OnDisconnected()
+{
+	getGatewaySocket().reconnectToGateway();
 }
 
 void UmikoBot::Save()
