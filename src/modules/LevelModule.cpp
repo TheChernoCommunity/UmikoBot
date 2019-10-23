@@ -113,9 +113,11 @@ LevelModule::LevelModule(UmikoBot* client)
 				client.createMessage(message.channelId(), "Invalid count");
 				return;
 			}
+			if (count1 < 1)
+				count1 = 1;
 
-			if (count2 - count1 > 30)
-				count2 = count1 + 30;
+			if (count2 > 30)
+				count2 = 30;
 
 			Discord::Embed embed;
 			embed.setColor(qrand() % 16777216);
