@@ -131,7 +131,7 @@ LevelModule::LevelModule(UmikoBot* client)
 				return;
 			}
 
-			for (int i = count1 - 1; i < count1 + count2 - 1; i++)
+			for (int i = count1 - 1; i < count1 + count2; i++)
 			{
 				if (i >= exp.size())
 				{
