@@ -82,5 +82,11 @@
 		"usage": "timeoffset <offset>",
 		"additional": "Where offset is the timezone offset from **UTC**\nIf your timezone is UTC+3 then your offset is +3",
 		"admin": false
+	},
+	"MODERATION_INVITATION_TOGGLE": {
+		"brief": "Toggles if invitations should be automatically deleted",
+		"usage": "invitations",
+		"additional": "",
+		"admin": true
 	}
 }
