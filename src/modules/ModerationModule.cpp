@@ -17,7 +17,7 @@ void ModerationModule::OnMessage(Discord::Client& client, const Discord::Message
 {
 	Module::OnMessage(client, message);
 	if (m_invitationModeration)
-		if (message.content().startsWith("https://discord.gg"))
+		if (message.content().contains("https://discord.gg", Qt::CaseInsensitive))
 			client.deleteMessage(message.channelId(), message.id());
 }
 
