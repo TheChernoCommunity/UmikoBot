@@ -613,7 +613,6 @@ snowflake_t UmikoBot::GetUserFromArg(snowflake_t guild, QStringList args, int st
 		else if (it.value().nickname.startsWith(name))
 		{
 			partialNickMatch = { it.key(), it.value().nickname };
-			break;
 		}
 
 		if (it.value().username == name)
@@ -624,7 +623,6 @@ snowflake_t UmikoBot::GetUserFromArg(snowflake_t guild, QStringList args, int st
 		else if (it.value().username.startsWith(name))
 		{
 			partialNameMatch = { it.key(), GetName(guild, it.key()) };
-			break;
 		}
 	}
 
