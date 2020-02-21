@@ -57,12 +57,21 @@ LevelModule::LevelModule(UmikoBot* client)
 
 			if (!ok) 
 			{
-				client.createMessage(message.channelId(), "Invalid count");
+				client.createMessage(message.channelId(), "**Invalid Count**");
+				return;
+			}
+
+			if (count < 1) 
+			{
+				client.createMessage(message.channelId(), "**Invalid Count**");
 				return;
 			}
 
 			if (count > 30)
-				count = 30;
+			{ 
+				client.createMessage(message.channelId(), "**Invalid Count**: The max count is `30`");
+				return;
+			}
 
 			for (int i = 0; i < count; i++) 
 			{
@@ -74,7 +83,7 @@ LevelModule::LevelModule(UmikoBot* client)
 
 				LevelModule::GuildLevelData& curr = exp[i];
 				desc += QString::number(i + 1) + ". ";
-				desc += reinterpret_cast<UmikoBot*>(&client)->GetName(channel.guildId(), exp[i].user);
+				desc += "**" + reinterpret_cast<UmikoBot*>(&client)->GetName(channel.guildId(), exp[i].user) + "**";
 
 				unsigned int xp = GetData(channel.guildId(), exp[i].user).exp;
 
@@ -110,29 +119,53 @@ LevelModule::LevelModule(UmikoBot* client)
 
 			if (!ok1 || !ok2)
 			{
-				client.createMessage(message.channelId(), "Invalid count");
+				client.createMessage(message.channelId(), "**Invalid Count**");
 				return;
 			}
-			if (count1 < 1)
-				count1 = 1;
 
-			if (count2 > 30)
-				count2 = 30;
+			if (count1 < 1 || count2 < 1) 
+			{
+				client.createMessage(message.channelId(), "**Invalid Count**");
+				return;
+			}
+
+
+			if (count2 < count1) 
+			{
+				client.createMessage(message.channelId(), "**Invalid Range**");
+				return;
+			}
+
+
+			if (count2 - count1 > 30) {
+				client.createMessage(message.channelId(), "**Invalid Count**: The max offset is `30`");
+				return;
+			}
 
 			Discord::Embed embed;
 			embed.setColor(qrand() % 16777216);
-			embed.setTitle("Top from " + QString::number(count1) + " to " + QString::number(count1 + count2 - 1));
+			if (count2 == count1) 
+			{
+				embed.setTitle("Top " + QString::number(count1));
+			}
+			else 
+			{
+				embed.setTitle("Top from " + QString::number(count1) + " to " + QString::number(count2));
+			}
+			
 
 			QString desc = "";
 
 			if (count1 > exp.size())
 			{
-				client.createMessage(channel.id(), "Not enough members to create the top.");
+				client.createMessage(channel.id(), "**Not enough members to create the list.**");
 				return;
 			}
 
-			for (int i = count1 - 1; i < count1 + count2 - 1; i++)
+
+			for (int i = count1 - 1; i < count2; i++)
 			{
+
 				if (i >= exp.size())
 				{
 					embed.setTitle("Top from " + QString::number(count1) + " to " + QString::number(i));
@@ -141,7 +174,7 @@ LevelModule::LevelModule(UmikoBot* client)
 
 				LevelModule::GuildLevelData& curr = exp[i];
 				desc += QString::number(i + 1) + ". ";
-				desc += reinterpret_cast<UmikoBot*>(&client)->GetName(channel.guildId(), exp[i].user);
+				desc += "**" + reinterpret_cast<UmikoBot*>(&client)->GetName(channel.guildId(), exp[i].user) + "**";
 
 				unsigned int xp = GetData(channel.guildId(), exp[i].user).exp;
 
