@@ -23,6 +23,14 @@ namespace Commands {
 		TIMEZONE_MODULE_TIMEOFFSET,
 
 		MODERATION_INVITATION_TOGGLE,
+
+		CURRENCY_WALLET,
+		CURRENCY_DAILY,
+		CURRENCY_GAMBLE,
+		CURRENCY_CLAIM,
+		CURRENCY_SET_PRIZE_CHANNEL,
+		CURRENCY_SET_NAME,
+		CURRENCY_SET_SYMBOL,
 	};
 }
 
@@ -44,8 +52,7 @@ struct CommandInfo {
 	bool adminPermission;
 };
 
-class UmikoBot : public Discord::Client
-{
+class UmikoBot : public Discord::Client {
 public:
 	UmikoBot(QObject* parent = nullptr);
 	~UmikoBot();
@@ -53,7 +60,7 @@ public:
 	QString GetNick(snowflake_t guild, snowflake_t user);
 	QString GetUsername(snowflake_t guild, snowflake_t user);
 	QString GetName(snowflake_t guild, snowflake_t user);
-	
+
 	snowflake_t GetUserFromArg(snowflake_t guild, QStringList args, int startIndex);
 
 	const QList<Discord::Role>& GetRoles(snowflake_t guild);
@@ -73,7 +80,7 @@ private:
 	QList<Module*> m_modules;
 	QTimer m_timer;
 
-	QMap<snowflake_t,GuildData> m_guildDatas;
+	QMap<snowflake_t, GuildData> m_guildDatas;
 	QList<Command> m_commands;
 	QMap<unsigned int, CommandInfo> m_commandsInfo;
 };

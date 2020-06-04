@@ -60,13 +60,13 @@
 		"admin": true
 	},
 	"LEVEL_MODULE_EXP_GIVE": {
-		"brief": "Used to give exp to a user",
+		"brief": "Used to give exp to a user.",
 		"usage": "givexp <amount>[L] <user>",
 		"additional": "**givexp 50L user** will give 50 levels of experience to that user\n**givexp 50 user**, will give 50 exp points to that user",
 		"admin": true
 	},
 	"LEVEL_MODULE_EXP_TAKE": {
-		"brief": "Used to take exp from a user",
+		"brief": "Used to take exp from a user.",
 		"usage": "takexp <amount>[L] <user>",
 		"additional": "**takexp 50L user** will take 50 levels of experience from that user\n**takexp 50 user**, will take 50 exp points from that user",
 		"admin": true
@@ -78,7 +78,7 @@
 		"admin": true
 	},
 	"TIMEZONE_MODULE_TIMEOFFSET": {
-		"brief": "Sets the timezone offset of the user",
+		"brief": "Sets the timezone offset of the user.",
 		"usage": "timeoffset <offset>",
 		"additional": "Where offset is the timezone offset from **UTC**\nIf your timezone is UTC+3 then your offset is +3",
 		"admin": false
@@ -86,6 +86,48 @@
 	"MODERATION_INVITATION_TOGGLE": {
 		"brief": "Toggles if invitations should be automatically deleted",
 		"usage": "invitations",
+		"additional": "",
+		"admin": true
+	},
+	"CURRENCY_WALLET": {
+		"brief": "Shows the user's current amount of credits.",
+		"usage": "wallet",
+		"additional": "",
+		"admin": false
+	},
+	"CURRENCY_DAILY": {
+		"brief": "Collects the user's extra credits for the day.",
+		"usage": "daily",
+		"additional": "",
+		"admin": false
+	},
+	"CURRENCY_GAMBLE": {
+		"brief": "Play a game of gamble with the command.",
+		"usage": "gamble",
+		"additional": "This is a number guessing game which can earn you extra credits.",
+		"admin": false
+	},
+	"CURRENCY_CLAIM": {
+		"brief": "Claims the giveaway prize (credits) when it comes out.",
+		"usage": "claim",
+		"additional": "Don't use it unless the bot notifies everyone of a giveaway!",
+		"admin": false
+	},
+	"CURRENCY_SET_PRIZE_CHANNEL": {
+		"brief": "Sets the giveaway announcement channel to the current channel in use.",
+		"usage": "setannouncechan",
+		"additional": "",
+		"admin": true
+	},
+	"CURRENCY_SET_NAME": {
+		"brief": "Sets the currency name.",
+		"usage": "setcurrenname",
+		"additional": "",
+		"admin": true
+	},
+	"CURRENCY_SET_SYMBOL": {
+		"brief": "Sets the currency symbol.",
+		"usage": "setcurrensymb",
 		"additional": "",
 		"admin": true
 	}
