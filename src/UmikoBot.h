@@ -31,6 +31,14 @@ namespace Commands {
 		CURRENCY_SET_PRIZE_CHANNEL,
 		CURRENCY_SET_NAME,
 		CURRENCY_SET_SYMBOL,
+		CURRENCY_SET_DAILY,
+		CURRENCY_SET_PRIZE,
+		CURRENCY_SET_GAMBLE_LOSS,
+		CURRENCY_SET_GAMBLE_REWARD,
+		CURRENCY_SET_GAMBLE_MIN_GUESS,
+		CURRENCY_SET_GAMBLE_MAX_GUESS,
+		CURRENCY_SET_PRIZE_PROB,
+		CURRENCY_SET_PRIZE_EXPIRY,
 	};
 }
 
@@ -52,7 +60,8 @@ struct CommandInfo {
 	bool adminPermission;
 };
 
-class UmikoBot : public Discord::Client {
+class UmikoBot : public Discord::Client 
+{
 public:
 	UmikoBot(QObject* parent = nullptr);
 	~UmikoBot();
