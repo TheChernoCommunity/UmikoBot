@@ -60,13 +60,13 @@
 		"admin": true
 	},
 	"LEVEL_MODULE_EXP_GIVE": {
-		"brief": "Used to give exp to a user",
+		"brief": "Used to give exp to a user.",
 		"usage": "givexp <amount>[L] <user>",
 		"additional": "**givexp 50L user** will give 50 levels of experience to that user\n**givexp 50 user**, will give 50 exp points to that user",
 		"admin": true
 	},
 	"LEVEL_MODULE_EXP_TAKE": {
-		"brief": "Used to take exp from a user",
+		"brief": "Used to take exp from a user.",
 		"usage": "takexp <amount>[L] <user>",
 		"additional": "**takexp 50L user** will take 50 levels of experience from that user\n**takexp 50 user**, will take 50 exp points from that user",
 		"admin": true
@@ -78,7 +78,7 @@
 		"admin": true
 	},
 	"TIMEZONE_MODULE_TIMEOFFSET": {
-		"brief": "Sets the timezone offset of the user",
+		"brief": "Sets the timezone offset of the user.",
 		"usage": "timeoffset <offset>",
 		"additional": "Where offset is the timezone offset from **UTC**\nIf your timezone is UTC+3 then your offset is +3",
 		"admin": false
@@ -86,6 +86,96 @@
 	"MODERATION_INVITATION_TOGGLE": {
 		"brief": "Toggles if invitations should be automatically deleted",
 		"usage": "invitations",
+		"additional": "",
+		"admin": true
+	},
+	"CURRENCY_WALLET": {
+		"brief": "Shows the user's current amount of credits.",
+		"usage": "wallet",
+		"additional": "",
+		"admin": false
+	},
+	"CURRENCY_DAILY": {
+		"brief": "Collects the user's extra credits for the day.",
+		"usage": "daily",
+		"additional": "The daily reward resets every 24hrs. Make sure to collect it everytime!",
+		"admin": false
+	},
+	"CURRENCY_GAMBLE": {
+		"brief": "Play a game of gamble with the command.",
+		"usage": "gamble (more details below)",
+		"additional": "This is a number guessing game which can earn you extra credits. There are two ways to play: \n\n**Normal: **In this mode you use the default bet amount to gamble.\n*Usage:* `!gamble` \n\n**Double or Nothing: ** In this mode you can bet whatever amount under 100 credits.\n *Usage:* `!gamble <betAmount>`",
+		"admin": false
+	},
+	"CURRENCY_CLAIM": {
+		"brief": "Claims the giveaway prize (credits) when it comes out.",
+		"usage": "claim",
+		"additional": "Don't use it unless the bot notifies everyone of a giveaway!",
+		"admin": false
+	},
+	"CURRENCY_SET_PRIZE_CHANNEL": {
+		"brief": "Sets the giveaway announcement channel to the current channel in use.",
+		"usage": "setannouncechan",
+		"additional": "",
+		"admin": true
+	},
+	"CURRENCY_SET_NAME": {
+		"brief": "Sets the currency name.",
+		"usage": "setcurrenname",
+		"additional": "",
+		"admin": true
+	},
+	"CURRENCY_SET_SYMBOL": {
+		"brief": "Sets the currency symbol.",
+		"usage": "setcurrensymb",
+		"additional": "",
+		"admin": true
+	},
+	"CURRENCY_SET_DAILY": {
+		"brief": "Sets the daily reward amount.",
+		"usage": "setdaily",
+		"additional": "",
+		"admin": true
+	}, 
+	"CURRENCY_SET_PRIZE": {
+		"brief": "Sets the freebie reward amount.",
+		"usage": "setprize",
+		"additional": "",
+		"admin": true
+	}, 
+	"CURRENCY_SET_GAMBLE_LOSS": {
+		"brief": "Sets the amount to be taken when the player loses in the normal gamble mode.",
+		"usage": "setgambleloss",
+		"additional": "",
+		"admin": true
+	}, 
+	"CURRENCY_SET_GAMBLE_REWARD": {
+		"brief": "Sets the amount to be rewarded when the player wins in the normal gamble mode.",
+		"usage": "setgamblereward",
+		"additional": "",
+		"admin": true
+	}, 
+	"CURRENCY_SET_GAMBLE_MIN_GUESS": {
+		"brief": "Sets the minimum guess number for the gamble mode.",
+		"usage": "setgambleminguess",
+		"additional": "",
+		"admin": true
+	}, 
+	"CURRENCY_SET_GAMBLE_MAX_GUESS": {
+		"brief": "Sets the maximum guess number for the gamble mode.",
+		"usage": "setgamblemaxguess",
+		"additional": "",
+		"admin": true
+	}, 
+	"CURRENCY_SET_PRIZE_PROB": {
+		"brief": "Sets the probability that the freebie giveaway occurs for each message.",
+		"usage": "setprizeprob",
+		"additional": "",
+		"admin": true
+	}, 
+	"CURRENCY_SET_PRIZE_EXPIRY": {
+		"brief": "Sets the expriy time (in seconds) for the freebie giveaway at the end of the day (when it has not been claimed).",
+		"usage": "setprizeexpiry",
 		"additional": "",
 		"admin": true
 	}
