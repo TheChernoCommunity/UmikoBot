@@ -271,28 +271,28 @@ CurrencyModule::CurrencyModule(UmikoBot* client)
 			return;
 
 		Permissions::ContainsPermission(client, channel.guildId(), message.author().id(), CommandPermission::ADMIN,
-			[args, &client, message, channel](bool result) 
+			[this, args, &client, message, channel](bool result) 
 			{
 				GuildSetting* setting = &GuildSettings::GetGuildSetting(channel.guildId());
 				if (!result) 
 				{
 					client.createMessage(message.channelId(), "You don't have permissions to use this command.");
 					return;
-				}});
+				}
+			
+				if (args.size() > 1) 
+				{
+					client.createMessage(message.channelId(), "**Wrong Usage of Command!** ");
+					return;
+				}
 
-		if (args.size() > 1) 
-		{
-			client.createMessage(message.channelId(), "**Wrong Usage of Command!** ");
-			return;
-		}
-
-		if (args.size() == 1) 
-		{
-			config.giveawayChannelId = message.channelId();
-			client.createMessage(message.channelId(), "**Giveaway announcement channel successfully changed to current channel.**");
-		}
-
-		});
+				if (args.size() == 1) 
+				{
+					config.giveawayChannelId = message.channelId();
+					client.createMessage(message.channelId(), "**Giveaway announcement channel successfully changed to current channel.**");
+				}
+			});
+	});
 
 	RegisterCommand(Commands::CURRENCY_SET_NAME, "setcurrenname", [this](Discord::Client& client, const Discord::Message& message, const Discord::Channel& channel) 
 		{
@@ -300,39 +300,38 @@ CurrencyModule::CurrencyModule(UmikoBot* client)
 		QStringList args = message.content().split(' ');
 		GuildSetting* setting = &GuildSettings::GetGuildSetting(channel.guildId());
 		QString prefix = setting->prefix;
-
-		if (args.size() == 1) 
-		{
-			client.createMessage(message.channelId(), "**Wrong Usage of Command!** ");
+		
+		if (args.first() != prefix + "setcurrenname")
 			return;
-		}
 
 		Permissions::ContainsPermission(client, channel.guildId(), message.author().id(), CommandPermission::ADMIN,
-			[args, &client, message, channel](bool result) 
+			[this, args, &client, message, channel](bool result) 
 			{
 				GuildSetting* setting = &GuildSettings::GetGuildSetting(channel.guildId());
 				if (!result) 
 				{
 					client.createMessage(message.channelId(), "You don't have permissions to use this command.");
 					return;
-				}});
+				}
+				if (args.size() == 1) 
+				{
+					client.createMessage(message.channelId(), "**Wrong Usage of Command!** ");
+					return;
+				}
 
-		if (args.first() != prefix + "setcurrenname")
-			return;
+				if (args.size() > 2) 
+				{
+					client.createMessage(message.channelId(), "**Wrong Usage of Command!** ");
+					return;
+				}
 
-		if (args.size() > 2) 
-		{
-			client.createMessage(message.channelId(), "**Wrong Usage of Command!** ");
-			return;
-		}
-
-		if (args.size() == 2) 
-		{
-			config.currencyName = args.at(1);
-			client.createMessage(message.channelId(), "**Currency Name set to** " + config.currencyName);
-		}
-
+				if (args.size() == 2) 
+				{
+					config.currencyName = args.at(1);
+					client.createMessage(message.channelId(), "**Currency Name set to** " + config.currencyName);
+				}
 		});
+	});
 
 	RegisterCommand(Commands::CURRENCY_SET_SYMBOL, "setcurrensymb", [this](Discord::Client& client, const Discord::Message& message, const Discord::Channel& channel) 
 		{
@@ -341,38 +340,38 @@ CurrencyModule::CurrencyModule(UmikoBot* client)
 		GuildSetting* setting = &GuildSettings::GetGuildSetting(channel.guildId());
 		QString prefix = setting->prefix;
 
+		if (args.first() != prefix + "setcurrensymb")
+			return;
+
 		Permissions::ContainsPermission(client, channel.guildId(), message.author().id(), CommandPermission::ADMIN,
-			[args, &client, message, channel](bool result) 
+			[this, args, &client, message, channel](bool result) 
 			{
 				GuildSetting* setting = &GuildSettings::GetGuildSetting(channel.guildId());
 				if (!result) 
 				{
 					client.createMessage(message.channelId(), "You don't have permissions to use this command.");
 					return;
-				}});
+				}
 
-		if (args.size() == 1) 
-		{
-			client.createMessage(message.channelId(), "**Wrong Usage of Command!** ");
-			return;
-		}
+				if (args.size() == 1) 
+				{
+					client.createMessage(message.channelId(), "**Wrong Usage of Command!** ");
+					return;
+				}
 
-		if (args.first() != prefix + "setcurrensymb")
-			return;
+				if (args.size() > 2) 
+				{
+					client.createMessage(message.channelId(), "**Wrong Usage of Command!** ");
+					return;
+				}
 
-		if (args.size() > 2) 
-		{
-			client.createMessage(message.channelId(), "**Wrong Usage of Command!** ");
-			return;
-		}
-
-		if (args.size() == 2) 
-		{
-			config.currencySymbol = args.at(1);
-			client.createMessage(message.channelId(), "**Currency Symbol set to** " + config.currencySymbol);
-		}
-
+				if (args.size() == 2) 
+				{
+					config.currencySymbol = args.at(1);
+					client.createMessage(message.channelId(), "**Currency Symbol set to** " + config.currencySymbol);
+				}
 		});
+	});
 
 	RegisterCommand(Commands::CURRENCY_SET_DAILY, "setdaily", [this](Discord::Client& client, const Discord::Message& message, const Discord::Channel& channel) 
 		{
@@ -385,28 +384,28 @@ CurrencyModule::CurrencyModule(UmikoBot* client)
 			return;
 
 		Permissions::ContainsPermission(client, channel.guildId(), message.author().id(), CommandPermission::ADMIN,
-			[args, &client, message, channel](bool result) 
+			[this, args, &client, message, channel](bool result) 
 			{
 				GuildSetting* setting = &GuildSettings::GetGuildSetting(channel.guildId());
 				if (!result) 
 				{
 					client.createMessage(message.channelId(), "You don't have permissions to use this command.");
 					return;
-				}});
+				}
 
-		if (args.size() == 1 || args.size() > 2) 
-		{
-			client.createMessage(message.channelId(), "**Wrong Usage of Command!** ");
-			return;
-		}
+				if (args.size() == 1 || args.size() > 2) 
+				{
+					client.createMessage(message.channelId(), "**Wrong Usage of Command!** ");
+					return;
+				}
 
-		if (args.size() == 2) 
-		{
-			config.dailyReward = args.at(1).toInt();
-			client.createMessage(message.channelId(), "**Daily Reward Amount set to **" + QString::number(config.dailyReward));
-		}
-
-		});
+				if (args.size() == 2) 
+				{
+					config.dailyReward = args.at(1).toInt();
+					client.createMessage(message.channelId(), "**Daily Reward Amount set to **" + QString::number(config.dailyReward));
+				}
+			});
+	});
 
 	RegisterCommand(Commands::CURRENCY_SET_PRIZE , "setprize", [this](Discord::Client& client, const Discord::Message& message, const Discord::Channel& channel) 
 		{
@@ -419,28 +418,28 @@ CurrencyModule::CurrencyModule(UmikoBot* client)
 			return;
 
 		Permissions::ContainsPermission(client, channel.guildId(), message.author().id(), CommandPermission::ADMIN,
-			[args, &client, message, channel](bool result) 
+			[this, args, &client, message, channel](bool result) 
 			{
 				GuildSetting* setting = &GuildSettings::GetGuildSetting(channel.guildId());
 				if (!result) 
 				{
 					client.createMessage(message.channelId(), "You don't have permissions to use this command.");
 					return;
-				}});
+				}
 
-		if (args.size() == 1 || args.size() > 2) 
-		{
-			client.createMessage(message.channelId(), "**Wrong Usage of Command!** ");
-			return;
-		}
+				if (args.size() == 1 || args.size() > 2) 
+				{
+					client.createMessage(message.channelId(), "**Wrong Usage of Command!** ");
+					return;
+				}
 
-		if (args.size() == 2) 
-		{
-			config.freebieReward = args.at(1).toInt();
-			client.createMessage(message.channelId(), "**Freebie Reward Amount set to **" + QString::number(config.freebieReward));
-		}
-
+				if (args.size() == 2) 
+				{
+					config.freebieReward = args.at(1).toInt();
+					client.createMessage(message.channelId(), "**Freebie Reward Amount set to **" + QString::number(config.freebieReward));
+				}
 		});
+	});
 
 	RegisterCommand(Commands::CURRENCY_SET_PRIZE_PROB, "setprizeprob", [this](Discord::Client& client, const Discord::Message& message, const Discord::Channel& channel) 
 		{
@@ -453,28 +452,28 @@ CurrencyModule::CurrencyModule(UmikoBot* client)
 			return;
 
 		Permissions::ContainsPermission(client, channel.guildId(), message.author().id(), CommandPermission::ADMIN,
-			[args, &client, message, channel](bool result) 
+			[this, args, &client, message, channel](bool result) 
 			{
 				GuildSetting* setting = &GuildSettings::GetGuildSetting(channel.guildId());
 				if (!result) 
 				{
 					client.createMessage(message.channelId(), "You don't have permissions to use this command.");
 					return;
-				}});
+				}
 
-		if (args.size() == 1 || args.size() > 2) 
-		{
-			client.createMessage(message.channelId(), "**Wrong Usage of Command!** ");
-			return;
-		}
+				if (args.size() == 1 || args.size() > 2) 
+				{
+					client.createMessage(message.channelId(), "**Wrong Usage of Command!** ");
+					return;
+				}
 
-		if (args.size() == 2) 
-		{
-			config.randGiveawayProb = args.at(1).toDouble();
-			client.createMessage(message.channelId(), "**Giveaway Probability Amount set to **" + QString::number(config.randGiveawayProb));
-		}
-
+				if (args.size() == 2) 
+				{
+					config.randGiveawayProb = args.at(1).toDouble();
+					client.createMessage(message.channelId(), "**Giveaway Probability Amount set to **" + QString::number(config.randGiveawayProb));
+				}
 		});
+	});
 
 	RegisterCommand(Commands::CURRENCY_SET_PRIZE_EXPIRY, "setprizeexpiry", [this](Discord::Client& client, const Discord::Message& message, const Discord::Channel& channel) 
 		{
@@ -487,28 +486,29 @@ CurrencyModule::CurrencyModule(UmikoBot* client)
 			return;
 
 		Permissions::ContainsPermission(client, channel.guildId(), message.author().id(), CommandPermission::ADMIN,
-			[args, &client, message, channel](bool result) 
+			[this, args, &client, message, channel](bool result) 
 			{
 				GuildSetting* setting = &GuildSettings::GetGuildSetting(channel.guildId());
 				if (!result) 
 				{
 					client.createMessage(message.channelId(), "You don't have permissions to use this command.");
 					return;
-				}});
+				}
 
-		if (args.size() == 1 || args.size() > 2) 
-		{
-			client.createMessage(message.channelId(), "**Wrong Usage of Command!** ");
-			return;
-		}
+				if (args.size() == 1 || args.size() > 2) 
+				{
+					client.createMessage(message.channelId(), "**Wrong Usage of Command!** ");
+					return;
+				}
 
-		if (args.size() == 2) 
-		{
-			config.freebieExpireTime = args.at(1).toUInt();
-			client.createMessage(message.channelId(), "**Freebie Expiry Time (secs) set to **" + QString::number(config.freebieExpireTime));
-		}
+				if (args.size() == 2) 
+				{
+					config.freebieExpireTime = args.at(1).toUInt();
+					client.createMessage(message.channelId(), "**Freebie Expiry Time (secs) set to **" + QString::number(config.freebieExpireTime));
+				}
 
 		});
+	});
 
 	RegisterCommand(Commands::CURRENCY_SET_GAMBLE_LOSS, "setgambleloss", [this](Discord::Client& client, const Discord::Message& message, const Discord::Channel& channel) 
 		{
@@ -521,27 +521,28 @@ CurrencyModule::CurrencyModule(UmikoBot* client)
 			return;
 
 		Permissions::ContainsPermission(client, channel.guildId(), message.author().id(), CommandPermission::ADMIN,
-			[args, &client, message, channel](bool result) 
+			[this, args, &client, message, channel](bool result) 
 			{
 				GuildSetting* setting = &GuildSettings::GetGuildSetting(channel.guildId());
 				if (!result) 
 				{
 					client.createMessage(message.channelId(), "You don't have permissions to use this command.");
 					return;
-				}});
+				}
 
-		if (args.size() == 1 || args.size() > 2) 
-		{
-			client.createMessage(message.channelId(), "**Wrong Usage of Command!** ");
-			return;
-		}
+				if (args.size() == 1 || args.size() > 2) 
+				{
+					client.createMessage(message.channelId(), "**Wrong Usage of Command!** ");
+					return;
+				}
 
-		if (args.size() == 2) 
-		{
-			config.gambleLoss = args.at(1).toInt();
-			client.createMessage(message.channelId(), "**Gamble Loss Amount set to **" + QString::number(config.gambleLoss));
-		}
+				if (args.size() == 2) 
+				{
+					config.gambleLoss = args.at(1).toInt();
+					client.createMessage(message.channelId(), "**Gamble Loss Amount set to **" + QString::number(config.gambleLoss));
+				}
 		});
+	});
 
 	RegisterCommand(Commands::CURRENCY_SET_GAMBLE_MAX_GUESS, "setgamblemaxguess", [this](Discord::Client& client, const Discord::Message& message, const Discord::Channel& channel) 
 		{
@@ -553,27 +554,28 @@ CurrencyModule::CurrencyModule(UmikoBot* client)
 			return;
 
 		Permissions::ContainsPermission(client, channel.guildId(), message.author().id(), CommandPermission::ADMIN,
-			[args, &client, message, channel](bool result) 
+			[this, args, &client, message, channel](bool result) 
 			{
 				GuildSetting* setting = &GuildSettings::GetGuildSetting(channel.guildId());
 				if (!result) 
 				{
 					client.createMessage(message.channelId(), "You don't have permissions to use this command.");
 					return;
-				}});
+				}
 
-		if (args.size() == 1 || args.size() > 2) 
-		{
-			client.createMessage(message.channelId(), "**Wrong Usage of Command!** ");
-			return;
-		}
+				if (args.size() == 1 || args.size() > 2) 
+				{
+					client.createMessage(message.channelId(), "**Wrong Usage of Command!** ");
+					return;
+				}
 
-		if (args.size() == 2) 
-		{
-			config.maxGuess = args.at(1).toInt();
-			client.createMessage(message.channelId(), "**Gamble Max Guess set to **" + QString::number(config.maxGuess));
-		}
+				if (args.size() == 2) 
+				{
+					config.maxGuess = args.at(1).toInt();
+					client.createMessage(message.channelId(), "**Gamble Max Guess set to **" + QString::number(config.maxGuess));
+				}
 		});
+	});
 
 	RegisterCommand(Commands::CURRENCY_SET_GAMBLE_MIN_GUESS, "setgambleminguess", [this](Discord::Client& client, const Discord::Message& message, const Discord::Channel& channel) 
 		{
@@ -587,28 +589,28 @@ CurrencyModule::CurrencyModule(UmikoBot* client)
 			return;
 
 		Permissions::ContainsPermission(client, channel.guildId(), message.author().id(), CommandPermission::ADMIN,
-			[args, &client, message, channel](bool result) 
+			[this, args, &client, message, channel](bool result) 
 			{
 				GuildSetting* setting = &GuildSettings::GetGuildSetting(channel.guildId());
 				if (!result) 
 				{
 					client.createMessage(message.channelId(), "You don't have permissions to use this command.");
 					return;
-				}});
+				}
 
-		if (args.size() == 1 || args.size() > 2) 
-		{
-			client.createMessage(message.channelId(), "**Wrong Usage of Command!** ");
-			return;
-		}
+				if (args.size() == 1 || args.size() > 2) 
+				{
+					client.createMessage(message.channelId(), "**Wrong Usage of Command!** ");
+					return;
+				}
 
-		if (args.size() == 2) 
-		{
-			config.minGuess = args.at(1).toInt();
-			client.createMessage(message.channelId(), "**Gamble Min Guess set to **" + QString::number(config.minGuess));
-		}
-		
+				if (args.size() == 2) 
+				{
+					config.minGuess = args.at(1).toInt();
+					client.createMessage(message.channelId(), "**Gamble Min Guess set to **" + QString::number(config.minGuess));
+				}
 		});
+	});
 
 	RegisterCommand(Commands::CURRENCY_SET_GAMBLE_REWARD, "setgamblereward", [this](Discord::Client& client, const Discord::Message& message, const Discord::Channel& channel) 
 		{
@@ -622,29 +624,29 @@ CurrencyModule::CurrencyModule(UmikoBot* client)
 			return;
 
 		Permissions::ContainsPermission(client, channel.guildId(), message.author().id(), CommandPermission::ADMIN,
-			[args, &client, message, channel](bool result) 
+			[this, args, &client, message, channel](bool result) 
 			{
 				GuildSetting* setting = &GuildSettings::GetGuildSetting(channel.guildId());
 				if (!result) 
 				{
 					client.createMessage(message.channelId(), "You don't have permissions to use this command.");
 					return;
-				}});
+				}
 
-		if (args.size() == 1 || args.size() > 2) 
-		{
-			client.createMessage(message.channelId(), "**Wrong Usage of Command!** ");
-			return;
-		}
+				if (args.size() == 1 || args.size() > 2) 
+				{
+					client.createMessage(message.channelId(), "**Wrong Usage of Command!** ");
+					return;
+				}
 
-		if (args.size() == 2) 
-		{
-			config.gambleReward = args.at(1).toInt();
-			client.createMessage(message.channelId(), "**Gamble Reward Amount set to **" + QString::number(config.gambleReward));
-		}
-
+				if (args.size() == 2) 
+				{
+					config.gambleReward = args.at(1).toInt();
+					client.createMessage(message.channelId(), "**Gamble Reward Amount set to **" + QString::number(config.gambleReward));
+				}
 
 		});
+	});
 }
 
 void CurrencyModule::StatusCommand(QString& result, snowflake_t guild, snowflake_t user) 
