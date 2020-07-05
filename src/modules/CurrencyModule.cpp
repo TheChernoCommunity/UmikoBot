@@ -301,7 +301,6 @@ CurrencyModule::CurrencyModule(UmikoBot* client)
 		GuildSetting* setting = &GuildSettings::GetGuildSetting(channel.guildId());
 		QString prefix = setting->prefix;
 
-
 		if (args.size() == 1) 
 		{
 			client.createMessage(message.channelId(), "**Wrong Usage of Command!** ");
@@ -382,7 +381,6 @@ CurrencyModule::CurrencyModule(UmikoBot* client)
 		GuildSetting* setting = &GuildSettings::GetGuildSetting(channel.guildId());
 		QString prefix = setting->prefix;
 
-
 		if (args.first() != prefix + "setdaily")
 			return;
 
@@ -416,7 +414,6 @@ CurrencyModule::CurrencyModule(UmikoBot* client)
 		QStringList args = message.content().split(' ');
 		GuildSetting* setting = &GuildSettings::GetGuildSetting(channel.guildId());
 		QString prefix = setting->prefix;
-
 
 		if (args.first() != prefix + "setprize")
 			return;
@@ -452,7 +449,6 @@ CurrencyModule::CurrencyModule(UmikoBot* client)
 		GuildSetting* setting = &GuildSettings::GetGuildSetting(channel.guildId());
 		QString prefix = setting->prefix;
 
-
 		if (args.first() != prefix + "setprizeprob")
 			return;
 
@@ -486,7 +482,6 @@ CurrencyModule::CurrencyModule(UmikoBot* client)
 		QStringList args = message.content().split(' ');
 		GuildSetting* setting = &GuildSettings::GetGuildSetting(channel.guildId());
 		QString prefix = setting->prefix;
-
 
 		if (args.first() != prefix + "setprizeexpiry")
 			return;
