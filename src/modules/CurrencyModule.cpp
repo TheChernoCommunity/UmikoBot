@@ -271,6 +271,21 @@ CurrencyModule::CurrencyModule(UmikoBot* client)
 			client.createMessage(message.channelId(), embed);
 		}
 
+		//! Set a timer to reset if the player doesn't respond
+		auto timer = new QTimer();
+		timer->setSingleShot(true);
+		QObject::connect(timer, &QTimer::timeout, [this, &message, &client]() 
+			{
+				if (selfGambleData.gamble) {
+
+					selfGambleData.gamble = false;
+
+					client.createMessage(message.channelId(), "**Gamble Timeout due to no response.**");
+				}
+			});
+
+		timer->start(gambleTimeout * 1000);
+
 		});
 
 	RegisterCommand(Commands::CURRENCY_CLAIM, "claim", [this](Discord::Client& client, const Discord::Message& message, const Discord::Channel& channel) 
