@@ -23,7 +23,7 @@ UmikoBot::UmikoBot(QObject* parent)
 	Load();
 	m_modules.push_back(new LevelModule(this));
 	m_modules.push_back(new TimezoneModule);
-	m_modules.push_back(new CurrencyModule);
+	m_modules.push_back(new CurrencyModule(this));
 	m_modules.push_back(new ModerationModule);
 	
 	Q_FOREACH(Module* module, m_modules)
@@ -241,7 +241,7 @@ UmikoBot::UmikoBot(QObject* parent)
 							{
 								if (result) {
 									QString current = "";
-									current = prefix + command.name + " - " + m_commandsInfo[command.id].briefDescription + "\n";
+									current = "`" + prefix + command.name + "` - " + m_commandsInfo[command.id].briefDescription + "\n";
 									if (description.length() + current.length() < 1900)
 										description += current;
 									else
@@ -252,7 +252,7 @@ UmikoBot::UmikoBot(QObject* parent)
 										continue;
 
 									QString current = "";
-									current = prefix + command.name + " - " + m_commandsInfo[command.id].briefDescription + "\n";
+									current = "`" + prefix + command.name + "` - " + m_commandsInfo[command.id].briefDescription + "\n";
 									if (description.length() + current.length() < 1900)
 										description += current;
 									else
@@ -268,7 +268,7 @@ UmikoBot::UmikoBot(QObject* parent)
 							if (forCommand(module->GetCommands()))
 								return;
 				}();
-				description += "\n**Note:** Use " + prefix + "help <command> to get the help for a specific command";
+				description += "\n**Note:** Use `" + prefix + "help <command>` to get the help for a specific command";
 
 				Discord::Embed embed;
 				embed.setColor(qrand() % 16777216);
@@ -370,7 +370,7 @@ UmikoBot::UmikoBot(QObject* parent)
 				else if (found && description == "")
 					description = "Module has no commands.";
 				else
-					description += "\n**Note**: Use " + prefix + "help to get the usage of a command.";
+					description += "\n**Note**: Use `" + prefix + "help to get the usage of a command.";
 
 				embed.setDescription(description);
 				createMessage(message.channelId(), embed);
@@ -666,10 +666,10 @@ QString UmikoBot::GetCommandHelp(QString commandName, QString prefix)
 				QStringList usages = info.usage.split("\n");
 				description += "**Usage**: \n";
 				if (usages.size() == 0)
-					description += "\t" + prefix + info.usage + "\n";
+					description += "\t`" + prefix + info.usage + "`\n";
 				else
 					for (const QString& usage : usages)
-						description += "\t" + prefix + usage + "\n";
+						description += "\t`" + prefix + usage + "`\n";
 
 				description += "\n" + info.additionalInfo;
 				return true;
@@ -722,7 +722,22 @@ void UmikoBot::Load()
 		Command(LEVEL_MODULE_BLOCK_EXP),
 
 		Command(TIMEZONE_MODULE_TIMEOFFSET),
-		Command(MODERATION_INVITATION_TOGGLE)
+		Command(MODERATION_INVITATION_TOGGLE),
+		Command(CURRENCY_WALLET),
+		Command(CURRENCY_DAILY),
+		Command(CURRENCY_GAMBLE),
+		Command(CURRENCY_CLAIM),
+		Command(CURRENCY_SET_PRIZE_CHANNEL),
+		Command(CURRENCY_SET_NAME),
+		Command(CURRENCY_SET_SYMBOL),
+		Command(CURRENCY_SET_DAILY),
+		Command(CURRENCY_SET_GAMBLE_LOSS),
+		Command(CURRENCY_SET_GAMBLE_MAX_GUESS),
+		Command(CURRENCY_SET_GAMBLE_MIN_GUESS),
+		Command(CURRENCY_SET_GAMBLE_REWARD),
+		Command(CURRENCY_SET_PRIZE),
+		Command(CURRENCY_SET_PRIZE_EXPIRY),
+		Command(CURRENCY_SET_PRIZE_PROB),
 	};
 
 	QFile file("commands.json");
