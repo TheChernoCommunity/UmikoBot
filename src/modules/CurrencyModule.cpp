@@ -266,8 +266,19 @@ CurrencyModule::CurrencyModule(UmikoBot* client)
 		GuildSetting* setting = &GuildSettings::GetGuildSetting(channel.guildId());
 		QString prefix = setting->prefix;
 
+
 		if (args.first() != prefix + "setannouncechan")
 			return;
+
+		Permissions::ContainsPermission(client, channel.guildId(), message.author().id(), CommandPermission::ADMIN,
+			[args, &client, message, channel](bool result) 
+			{
+				GuildSetting* setting = &GuildSettings::GetGuildSetting(channel.guildId());
+				if (!result) 
+				{
+					client.createMessage(message.channelId(), "You don't have permissions to use this command.");
+					return;
+				}});
 
 		if (args.size() > 1) 
 		{
@@ -290,11 +301,22 @@ CurrencyModule::CurrencyModule(UmikoBot* client)
 		GuildSetting* setting = &GuildSettings::GetGuildSetting(channel.guildId());
 		QString prefix = setting->prefix;
 
+
 		if (args.size() == 1) 
 		{
 			client.createMessage(message.channelId(), "**Wrong Usage of Command!** ");
 			return;
 		}
+
+		Permissions::ContainsPermission(client, channel.guildId(), message.author().id(), CommandPermission::ADMIN,
+			[args, &client, message, channel](bool result) 
+			{
+				GuildSetting* setting = &GuildSettings::GetGuildSetting(channel.guildId());
+				if (!result) 
+				{
+					client.createMessage(message.channelId(), "You don't have permissions to use this command.");
+					return;
+				}});
 
 		if (args.first() != prefix + "setcurrenname")
 			return;
@@ -319,6 +341,16 @@ CurrencyModule::CurrencyModule(UmikoBot* client)
 		QStringList args = message.content().split(' ');
 		GuildSetting* setting = &GuildSettings::GetGuildSetting(channel.guildId());
 		QString prefix = setting->prefix;
+
+		Permissions::ContainsPermission(client, channel.guildId(), message.author().id(), CommandPermission::ADMIN,
+			[args, &client, message, channel](bool result) 
+			{
+				GuildSetting* setting = &GuildSettings::GetGuildSetting(channel.guildId());
+				if (!result) 
+				{
+					client.createMessage(message.channelId(), "You don't have permissions to use this command.");
+					return;
+				}});
 
 		if (args.size() == 1) 
 		{
@@ -350,8 +382,19 @@ CurrencyModule::CurrencyModule(UmikoBot* client)
 		GuildSetting* setting = &GuildSettings::GetGuildSetting(channel.guildId());
 		QString prefix = setting->prefix;
 
+
 		if (args.first() != prefix + "setdaily")
 			return;
+
+		Permissions::ContainsPermission(client, channel.guildId(), message.author().id(), CommandPermission::ADMIN,
+			[args, &client, message, channel](bool result) 
+			{
+				GuildSetting* setting = &GuildSettings::GetGuildSetting(channel.guildId());
+				if (!result) 
+				{
+					client.createMessage(message.channelId(), "You don't have permissions to use this command.");
+					return;
+				}});
 
 		if (args.size() == 1 || args.size() > 2) 
 		{
@@ -374,8 +417,19 @@ CurrencyModule::CurrencyModule(UmikoBot* client)
 		GuildSetting* setting = &GuildSettings::GetGuildSetting(channel.guildId());
 		QString prefix = setting->prefix;
 
+
 		if (args.first() != prefix + "setprize")
 			return;
+
+		Permissions::ContainsPermission(client, channel.guildId(), message.author().id(), CommandPermission::ADMIN,
+			[args, &client, message, channel](bool result) 
+			{
+				GuildSetting* setting = &GuildSettings::GetGuildSetting(channel.guildId());
+				if (!result) 
+				{
+					client.createMessage(message.channelId(), "You don't have permissions to use this command.");
+					return;
+				}});
 
 		if (args.size() == 1 || args.size() > 2) 
 		{
@@ -398,8 +452,19 @@ CurrencyModule::CurrencyModule(UmikoBot* client)
 		GuildSetting* setting = &GuildSettings::GetGuildSetting(channel.guildId());
 		QString prefix = setting->prefix;
 
+
 		if (args.first() != prefix + "setprizeprob")
 			return;
+
+		Permissions::ContainsPermission(client, channel.guildId(), message.author().id(), CommandPermission::ADMIN,
+			[args, &client, message, channel](bool result) 
+			{
+				GuildSetting* setting = &GuildSettings::GetGuildSetting(channel.guildId());
+				if (!result) 
+				{
+					client.createMessage(message.channelId(), "You don't have permissions to use this command.");
+					return;
+				}});
 
 		if (args.size() == 1 || args.size() > 2) 
 		{
@@ -422,8 +487,19 @@ CurrencyModule::CurrencyModule(UmikoBot* client)
 		GuildSetting* setting = &GuildSettings::GetGuildSetting(channel.guildId());
 		QString prefix = setting->prefix;
 
+
 		if (args.first() != prefix + "setprizeexpiry")
 			return;
+
+		Permissions::ContainsPermission(client, channel.guildId(), message.author().id(), CommandPermission::ADMIN,
+			[args, &client, message, channel](bool result) 
+			{
+				GuildSetting* setting = &GuildSettings::GetGuildSetting(channel.guildId());
+				if (!result) 
+				{
+					client.createMessage(message.channelId(), "You don't have permissions to use this command.");
+					return;
+				}});
 
 		if (args.size() == 1 || args.size() > 2) 
 		{
@@ -445,8 +521,19 @@ CurrencyModule::CurrencyModule(UmikoBot* client)
 		GuildSetting* setting = &GuildSettings::GetGuildSetting(channel.guildId());
 		QString prefix = setting->prefix;
 
+
 		if (args.first() != prefix + "setgambleloss")
 			return;
+
+		Permissions::ContainsPermission(client, channel.guildId(), message.author().id(), CommandPermission::ADMIN,
+			[args, &client, message, channel](bool result) 
+			{
+				GuildSetting* setting = &GuildSettings::GetGuildSetting(channel.guildId());
+				if (!result) 
+				{
+					client.createMessage(message.channelId(), "You don't have permissions to use this command.");
+					return;
+				}});
 
 		if (args.size() == 1 || args.size() > 2) 
 		{
@@ -469,6 +556,16 @@ CurrencyModule::CurrencyModule(UmikoBot* client)
 
 		if (args.first() != prefix + "setgamblemaxguess")
 			return;
+
+		Permissions::ContainsPermission(client, channel.guildId(), message.author().id(), CommandPermission::ADMIN,
+			[args, &client, message, channel](bool result) 
+			{
+				GuildSetting* setting = &GuildSettings::GetGuildSetting(channel.guildId());
+				if (!result) 
+				{
+					client.createMessage(message.channelId(), "You don't have permissions to use this command.");
+					return;
+				}});
 
 		if (args.size() == 1 || args.size() > 2) 
 		{
@@ -494,6 +591,16 @@ CurrencyModule::CurrencyModule(UmikoBot* client)
 		if (args.first() != prefix + "setgambleminguess")
 			return;
 
+		Permissions::ContainsPermission(client, channel.guildId(), message.author().id(), CommandPermission::ADMIN,
+			[args, &client, message, channel](bool result) 
+			{
+				GuildSetting* setting = &GuildSettings::GetGuildSetting(channel.guildId());
+				if (!result) 
+				{
+					client.createMessage(message.channelId(), "You don't have permissions to use this command.");
+					return;
+				}});
+
 		if (args.size() == 1 || args.size() > 2) 
 		{
 			client.createMessage(message.channelId(), "**Wrong Usage of Command!** ");
@@ -518,6 +625,16 @@ CurrencyModule::CurrencyModule(UmikoBot* client)
 
 		if (args.first() != prefix + "setgamblereward")
 			return;
+
+		Permissions::ContainsPermission(client, channel.guildId(), message.author().id(), CommandPermission::ADMIN,
+			[args, &client, message, channel](bool result) 
+			{
+				GuildSetting* setting = &GuildSettings::GetGuildSetting(channel.guildId());
+				if (!result) 
+				{
+					client.createMessage(message.channelId(), "You don't have permissions to use this command.");
+					return;
+				}});
 
 		if (args.size() == 1 || args.size() > 2) 
 		{
