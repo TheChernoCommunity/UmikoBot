@@ -207,7 +207,7 @@ UmikoBot::UmikoBot(QObject* parent)
 							for (const Command& command : commands) {
 								if (result) {
 									QString current = "";
-									current = prefix + command.name + " - " + m_commandsInfo[command.id].briefDescription + "\n";
+									current = "`" + prefix + command.name + "` - " + m_commandsInfo[command.id].briefDescription + "\n";
 									if (description.length() + current.length() < 1900)
 										description += current;
 									else
@@ -218,7 +218,7 @@ UmikoBot::UmikoBot(QObject* parent)
 										continue;
 
 									QString current = "";
-									current = prefix + command.name + " - " + m_commandsInfo[command.id].briefDescription + "\n";
+									current = "`" + prefix + command.name + "` - " + m_commandsInfo[command.id].briefDescription + "\n";
 									if (description.length() + current.length() < 1900)
 										description += current;
 									else
@@ -233,7 +233,7 @@ UmikoBot::UmikoBot(QObject* parent)
 							if (forCommand(module->GetCommands()))
 								return;
 				}();
-				description += "\n**Note:** Use " + prefix + "help <command> to get the help for a specific command";
+				description += "\n**Note:** Use `" + prefix + "help <command>` to get the help for a specific command";
 
 				Discord::Embed embed;
 				embed.setColor(qrand() % 16777216);
@@ -576,10 +576,10 @@ QString UmikoBot::GetCommandHelp(QString commandName, QString prefix) {
 				QStringList usages = info.usage.split("\n");
 				description += "**Usage**: \n";
 				if (usages.size() == 0)
-					description += "\t" + prefix + info.usage + "\n";
+					description += "\t`" + prefix + info.usage + "`\n";
 				else
 					for (const QString& usage : usages)
-						description += "\t" + prefix + usage + "\n";
+						description += "\t`" + prefix + usage + "`\n";
 
 				description += "\n" + info.additionalInfo;
 				return true;

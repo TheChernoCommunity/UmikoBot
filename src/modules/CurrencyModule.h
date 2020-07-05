@@ -42,7 +42,6 @@ private:
 		snowflake_t userId{ 0 };
 		int randNum = 0;
 		snowflake_t channelId{ 0 };
-		snowflake_t guildId{ 0 };
 		double betAmount{ 0 }; //!Use if doubleOrNothing
 	}selfGambleData;
 

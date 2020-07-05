@@ -6,13 +6,20 @@
 #include <QtCore/QJsonDocument>
 #include <QtCore/qregexp.h>
 
+//! Currency Config Location
 #define currenConfigLoc QString("currencyConfig")
+
+//! Maximum amount that can be bet
+#define gamblebetMax 100
+
+//! Gamble Timeout in seconds
+#define gambleTimeout 20
 
 CurrencyModule::CurrencyModule(UmikoBot* client)
 	: Module("currency", true) 
 {
 
-	m_timer.setInterval(84600 * 1000); //!24hrs = 84600 seconds
+	m_timer.setInterval(24*60*60*1000); //!24hr timer
 	QObject::connect(&m_timer, &QTimer::timeout, [this, client]() 
 		{
 		
@@ -25,7 +32,7 @@ CurrencyModule::CurrencyModule(UmikoBot* client)
 
 		if (!isRandomGiveAwayDone) 
 		{
-			client->createMessage(config.giveawayChannelId, "Hey everyone! Today's freebie expires in **"+ QString::number(config.freebieExpireTime) +"seconds**. `!claim` it now!");
+			client->createMessage(config.giveawayChannelId, "Hey everyone! Today's freebie expires in **"+ QString::number(config.freebieExpireTime) +" seconds**. `!claim` it now!");
 
 			allowGiveaway = true;
 
@@ -122,7 +129,8 @@ CurrencyModule::CurrencyModule(UmikoBot* client)
 			return;
 		}
 
-		if (args.size() == 1)  //! Normal Mode
+		//! Normal Mode
+		if (args.size() == 1)
 		{
 			if (selfGambleData.gamble) 
 			{
@@ -138,17 +146,17 @@ CurrencyModule::CurrencyModule(UmikoBot* client)
 			selfGambleData.channelId = message.channelId();
 			selfGambleData.gamble = true;
 			selfGambleData.userId = message.author().id();
-			selfGambleData.guildId = channel.guildId();
 
 			Discord::Embed embed;
 			embed.setColor(qrand() % 16777216);
 			embed.setTitle("Welcome to Gamble!");
-			embed.setDescription("All you need to do is guess a random number between "+ QString::number(config.minGuess) + " and " + QString::number(config.maxGuess) + " (inclusive) and if it is the same as the number I guess, you get **"+ QString::number(config.gambleReward) + config.currencySymbol + "**!\n\n**What number do you think of?**");
+			embed.setDescription("All you need to do is guess a random number between "+ QString::number(config.minGuess) + " and " + QString::number(config.maxGuess) + " (inclusive) and if it is the same as the number I guess, you get **"+ QString::number(config.gambleReward) + config.currencySymbol + "**!\n\n**What number do you think of?** <:wesmart:388340133864407043>");
 			
 			client.createMessage(message.channelId(), embed);
 		}
 
-		if (args.size() == 2) //! Double or Nothing
+		//! Double or Nothing
+		if (args.size() == 2)
 		{
 			QRegExp re("[+]?\\d*\\.?\\d+");
 			if (!re.exactMatch(args.at(1))) 
@@ -163,23 +171,42 @@ CurrencyModule::CurrencyModule(UmikoBot* client)
 				embed.setTitle("Welcome to Gamble!");
 				embed.setDescription("**Sorry but this feature is currently in use by another person. Please try again later!**");
 				client.createMessage(message.channelId(), embed);
+				return;
 			}
-
+			if (args.at(1).toDouble() > gamblebetMax) 
+			{
+				client.createMessage(channel.id(), "You cannot bet an amount more than **" + QString::number(gamblebetMax) + config.currencySymbol+"**");
+				return;
+			}
 			selfGambleData.randNum = qrand() % (config.maxGuess - config.minGuess + 1) + config.minGuess;
 			selfGambleData.channelId = message.channelId();
 			selfGambleData.gamble = true;
 			selfGambleData.userId = message.author().id();
-			selfGambleData.guildId = channel.guildId();
 			selfGambleData.doubleOrNothing = true;
 			selfGambleData.betAmount = args.at(1).toDouble();
 
 			Discord::Embed embed;
 			embed.setColor(qrand() % 16777216);
-			embed.setTitle("Welcome to Gamble!");
+			embed.setTitle("Welcome to Gamble (Double or Nothing)!");
 			embed.setDescription("All you need to do is guess a random number between " + QString::number(config.minGuess) + " and " + QString::number(config.maxGuess) + " (inclusive) and if it is the same as the number I guess, you get double the amount you just bet: **" + QString::number(2*selfGambleData.betAmount) + config.currencySymbol + "**!\n\n**What number do you think of?**");
 
 			client.createMessage(message.channelId(), embed);
 		}
+
+		//! Set a timer to reset if the player doesn't respond
+		auto timer = new QTimer();
+		timer->setSingleShot(true);
+		QObject::connect(timer, &QTimer::timeout, [this, &message, &client]() 
+			{
+				if (selfGambleData.gamble) {
+
+					selfGambleData.gamble = false;
+
+					client.createMessage(message.channelId(), "**Gamble Timeout due to no response.**");
+				}
+			});
+
+		timer->start(gambleTimeout * 1000);
 
 		});
 
@@ -476,7 +503,7 @@ CurrencyModule::CurrencyModule(UmikoBot* client)
 		if (args.size() == 2) 
 		{
 			config.minGuess = args.at(1).toInt();
-			client.createMessage(message.channelId(), "**Gamble Min Guess Amount set to **" + QString::number(config.minGuess));
+			client.createMessage(message.channelId(), "**Gamble Min Guess set to **" + QString::number(config.minGuess));
 		}
 		
 		});
@@ -534,36 +561,36 @@ void CurrencyModule::OnMessage(Discord::Client& client, const Discord::Message& 
 		}
 	}
 
-	if (selfGambleData.gamble && !message.author().bot() && message.channelId() == selfGambleData.channelId) 
+	//! If the message is a number, continue with the gambling mech
+	QRegExp re("\\d*");
+	if (re.exactMatch(message.content())) 
 	{
-		if (message.author().id() == selfGambleData.userId) 
+		if (selfGambleData.gamble && !message.author().bot() && message.channelId() == selfGambleData.channelId && message.author().id() == selfGambleData.userId) 
 		{
-
-			//Check if the message is a number
-			QRegExp re("\\d*");
-			if (!re.exactMatch(message.content()))
-				return;
 
 			if (message.content().toInt() > config.maxGuess || message.content().toInt() < config.minGuess) 
 			{
 
-				client.createMessage(message.channelId(), "**Your guess is out of range!** \nTry a number between "+ QString::number(config.minGuess) + " and " + QString::number(config.maxGuess) + " (inclusive). ");
+				client.createMessage(message.channelId(), "**Your guess is out of range!** \nTry a number between " + QString::number(config.minGuess) + " and " + QString::number(config.maxGuess) + " (inclusive). ");
 				return;
 
 			}
 			if (message.content().toInt() == selfGambleData.randNum) 
 			{
-				if (!selfGambleData.doubleOrNothing) {
+				if (!selfGambleData.doubleOrNothing) 
+				{
 					m_settings[message.author().id()].currency += config.gambleReward;
 					client.createMessage(message.channelId(), "**You guessed CORRECTLY!**\n(**" + QString::number(config.gambleReward) + config.currencySymbol + "** have been added to your wallet!)");
 				}
 				else 
 				{
-					m_settings[message.author().id()].currency += 2*selfGambleData.betAmount;
+					m_settings[message.author().id()].currency += 2 * selfGambleData.betAmount;
 					client.createMessage(message.channelId(), "**You guessed CORRECTLY!**\n(**" + QString::number(2 * selfGambleData.betAmount) + config.currencySymbol + "** have been added to your wallet!)");
 				}
-				
+
 			}
+
+			//! Player lost
 			else 
 			{
 				if (!selfGambleData.doubleOrNothing) 
@@ -574,11 +601,11 @@ void CurrencyModule::OnMessage(Discord::Client& client, const Discord::Message& 
 				}
 				else 
 				{
-					m_settings[message.author().id()].currency -= 2*selfGambleData.betAmount;
+					m_settings[message.author().id()].currency -= selfGambleData.betAmount;
 					client.createMessage(message.channelId(), "**Better Luck next time!**\n*(psst! I took **" + QString::number(selfGambleData.betAmount) + config.currencySymbol
 						+ "** from your wallet...)*");
 				}
-				
+
 			}
 
 			selfGambleData.gamble = false;
@@ -605,7 +632,7 @@ void CurrencyModule::OnSave(QJsonDocument& doc) const
 	doc.setObject(docObj);
 
 	QFile currenConfigfile("configs/" + currenConfigLoc + ".json");
-	if (currenConfigfile.open(QFile::ReadWrite)) 
+	if (currenConfigfile.open(QFile::ReadWrite | QFile::Truncate)) 
 	{
 		QJsonDocument doc;
 		QJsonObject obj;
@@ -656,5 +683,7 @@ void CurrencyModule::OnLoad(const QJsonDocument& doc)
 		config.maxGuess = rootObj["gambleMaxGuess"].toString().toInt();
 		config.randGiveawayProb = rootObj["freebieProb"].toString().toDouble();
 		config.freebieExpireTime = rootObj["freebieExpireTime"].toString().toUInt();
+
+		currenConfigfile.close();
 	}
 }

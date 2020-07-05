@@ -98,13 +98,13 @@
 	"CURRENCY_DAILY": {
 		"brief": "Collects the user's extra credits for the day.",
 		"usage": "daily",
-		"additional": "",
+		"additional": "The daily reward resets every 24hrs. Make sure to collect it everytime!",
 		"admin": false
 	},
 	"CURRENCY_GAMBLE": {
 		"brief": "Play a game of gamble with the command.",
-		"usage": "gamble",
-		"additional": "This is a number guessing game which can earn you extra credits.",
+		"usage": "gamble (more details below)",
+		"additional": "This is a number guessing game which can earn you extra credits. There are two ways to play: \n\n**Normal: **In this mode you use the default bet amount to gamble.\n*Usage:* `!gamble` \n\n**Double or Nothing: ** In this mode you can bet whatever amount under 100 credits.\n *Usage:* `!gamble <betAmount>`",
 		"admin": false
 	},
 	"CURRENCY_CLAIM": {
@@ -128,6 +128,54 @@
 	"CURRENCY_SET_SYMBOL": {
 		"brief": "Sets the currency symbol.",
 		"usage": "setcurrensymb",
+		"additional": "",
+		"admin": true
+	},
+	"CURRENCY_SET_DAILY": {
+		"brief": "Sets the daily reward amount.",
+		"usage": "setdaily",
+		"additional": "",
+		"admin": true
+	}, 
+	"CURRENCY_SET_PRIZE": {
+		"brief": "Sets the freebie reward amount.",
+		"usage": "setprize",
+		"additional": "",
+		"admin": true
+	}, 
+	"CURRENCY_SET_GAMBLE_LOSS": {
+		"brief": "Sets the amount to be taken when the player loses in the normal gamble mode.",
+		"usage": "setgambleloss",
+		"additional": "",
+		"admin": true
+	}, 
+	"CURRENCY_SET_GAMBLE_REWARD": {
+		"brief": "Sets the amount to be rewarded when the player wins in the normal gamble mode.",
+		"usage": "setgamblereward",
+		"additional": "",
+		"admin": true
+	}, 
+	"CURRENCY_SET_GAMBLE_MIN_GUESS": {
+		"brief": "Sets the minimum guess number for the gamble mode.",
+		"usage": "setgambleminguess",
+		"additional": "",
+		"admin": true
+	}, 
+	"CURRENCY_SET_GAMBLE_MAX_GUESS": {
+		"brief": "Sets the maximum guess number for the gamble mode.",
+		"usage": "setgamblemaxguess",
+		"additional": "",
+		"admin": true
+	}, 
+	"CURRENCY_SET_PRIZE_PROB": {
+		"brief": "Sets the probability that the freebie giveaway occurs for each message.",
+		"usage": "setprizeprob",
+		"additional": "",
+		"admin": true
+	}, 
+	"CURRENCY_SET_PRIZE_EXPIRY": {
+		"brief": "Sets the expriy time (in seconds) for the freebie giveaway at the end of the day (when it has not been claimed).",
+		"usage": "setprizeexpiry",
 		"additional": "",
 		"admin": true
 	}
