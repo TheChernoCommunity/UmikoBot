@@ -31,7 +31,7 @@ UmikoBot::UmikoBot(QObject* parent)
 		module->Load();
 	}
 
-	m_timer.setInterval(60 * 1000);
+	m_timer.setInterval(10 * 1000);
 	QObject::connect(&m_timer, &QTimer::timeout, 
 		[this]()
 	{
@@ -723,6 +723,7 @@ void UmikoBot::Load()
 
 		Command(TIMEZONE_MODULE_TIMEOFFSET),
 		Command(MODERATION_INVITATION_TOGGLE),
+
 		Command(CURRENCY_WALLET),
 		Command(CURRENCY_DAILY),
 		Command(CURRENCY_GAMBLE),
@@ -738,6 +739,7 @@ void UmikoBot::Load()
 		Command(CURRENCY_SET_PRIZE),
 		Command(CURRENCY_SET_PRIZE_EXPIRY),
 		Command(CURRENCY_SET_PRIZE_PROB),
+		Command(CURRENCY_RICH_LIST)
 	};
 
 	QFile file("commands.json");
