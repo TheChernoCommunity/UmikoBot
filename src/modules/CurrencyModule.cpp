@@ -5,6 +5,7 @@
 #include <QtCore/QFile>
 #include <QtCore/QJsonDocument>
 #include <QtCore/qregexp.h>
+#include <iostream>
 
 //! Currency Config Location
 #define currenConfigLoc QString("currencyConfig")
@@ -270,21 +271,6 @@ CurrencyModule::CurrencyModule(UmikoBot* client)
 
 			client.createMessage(message.channelId(), embed);
 		}
-
-		//! Set a timer to reset if the player doesn't respond
-		auto timer = new QTimer();
-		timer->setSingleShot(true);
-		QObject::connect(timer, &QTimer::timeout, [this, &message, &client]() 
-			{
-				if (selfGambleData.gamble) {
-
-					selfGambleData.gamble = false;
-
-					client.createMessage(message.channelId(), "**Gamble Timeout due to no response.**");
-				}
-			});
-
-		timer->start(gambleTimeout * 1000);
 
 		});
 
