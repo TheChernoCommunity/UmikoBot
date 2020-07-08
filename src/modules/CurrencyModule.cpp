@@ -5,7 +5,6 @@
 #include <QtCore/QFile>
 #include <QtCore/QJsonDocument>
 #include <QtCore/qregexp.h>
-#include <iostream>
 
 //! Currency Config Location
 #define currenConfigLoc QString("currencyConfig")
