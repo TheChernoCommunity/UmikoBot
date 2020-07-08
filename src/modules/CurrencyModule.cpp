@@ -227,6 +227,11 @@ CurrencyModule::CurrencyModule(UmikoBot* client)
 				client.createMessage(channel.id(), "You cannot bet an amount more than **" + QString::number(gamblebetMax) + config.currencySymbol+"**");
 				return;
 			}
+			if (args.at(1).toDouble() == 0) 
+			{
+				client.createMessage(message.channelId(), "<:aanger:730377398314467439> **BRUH. Don't you dare waste my time! I ain't interested in nothing.**");
+				return;
+			}
 			serverGamble.randNum = qrand() % (config.maxGuess - config.minGuess + 1) + config.minGuess;
 			serverGamble.channelId = message.channelId();
 			serverGamble.gamble = true;
@@ -259,7 +264,7 @@ CurrencyModule::CurrencyModule(UmikoBot* client)
 			Discord::Embed embed;
 			embed.setColor(qrand() % 16777216);
 			embed.setTitle("Welcome to Gamble (Double or Nothing) " + name + "!");
-			embed.setDescription("All you need to do is guess a random number between " + QString::number(config.minGuess) + " and " + QString::number(config.maxGuess) + " (inclusive) and if it is the same as the number I guess, you get double the amount you just bet: **" + QString::number(2* serverGamble.betAmount) + config.currencySymbol + "**!\n\n**What number do you think of?**");
+			embed.setDescription("All you need to do is guess a random number between " + QString::number(config.minGuess) + " and " + QString::number(config.maxGuess) + " (inclusive) and if it is the same as the number I guess, you get double the amount you just bet: **" + QString::number(2* serverGamble.betAmount) + config.currencySymbol + "**!\n\n**What number do you think of?** <:wesmart:388340133864407043>");
 
 			client.createMessage(message.channelId(), embed);
 		}
