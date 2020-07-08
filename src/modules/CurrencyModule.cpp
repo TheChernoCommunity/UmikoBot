@@ -153,10 +153,11 @@ CurrencyModule::CurrencyModule(UmikoBot* client)
 
 			if (serverGamble.gamble) 
 			{
+				QString user = reinterpret_cast<UmikoBot*>(&client)->GetName(channel.guildId(), serverGamble.userId);
 				Discord::Embed embed;
 				embed.setColor(qrand() % 16777216);
 				embed.setTitle("Welcome to Gamble!");
-				embed.setDescription("**Sorry but this feature is currently in use by another person. Please try again later!**");
+				embed.setDescription("Sorry but this feature is currently in use by **" + user + "**. Please try again later!");
 				client.createMessage(message.channelId(), embed);
 				return;
 			}
@@ -188,9 +189,11 @@ CurrencyModule::CurrencyModule(UmikoBot* client)
 
 			serverGamble.timer->start();
 
+			QString name = reinterpret_cast<UmikoBot*>(&client)->GetName(channel.guildId(), serverGamble.userId);
+
 			Discord::Embed embed;
 			embed.setColor(qrand() % 16777216);
-			embed.setTitle("Welcome to Gamble!");
+			embed.setTitle("Welcome to Gamble " + name + "!");
 			embed.setDescription("All you need to do is guess a random number between "+ QString::number(config.minGuess) + " and " + QString::number(config.maxGuess) + " (inclusive) and if it is the same as the number I guess, you get **"+ QString::number(config.gambleReward) + config.currencySymbol + "**!\n\n**What number do you think of?** <:wesmart:388340133864407043>");
 			
 			client.createMessage(message.channelId(), embed);
@@ -211,10 +214,11 @@ CurrencyModule::CurrencyModule(UmikoBot* client)
 
 			if (serverGamble.gamble)
 			{
+				QString user = reinterpret_cast<UmikoBot*>(&client)->GetName(channel.guildId(), serverGamble.userId);
 				Discord::Embed embed;
 				embed.setColor(qrand() % 16777216);
 				embed.setTitle("Welcome to Gamble!");
-				embed.setDescription("**Sorry but this feature is currently in use by another person. Please try again later!**");
+				embed.setDescription("Sorry but this feature is currently in use by **" + user + "**. Please try again later!");
 				client.createMessage(message.channelId(), embed);
 				return;
 			}
@@ -250,10 +254,11 @@ CurrencyModule::CurrencyModule(UmikoBot* client)
 				});
 
 			serverGamble.timer->start();
+			QString name = reinterpret_cast<UmikoBot*>(&client)->GetName(channel.guildId(), serverGamble.userId);
 
 			Discord::Embed embed;
 			embed.setColor(qrand() % 16777216);
-			embed.setTitle("Welcome to Gamble (Double or Nothing)!");
+			embed.setTitle("Welcome to Gamble (Double or Nothing) " + name + "!");
 			embed.setDescription("All you need to do is guess a random number between " + QString::number(config.minGuess) + " and " + QString::number(config.maxGuess) + " (inclusive) and if it is the same as the number I guess, you get double the amount you just bet: **" + QString::number(2* serverGamble.betAmount) + config.currencySymbol + "**!\n\n**What number do you think of?**");
 
 			client.createMessage(message.channelId(), embed);
