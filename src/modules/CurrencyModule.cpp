@@ -764,8 +764,8 @@ CurrencyModule::CurrencyModule(UmikoBot* client)
 				client.createMessage(message.channelId(), embed);
 			}
 		
-		});
-	});
+		}
+	);
 }
 
 void CurrencyModule::StatusCommand(QString& result, snowflake_t guild, snowflake_t user) 
