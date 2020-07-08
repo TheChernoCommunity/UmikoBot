@@ -31,7 +31,7 @@
 	},
 	"LEVEL_MODULE_TOP": {
 		"brief": "Returns the top of a specified user count",
-		"usage": "top `<count>`: List of top people until `<count>`\ntop `<count1>` `<count2>`: List of top people from `<count1>` to `<count2>`",
+		"usage": "top <count> (List of top people until <count>)\ntop <count1> <count2> (List of top people from <count1> to <count2>)",
 		"additional": "**Example:\n** `!top 3`: Displays the top 3 people. \n`!top 3 5`: Displays the 3rd, 4th and 5th top users.",
 		"admin": false
 	},
@@ -178,5 +178,11 @@
 		"usage": "setprizeexpiry",
 		"additional": "",
 		"admin": true
+	},
+	"CURRENCY_RICH_LIST": {
+		"brief": "Displays the top 30 rich people on the server",
+		"usage": "richlist",
+		"additional": "Make sure you're in the list!",
+		"admin": false
 	}
 }

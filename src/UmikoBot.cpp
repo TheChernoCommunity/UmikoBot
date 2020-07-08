@@ -723,6 +723,7 @@ void UmikoBot::Load()
 
 		Command(TIMEZONE_MODULE_TIMEOFFSET),
 		Command(MODERATION_INVITATION_TOGGLE),
+
 		Command(CURRENCY_WALLET),
 		Command(CURRENCY_DAILY),
 		Command(CURRENCY_GAMBLE),
@@ -738,6 +739,7 @@ void UmikoBot::Load()
 		Command(CURRENCY_SET_PRIZE),
 		Command(CURRENCY_SET_PRIZE_EXPIRY),
 		Command(CURRENCY_SET_PRIZE_PROB),
+		Command(CURRENCY_RICH_LIST)
 	};
 
 	QFile file("commands.json");

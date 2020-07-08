@@ -5,6 +5,7 @@
 #include <QtCore/QFile>
 #include <QtCore/QJsonDocument>
 #include <QtCore/qregexp.h>
+#include <iostream>
 
 //! Currency Config Location
 #define currenConfigLoc QString("currencyConfig")
@@ -16,36 +17,44 @@
 #define gambleTimeout 20
 
 CurrencyModule::CurrencyModule(UmikoBot* client)
-	: Module("currency", true) 
+	: Module("currency", true)
 {
 
 	m_timer.setInterval(24*60*60*1000); //!24hr timer
 	QObject::connect(&m_timer, &QTimer::timeout, [this, client]() 
 		{
-		
-		//!Clear the daily bonus for everyone
-		for (auto it = m_settings.begin(); it != m_settings.end(); ++it
-			) 
-		{
-			it->isDailyClaimed = false;
-		}
-
-		if (!isRandomGiveAwayDone) 
-		{
-			client->createMessage(config.giveawayChannelId, "Hey everyone! Today's freebie expires in **"+ QString::number(config.freebieExpireTime) +" seconds**. `!claim` it now!");
-
-			allowGiveaway = true;
-
-			QTimer timer;
-			timer.setInterval(config.freebieExpireTime * 1000);
-			QObject::connect(&timer, &QTimer::timeout, 
-				[this, client]() 
+			
+			for (auto server : guildList.keys()) 
+			{
+				//!Clear the daily bonus for everyone
+				for (auto user = guildList[server].begin(); user != guildList[server].end(); ++user
+					) 
 				{
-					if(isRandomGiveAwayDone)
-						isRandomGiveAwayDone = false;
+					user->isDailyClaimed = false;
+				}
 
-				});
-		}
+				auto guildId = server;
+				auto& serverConfig = getServerData(guildId);
+
+				if (!serverConfig.isRandomGiveawayDone) 
+				{
+					client->createMessage(serverConfig.giveawayChannelId, "Hey everyone! Today's freebie expires in **"+ QString::number(serverConfig.freebieExpireTime) +" seconds**. `!claim` it now!");
+
+					serverConfig.allowGiveaway = true;
+
+					QTimer timer;
+					timer.setInterval(serverConfig.freebieExpireTime * 1000);
+					QObject::connect(&timer, &QTimer::timeout, 
+					[this, client, guildId] ()
+						{
+							auto& serverConfig = getServerData(guildId);
+							if(serverConfig.isRandomGiveawayDone)
+							serverConfig.isRandomGiveawayDone = false;
+						});
+				}
+
+			}
+		
 	});
 
 	m_timer.start();
@@ -67,7 +76,12 @@ CurrencyModule::CurrencyModule(UmikoBot* client)
 		{
 			Discord::Embed embed;
 			embed.setColor(11777216);
-			QString creditScore = QString::number(m_settings[message.author().id()].currency);
+
+			//! Get User and Sever Data
+			auto config = getServerData(channel.guildId());
+
+			QString creditScore = QString::number(getUserData(channel.guildId(), message.author().id()).currency);
+			
 			QString desc = "**Current Credits: ** `" + creditScore + "` **" + config.currencySymbol + "** (" + config.currencyName +")";
 			embed.setTitle("Your Wallet");
 			embed.setDescription(desc);
@@ -90,7 +104,7 @@ CurrencyModule::CurrencyModule(UmikoBot* client)
 			client.createMessage(message.channelId(), "**Wrong Usage of Command!** ");
 			return;
 		}
-		if (m_settings[message.author().id()].isDailyClaimed)
+		if (getUserData(channel.guildId(), message.author().id()).isDailyClaimed)
 		{
 
 			int remainingTime = m_timer.remainingTime();
@@ -104,10 +118,12 @@ CurrencyModule::CurrencyModule(UmikoBot* client)
 		}
 		else 
 		{
-			m_settings[message.author().id()].isDailyClaimed = true;
-			m_settings[message.author().id()].currency += config.dailyReward;
+			auto index = getUserIndex(channel.guildId(), message.author().id());
+			
+			guildList[channel.guildId()][index].isDailyClaimed = true;
+			guildList[channel.guildId()][index].currency += getServerData(channel.guildId()).dailyReward;
 
-			client.createMessage(message.channelId(), "**You now have "+ QString::number(config.dailyReward) + " more " +  config.currencyName + "(s) in your wallet!**");
+			client.createMessage(message.channelId(), "**You now have "+ QString::number(getServerData(channel.guildId()).dailyReward) + " more " + getServerData(channel.guildId()).currencyName + "(s) in your wallet!**");
 		}
 
 		});
@@ -132,7 +148,10 @@ CurrencyModule::CurrencyModule(UmikoBot* client)
 		//! Normal Mode
 		if (args.size() == 1)
 		{
-			if (selfGambleData.gamble) 
+
+			auto& serverGamble = gambleData[channel.guildId()];
+
+			if (serverGamble.gamble) 
 			{
 				Discord::Embed embed;
 				embed.setColor(qrand() % 16777216);
@@ -142,10 +161,32 @@ CurrencyModule::CurrencyModule(UmikoBot* client)
 				return;
 			}
 
-			selfGambleData.randNum = qrand() % (config.maxGuess - config.minGuess +1) + config.minGuess;
-			selfGambleData.channelId = message.channelId();
-			selfGambleData.gamble = true;
-			selfGambleData.userId = message.author().id();
+			auto& config = getServerData(channel.guildId());
+
+			serverGamble.randNum = qrand() % (config.maxGuess - config.minGuess +1) + config.minGuess;
+			serverGamble.channelId = message.channelId();
+			serverGamble.gamble = true;
+			serverGamble.userId = message.author().id();
+
+			auto guild = channel.guildId();
+
+			serverGamble.timer = new QTimer();
+
+			serverGamble.timer->setInterval(gambleTimeout * 1000);
+			serverGamble.timer->setSingleShot(true);
+			QObject::connect(serverGamble.timer, &QTimer::timeout, [this, &client, guild, message]() 
+				{
+				if (gambleData[guild].gamble || gambleData[guild].doubleOrNothing) 
+				{
+					gambleData[guild].gamble = false;
+					gambleData[guild].doubleOrNothing = false;
+
+					client.createMessage(message.channelId(), "**Gamble Timeout Due to No Valid Response**");
+
+				}				
+				});
+
+			serverGamble.timer->start();
 
 			Discord::Embed embed;
 			embed.setColor(qrand() % 16777216);
@@ -164,7 +205,11 @@ CurrencyModule::CurrencyModule(UmikoBot* client)
 				client.createMessage(message.channelId(), "**Wrong Usage of Command!** The argument must be a **positive number**.");
 					return;
 			}
-			if (selfGambleData.gamble) 
+
+			auto& serverGamble = gambleData[channel.guildId()];
+			auto& config = getServerData(channel.guildId());
+
+			if (serverGamble.gamble)
 			{
 				Discord::Embed embed;
 				embed.setColor(qrand() % 16777216);
@@ -178,35 +223,41 @@ CurrencyModule::CurrencyModule(UmikoBot* client)
 				client.createMessage(channel.id(), "You cannot bet an amount more than **" + QString::number(gamblebetMax) + config.currencySymbol+"**");
 				return;
 			}
-			selfGambleData.randNum = qrand() % (config.maxGuess - config.minGuess + 1) + config.minGuess;
-			selfGambleData.channelId = message.channelId();
-			selfGambleData.gamble = true;
-			selfGambleData.userId = message.author().id();
-			selfGambleData.doubleOrNothing = true;
-			selfGambleData.betAmount = args.at(1).toDouble();
+			serverGamble.randNum = qrand() % (config.maxGuess - config.minGuess + 1) + config.minGuess;
+			serverGamble.channelId = message.channelId();
+			serverGamble.gamble = true;
+			serverGamble.userId = message.author().id();
+			serverGamble.doubleOrNothing = true;
+			serverGamble.betAmount = args.at(1).toDouble();
+
+			auto guild = channel.guildId();
+
+			serverGamble.timer = new QTimer();
+
+			serverGamble.timer->setInterval(gambleTimeout * 1000);
+			serverGamble.timer->setSingleShot(true);
+			QObject::connect(serverGamble.timer, &QTimer::timeout, [this, &client, guild, message]() {
+
+				if (gambleData[guild].gamble || gambleData[guild].doubleOrNothing) 
+				{
+					gambleData[guild].gamble = false;
+					gambleData[guild].doubleOrNothing = false;
+
+					client.createMessage(message.channelId(), "**Gamble Timeout Due to No Valid Response**");
+
+				}
+				
+				});
+
+			serverGamble.timer->start();
 
 			Discord::Embed embed;
 			embed.setColor(qrand() % 16777216);
 			embed.setTitle("Welcome to Gamble (Double or Nothing)!");
-			embed.setDescription("All you need to do is guess a random number between " + QString::number(config.minGuess) + " and " + QString::number(config.maxGuess) + " (inclusive) and if it is the same as the number I guess, you get double the amount you just bet: **" + QString::number(2*selfGambleData.betAmount) + config.currencySymbol + "**!\n\n**What number do you think of?**");
+			embed.setDescription("All you need to do is guess a random number between " + QString::number(config.minGuess) + " and " + QString::number(config.maxGuess) + " (inclusive) and if it is the same as the number I guess, you get double the amount you just bet: **" + QString::number(2* serverGamble.betAmount) + config.currencySymbol + "**!\n\n**What number do you think of?**");
 
 			client.createMessage(message.channelId(), embed);
 		}
-
-		//! Set a timer to reset if the player doesn't respond
-		auto timer = new QTimer();
-		timer->setSingleShot(true);
-		QObject::connect(timer, &QTimer::timeout, [this, &message, &client]() 
-			{
-				if (selfGambleData.gamble) {
-
-					selfGambleData.gamble = false;
-
-					client.createMessage(message.channelId(), "**Gamble Timeout due to no response.**");
-				}
-			});
-
-		timer->start(gambleTimeout * 1000);
 
 		});
 
@@ -228,19 +279,22 @@ CurrencyModule::CurrencyModule(UmikoBot* client)
 
 		if (args.size() == 1) 
 		{
-			if (!isRandomGiveAwayDone) 
+			if (!getServerData(channel.guildId()).isRandomGiveawayDone) 
 			{
-				if (allowGiveaway) 
+				if (getServerData(channel.guildId()).allowGiveaway)
 				{
+					auto& config = getServerData(channel.guildId());
 					Discord::Embed embed;
 					embed.setColor(qrand() % 11777216);
 					embed.setTitle("Claim FREEBIE");
 					embed.setDescription(":drum: And today's FREEBIE goes to **" + message.author().username() + "**! \n\n Congratulations! You just got **"+ QString::number(config.freebieReward) + config.currencySymbol +"**!");
 
-					m_settings[message.author().id()].currency += config.freebieReward;
+					auto index = getUserIndex(channel.guildId(), message.author().id());
+
+					guildList[channel.guildId()][index].currency += config.freebieReward;
 
 					client.createMessage(message.channelId(), embed);
-					isRandomGiveAwayDone = true;
+					getServerData(channel.guildId()).isRandomGiveawayDone = true;
 				}
 				else 
 				{
@@ -276,7 +330,7 @@ CurrencyModule::CurrencyModule(UmikoBot* client)
 				GuildSetting* setting = &GuildSettings::GetGuildSetting(channel.guildId());
 				if (!result) 
 				{
-					client.createMessage(message.channelId(), "You don't have permissions to use this command.");
+					client.createMessage(message.channelId(), "**You don't have permissions to use this command.**");
 					return;
 				}
 			
@@ -288,6 +342,7 @@ CurrencyModule::CurrencyModule(UmikoBot* client)
 
 				if (args.size() == 1) 
 				{
+					auto& config = getServerData(channel.guildId());
 					config.giveawayChannelId = message.channelId();
 					client.createMessage(message.channelId(), "**Giveaway announcement channel successfully changed to current channel.**");
 				}
@@ -310,7 +365,7 @@ CurrencyModule::CurrencyModule(UmikoBot* client)
 				GuildSetting* setting = &GuildSettings::GetGuildSetting(channel.guildId());
 				if (!result) 
 				{
-					client.createMessage(message.channelId(), "You don't have permissions to use this command.");
+					client.createMessage(message.channelId(), "**You don't have permissions to use this command.**");
 					return;
 				}
 				if (args.size() == 1) 
@@ -327,6 +382,7 @@ CurrencyModule::CurrencyModule(UmikoBot* client)
 
 				if (args.size() == 2) 
 				{
+					auto& config = getServerData(channel.guildId());
 					config.currencyName = args.at(1);
 					client.createMessage(message.channelId(), "**Currency Name set to** " + config.currencyName);
 				}
@@ -349,7 +405,7 @@ CurrencyModule::CurrencyModule(UmikoBot* client)
 				GuildSetting* setting = &GuildSettings::GetGuildSetting(channel.guildId());
 				if (!result) 
 				{
-					client.createMessage(message.channelId(), "You don't have permissions to use this command.");
+					client.createMessage(message.channelId(), "**You don't have permissions to use this command.**");
 					return;
 				}
 
@@ -367,6 +423,7 @@ CurrencyModule::CurrencyModule(UmikoBot* client)
 
 				if (args.size() == 2) 
 				{
+					auto& config = getServerData(channel.guildId());
 					config.currencySymbol = args.at(1);
 					client.createMessage(message.channelId(), "**Currency Symbol set to** " + config.currencySymbol);
 				}
@@ -389,7 +446,7 @@ CurrencyModule::CurrencyModule(UmikoBot* client)
 				GuildSetting* setting = &GuildSettings::GetGuildSetting(channel.guildId());
 				if (!result) 
 				{
-					client.createMessage(message.channelId(), "You don't have permissions to use this command.");
+					client.createMessage(message.channelId(), "**You don't have permissions to use this command.**");
 					return;
 				}
 
@@ -401,6 +458,7 @@ CurrencyModule::CurrencyModule(UmikoBot* client)
 
 				if (args.size() == 2) 
 				{
+					auto& config = getServerData(channel.guildId());
 					config.dailyReward = args.at(1).toInt();
 					client.createMessage(message.channelId(), "**Daily Reward Amount set to **" + QString::number(config.dailyReward));
 				}
@@ -423,7 +481,7 @@ CurrencyModule::CurrencyModule(UmikoBot* client)
 				GuildSetting* setting = &GuildSettings::GetGuildSetting(channel.guildId());
 				if (!result) 
 				{
-					client.createMessage(message.channelId(), "You don't have permissions to use this command.");
+					client.createMessage(message.channelId(), "**You don't have permissions to use this command.**");
 					return;
 				}
 
@@ -435,6 +493,7 @@ CurrencyModule::CurrencyModule(UmikoBot* client)
 
 				if (args.size() == 2) 
 				{
+					auto& config = getServerData(channel.guildId());
 					config.freebieReward = args.at(1).toInt();
 					client.createMessage(message.channelId(), "**Freebie Reward Amount set to **" + QString::number(config.freebieReward));
 				}
@@ -457,7 +516,7 @@ CurrencyModule::CurrencyModule(UmikoBot* client)
 				GuildSetting* setting = &GuildSettings::GetGuildSetting(channel.guildId());
 				if (!result) 
 				{
-					client.createMessage(message.channelId(), "You don't have permissions to use this command.");
+					client.createMessage(message.channelId(), "**You don't have permissions to use this command.**");
 					return;
 				}
 
@@ -469,6 +528,7 @@ CurrencyModule::CurrencyModule(UmikoBot* client)
 
 				if (args.size() == 2) 
 				{
+					auto& config = getServerData(channel.guildId());
 					config.randGiveawayProb = args.at(1).toDouble();
 					client.createMessage(message.channelId(), "**Giveaway Probability Amount set to **" + QString::number(config.randGiveawayProb));
 				}
@@ -491,7 +551,7 @@ CurrencyModule::CurrencyModule(UmikoBot* client)
 				GuildSetting* setting = &GuildSettings::GetGuildSetting(channel.guildId());
 				if (!result) 
 				{
-					client.createMessage(message.channelId(), "You don't have permissions to use this command.");
+					client.createMessage(message.channelId(), "**You don't have permissions to use this command.**");
 					return;
 				}
 
@@ -503,6 +563,7 @@ CurrencyModule::CurrencyModule(UmikoBot* client)
 
 				if (args.size() == 2) 
 				{
+					auto& config = getServerData(channel.guildId());
 					config.freebieExpireTime = args.at(1).toUInt();
 					client.createMessage(message.channelId(), "**Freebie Expiry Time (secs) set to **" + QString::number(config.freebieExpireTime));
 				}
@@ -526,7 +587,7 @@ CurrencyModule::CurrencyModule(UmikoBot* client)
 				GuildSetting* setting = &GuildSettings::GetGuildSetting(channel.guildId());
 				if (!result) 
 				{
-					client.createMessage(message.channelId(), "You don't have permissions to use this command.");
+					client.createMessage(message.channelId(), "**You don't have permissions to use this command.**");
 					return;
 				}
 
@@ -538,6 +599,7 @@ CurrencyModule::CurrencyModule(UmikoBot* client)
 
 				if (args.size() == 2) 
 				{
+					auto& config = getServerData(channel.guildId());
 					config.gambleLoss = args.at(1).toInt();
 					client.createMessage(message.channelId(), "**Gamble Loss Amount set to **" + QString::number(config.gambleLoss));
 				}
@@ -559,7 +621,7 @@ CurrencyModule::CurrencyModule(UmikoBot* client)
 				GuildSetting* setting = &GuildSettings::GetGuildSetting(channel.guildId());
 				if (!result) 
 				{
-					client.createMessage(message.channelId(), "You don't have permissions to use this command.");
+					client.createMessage(message.channelId(), "**You don't have permissions to use this command.**");
 					return;
 				}
 
@@ -571,6 +633,7 @@ CurrencyModule::CurrencyModule(UmikoBot* client)
 
 				if (args.size() == 2) 
 				{
+					auto& config = getServerData(channel.guildId());
 					config.maxGuess = args.at(1).toInt();
 					client.createMessage(message.channelId(), "**Gamble Max Guess set to **" + QString::number(config.maxGuess));
 				}
@@ -594,7 +657,7 @@ CurrencyModule::CurrencyModule(UmikoBot* client)
 				GuildSetting* setting = &GuildSettings::GetGuildSetting(channel.guildId());
 				if (!result) 
 				{
-					client.createMessage(message.channelId(), "You don't have permissions to use this command.");
+					client.createMessage(message.channelId(), "**You don't have permissions to use this command.**");
 					return;
 				}
 
@@ -606,6 +669,7 @@ CurrencyModule::CurrencyModule(UmikoBot* client)
 
 				if (args.size() == 2) 
 				{
+					auto& config = getServerData(channel.guildId());
 					config.minGuess = args.at(1).toInt();
 					client.createMessage(message.channelId(), "**Gamble Min Guess set to **" + QString::number(config.minGuess));
 				}
@@ -629,7 +693,7 @@ CurrencyModule::CurrencyModule(UmikoBot* client)
 				GuildSetting* setting = &GuildSettings::GetGuildSetting(channel.guildId());
 				if (!result) 
 				{
-					client.createMessage(message.channelId(), "You don't have permissions to use this command.");
+					client.createMessage(message.channelId(), "**You don't have permissions to use this command.**");
 					return;
 				}
 
@@ -641,91 +705,159 @@ CurrencyModule::CurrencyModule(UmikoBot* client)
 
 				if (args.size() == 2) 
 				{
+					auto& config = getServerData(channel.guildId());
 					config.gambleReward = args.at(1).toInt();
 					client.createMessage(message.channelId(), "**Gamble Reward Amount set to **" + QString::number(config.gambleReward));
 				}
 
 		});
 	});
+
+	RegisterCommand(Commands::CURRENCY_RICH_LIST, "richlist", [this](Discord::Client& client, const Discord::Message& message, const Discord::Channel& channel) 
+		{
+		
+			QStringList args = message.content().split(' ');
+			GuildSetting* setting = &GuildSettings::GetGuildSetting(channel.guildId());
+			QString prefix = setting->prefix;
+
+
+			if (args.first() != prefix + "richlist")
+				return;
+
+			if (args.size() > 1) 
+			{
+				client.createMessage(message.channelId(), "**Wrong Usage of Command!** ");
+				return;
+			}
+			else 
+			{
+				//! Print the top 30 (or less depending on number of 
+				//! members) people in the leaderboard
+
+				auto leaderboard = guildList[channel.guildId()];
+				int offset{ 30 };
+				if (leaderboard.size() < 30) {
+					offset = leaderboard.size();
+				}
+
+				qSort(leaderboard.begin(), leaderboard.begin() + offset, [](UserCurrency u1, UserCurrency u2)
+					{
+						return u1.currency > u2.currency;
+					});
+
+				Discord::Embed embed;
+				embed.setTitle("Currency Leaderboard (Top 30)");
+				QString desc;
+				int rank = 0;
+				for (auto user : leaderboard) {
+					rank++;
+					QString username = reinterpret_cast<UmikoBot*>(&client)->GetName(channel.guildId(), user.userId);
+					QString currency = QString::number(user.currency);
+
+					desc += "**" + QString::number(rank) + ") " + username + ":** ";
+					desc += "`" + currency + "`" + "**" + getServerData(channel.guildId()).currencySymbol + "** (" + getServerData(channel.guildId()).currencyName + ")\n";
+				}
+
+				embed.setColor(qrand() % 16777216);
+				embed.setDescription(desc);
+
+				client.createMessage(message.channelId(), embed);
+			}
+		
+		});
+	});
 }
 
 void CurrencyModule::StatusCommand(QString& result, snowflake_t guild, snowflake_t user) 
 {
-	QString creditScore = QString::number(m_settings[user].currency);
-	result += "**Wallet: **" + creditScore + " **" + config.currencySymbol +"**";
+	QString creditScore = QString::number(getUserData(guild, user).currency);
+	result += "**Wallet: **" + creditScore + " **" + getServerData(guild).currencySymbol +"**";
 	result+='\n';
 }
 
 void CurrencyModule::OnMessage(Discord::Client& client, const Discord::Message& message) 
 {
 
-	if (!isRandomGiveAwayDone) 
-	{
-		static int pingCount = 0;
-		if (pingCount == 0) 
+	client.getChannel(message.channelId()).then(
+		[this, message, &client](const Discord::Channel& channel) 
 		{
-			randp.param(std::bernoulli_distribution::param_type(config.randGiveawayProb));
-			bool outcome = randp(random_engine);
-			if (outcome) 
+			if (channel.guildId() != 0 && !message.author().bot()) 
+				//! Make sure the message is not a DM
 			{
-				client.createMessage(config.giveawayChannelId, "Hey everyone! **FREEBIE** available now! Go `!claim` some juicy coins!");
-				allowGiveaway = true;
-				pingCount++;
-			}
-		}
-	}
+				auto guildId = channel.guildId();
+				auto& serverConfig = serverCurrencyConfig[guildId];
 
-	//! If the message is a number, continue with the gambling mech
-	QRegExp re("\\d*");
-	if (re.exactMatch(message.content())) 
-	{
-		if (selfGambleData.gamble && !message.author().bot() && message.channelId() == selfGambleData.channelId && message.author().id() == selfGambleData.userId) 
-		{
-
-			if (message.content().toInt() > config.maxGuess || message.content().toInt() < config.minGuess) 
-			{
-
-				client.createMessage(message.channelId(), "**Your guess is out of range!** \nTry a number between " + QString::number(config.minGuess) + " and " + QString::number(config.maxGuess) + " (inclusive). ");
-				return;
-
-			}
-			if (message.content().toInt() == selfGambleData.randNum) 
-			{
-				if (!selfGambleData.doubleOrNothing) 
+				if (!serverConfig.isRandomGiveawayDone && !serverConfig.allowGiveaway) 
 				{
-					m_settings[message.author().id()].currency += config.gambleReward;
-					client.createMessage(message.channelId(), "**You guessed CORRECTLY!**\n(**" + QString::number(config.gambleReward) + config.currencySymbol + "** have been added to your wallet!)");
-				}
-				else 
-				{
-					m_settings[message.author().id()].currency += 2 * selfGambleData.betAmount;
-					client.createMessage(message.channelId(), "**You guessed CORRECTLY!**\n(**" + QString::number(2 * selfGambleData.betAmount) + config.currencySymbol + "** have been added to your wallet!)");
+						randp.param(std::bernoulli_distribution::param_type(serverConfig.randGiveawayProb));
+						bool outcome = randp(random_engine);
+						if (outcome) {
+							client.createMessage(serverConfig.giveawayChannelId, "Hey everyone! **FREEBIE** available now! Go `!claim` some juicy coins!");
+							serverConfig.allowGiveaway = true;
+						}
+				
 				}
 
+
+				//! If the message is a number, continue with the gambling mech
+				QRegExp re("\\d*");
+				if (re.exactMatch(message.content())) 
+				{
+		
+					if (gambleData[guildId].gamble && !message.author().bot() && message.channelId() == gambleData[guildId].channelId && message.author().id() == gambleData[guildId].userId)
+					{
+
+						if (message.content().toInt() > serverConfig.maxGuess || message.content().toInt() < serverConfig.minGuess)
+						{
+
+							client.createMessage(message.channelId(), "**Your guess is out of range!** \nTry a number between " + QString::number(serverConfig.minGuess) + " and " + QString::number(serverConfig.maxGuess) + " (inclusive). ");
+							return;
+
+						}
+						if (message.content().toInt() == gambleData[guildId].randNum) 
+						{
+							if (!gambleData[guildId].doubleOrNothing) 
+							{
+								auto index = getUserIndex(guildId, message.author().id());
+								guildList[guildId][index].currency += serverConfig.gambleReward;
+								client.createMessage(message.channelId(), "**You guessed CORRECTLY!**\n(**" + QString::number(serverConfig.gambleReward) + serverConfig.currencySymbol + "** have been added to your wallet!)");
+							}
+							else 
+							{
+								auto index = getUserIndex(guildId, message.author().id());
+								guildList[guildId][index].currency += 2 * gambleData[guildId].betAmount;
+								client.createMessage(message.channelId(), "**You guessed CORRECTLY!**\n(**" + QString::number(2 * gambleData[guildId].betAmount) + serverConfig.currencySymbol + "** have been added to your wallet!)");
+							}
+
+						}
+
+						//! Player lost
+						else 
+						{
+							if (!gambleData[guildId].doubleOrNothing) 
+							{
+								auto index = getUserIndex(guildId, message.author().id());
+								guildList[guildId][index].currency -= serverConfig.gambleLoss;
+								client.createMessage(message.channelId(), "**Better Luck next time!**\n*(psst! I took **" + QString::number(serverConfig.gambleLoss) + serverConfig.currencySymbol
+									+ "** from your wallet for my time...)*");
+							}
+							else 
+							{
+								auto index = getUserIndex(guildId, message.author().id());
+								guildList[guildId][index].currency -= gambleData[guildId].betAmount;
+								client.createMessage(message.channelId(), "**Better Luck next time!**\n*(psst! I took **" + QString::number(gambleData[guildId].betAmount) + serverConfig.currencySymbol
+									+ "** from your wallet...)*");
+							}
+
+						}
+
+						gambleData[guildId].gamble = false;
+						gambleData[guildId].doubleOrNothing = false;
+					}
+				}
 			}
 
-			//! Player lost
-			else 
-			{
-				if (!selfGambleData.doubleOrNothing) 
-				{
-					m_settings[message.author().id()].currency -= config.gambleLoss;
-					client.createMessage(message.channelId(), "**Better Luck next time!**\n*(psst! I took **" + QString::number(config.gambleLoss) + config.currencySymbol
-						+ "** from your wallet for my time...)*");
-				}
-				else 
-				{
-					m_settings[message.author().id()].currency -= selfGambleData.betAmount;
-					client.createMessage(message.channelId(), "**Better Luck next time!**\n*(psst! I took **" + QString::number(selfGambleData.betAmount) + config.currencySymbol
-						+ "** from your wallet...)*");
-				}
-
-			}
-
-			selfGambleData.gamble = false;
-			selfGambleData.doubleOrNothing = false;
-		}
-	}
+		});
 
 	Module::OnMessage(client, message);
 }
@@ -733,36 +865,53 @@ void CurrencyModule::OnMessage(Discord::Client& client, const Discord::Message& 
 void CurrencyModule::OnSave(QJsonDocument& doc) const 
 {
 	QJsonObject docObj;
-	// User Data
-	for (auto it = m_settings.begin(); it != m_settings.end(); ++it) 
-	{
-		QJsonObject obj;
-		obj["currency"] = it->currency;
-		obj["isDailyClaimed"] = it->isDailyClaimed;
 
-		docObj[QString::number(it.key())] = obj;
+	//! User Data
+	for (auto server : guildList.keys()) 
+	{
+		QJsonObject serverJSON;
+		
+		for (auto user = guildList[server].begin(); user != guildList[server].end(); ++user) {
+			QJsonObject obj;
+			obj["currency"] = user->currency;
+			obj["isDailyClaimed"] = user->isDailyClaimed;
+
+			serverJSON[QString::number(user->userId)] = obj;
+		}
+
+		docObj[QString::number(server)] = serverJSON;
 	}
 
 	doc.setObject(docObj);
+	
 
+	//! Server Data (Config)
 	QFile currenConfigfile("configs/" + currenConfigLoc + ".json");
 	if (currenConfigfile.open(QFile::ReadWrite | QFile::Truncate)) 
 	{
 		QJsonDocument doc;
-		QJsonObject obj;
-		obj["name"] = config.currencyName;
-		obj["symbol"] = config.currencySymbol;
-		obj["freebieChannelId"] = QString::number(config.giveawayChannelId);
-		obj["dailyReward"] = QString::number(config.dailyReward);
-		obj["freebieReward"] = QString::number(config.freebieReward);
-		obj["gambleLoss"] = QString::number(config.gambleLoss);
-		obj["gambleReward"] = QString::number(config.gambleReward);
-		obj["gambleMinGuess"] = QString::number(config.minGuess);
-		obj["gambleMaxGuess"] = QString::number(config.maxGuess);
-		obj["freebieProb"] = QString::number(config.randGiveawayProb);
-		obj["freebieExpireTime"] = QString::number(config.freebieExpireTime);
+		QJsonObject serverList;
+		for (auto server : serverCurrencyConfig.keys())
+		{
+			QJsonObject obj;
+			
+			auto config = serverCurrencyConfig[server];
+			obj["name"] = config.currencyName;
+			obj["symbol"] = config.currencySymbol;
+			obj["freebieChannelId"] = QString::number(config.giveawayChannelId);
+			obj["dailyReward"] = QString::number(config.dailyReward);
+			obj["freebieReward"] = QString::number(config.freebieReward);
+			obj["gambleLoss"] = QString::number(config.gambleLoss);
+			obj["gambleReward"] = QString::number(config.gambleReward);
+			obj["gambleMinGuess"] = QString::number(config.minGuess);
+			obj["gambleMaxGuess"] = QString::number(config.maxGuess);
+			obj["freebieProb"] = QString::number(config.randGiveawayProb);
+			obj["freebieExpireTime"] = QString::number(config.freebieExpireTime);
 
-		doc.setObject(obj);
+			serverList[QString::number(server)] = obj;
+			
+		}
+		doc.setObject(serverList);
 		currenConfigfile.write(doc.toJson());
 		currenConfigfile.close();
 	}
@@ -772,32 +921,55 @@ void CurrencyModule::OnLoad(const QJsonDocument& doc)
 {
 	QJsonObject docObj = doc.object();
 
-	for (auto it = docObj.begin(); it != docObj.end(); ++it) 
-	{
-		const QJsonObject obj = it.value().toObject();
-		Setting& setting = m_settings[it.key().toULongLong()];
-		setting.currency = obj["currency"].toDouble();
-		setting.isDailyClaimed = obj["isDailyClaimed"].toBool();
-	}
+	QStringList servers = docObj.keys();
 
+	guildList.clear();
+
+	//!User Data (Currency)
+	for (auto server : servers) 
+	{
+		auto guildId = server.toULongLong();
+		auto obj = docObj[server].toObject();
+		QStringList users = obj.keys();
+
+		QList<UserCurrency> list;
+		for (auto user : users) {
+			UserCurrency currencyData;
+			currencyData.userId = user.toULongLong();
+			currencyData.currency = obj[user].toObject()["currency"].toDouble();
+			currencyData.isDailyClaimed = obj[user].toObject()["isDailyClaimed"].toBool();
+			list.append(currencyData);
+		}
+		guildList.insert(guildId, list);
+		
+	}
 	QFile currenConfigfile("configs/" + currenConfigLoc + ".json");
 	if (currenConfigfile.open(QFile::ReadOnly)) 
 	{
 		QJsonDocument d = QJsonDocument::fromJson(currenConfigfile.readAll());
 		QJsonObject rootObj = d.object();
 
-		config.currencyName = rootObj["name"].toString();
-		config.currencySymbol = rootObj["symbol"].toString();
-		config.giveawayChannelId = rootObj["freebieChannelId"].toString().toULongLong();
-		config.dailyReward = rootObj["dailyReward"].toString().toInt();
-		config.freebieReward = rootObj["freebieReward"].toString().toInt();
-		config.gambleLoss = rootObj["gambleLoss"].toString().toInt();
-		config.gambleReward = rootObj["gambleReward"].toString().toInt();
-		config.minGuess = rootObj["gambleMinGuess"].toString().toInt();
-		config.maxGuess = rootObj["gambleMaxGuess"].toString().toInt();
-		config.randGiveawayProb = rootObj["freebieProb"].toString().toDouble();
-		config.freebieExpireTime = rootObj["freebieExpireTime"].toString().toUInt();
+		serverCurrencyConfig.clear();
+		auto servers = rootObj.keys();
+		for (const auto& server : servers) {
+			CurrencyConfig config;
+			auto serverObj = rootObj[server].toObject();
+			config.currencyName = serverObj["name"].toString();
+			config.currencySymbol = serverObj["symbol"].toString();
+			config.giveawayChannelId = serverObj["freebieChannelId"].toString().toULongLong();
+			config.dailyReward = serverObj["dailyReward"].toString().toInt();
+			config.freebieReward = serverObj["freebieReward"].toString().toInt();
+			config.gambleLoss = serverObj["gambleLoss"].toString().toInt();
+			config.gambleReward = serverObj["gambleReward"].toString().toInt();
+			config.minGuess = serverObj["gambleMinGuess"].toString().toInt();
+			config.maxGuess = serverObj["gambleMaxGuess"].toString().toInt();
+			config.randGiveawayProb = serverObj["freebieProb"].toString().toDouble();
+			config.freebieExpireTime = serverObj["freebieExpireTime"].toString().toUInt();
+			auto guildId = server.toULongLong();
+			serverCurrencyConfig.insert(guildId, config);
+		}
 
+		
 		currenConfigfile.close();
 	}
 }
