@@ -935,6 +935,7 @@ void CurrencyModule::OnMessage(Discord::Client& client, const Discord::Message& 
 
 						gambleData[guildId].gamble = false;
 						gambleData[guildId].doubleOrNothing = false;
+						delete gambleData[guildId].timer;
 					}
 				}
 			}
