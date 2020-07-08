@@ -84,7 +84,9 @@ private:
 				return std::distance(guildList[guild].begin(), it);
 			}
 		}
-		return -1;
+		//! If user is not added to the system, make a new one
+		guildList[guild].append(UserCurrency{ id, 0, false });
+		return std::distance(guildList[guild].begin(), std::prev(guildList[guild].end()));
 	}
 
 	CurrencyConfig& getServerData(snowflake_t guild) 

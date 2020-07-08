@@ -5,13 +5,15 @@
 #include <QtCore/QFile>
 #include <QtCore/QJsonDocument>
 #include <QtCore/qregexp.h>
-#include <iostream>
 
 //! Currency Config Location
 #define currenConfigLoc QString("currencyConfig")
 
 //! Maximum amount that can be bet
 #define gamblebetMax 100
+
+//! Maximum donation amount
+#define donateMax 200
 
 //! Gamble Timeout in seconds
 #define gambleTimeout 20
@@ -774,6 +776,76 @@ CurrencyModule::CurrencyModule(UmikoBot* client)
 				client.createMessage(message.channelId(), embed);
 			}
 		
+		}
+	);
+
+	RegisterCommand(Commands::CURRENCY_DONATE, "donate", [this](Discord::Client& client, const Discord::Message& message, const Discord::Channel& channel) {
+
+		QStringList args = message.content().split(' ');
+		GuildSetting* setting = &GuildSettings::GetGuildSetting(channel.guildId());
+		QString prefix = setting->prefix;
+
+
+		if (args.first() != prefix + "donate")
+			return;
+
+		if (args.size() == 1 || args.size() == 2) {
+			client.createMessage(message.channelId(), "**Wrong Usage of Command!** ");
+			return;
+		}
+		QRegExp re("[+]?\\d*\\.?\\d+");
+		if (!re.exactMatch(args.at(1))) 
+		{
+				client.createMessage(message.channelId(), "**You can't donate in invalid amounts**");
+					return;
+		}
+
+		if (args.at(1).toDouble() == 0) 
+		{
+			client.createMessage(message.channelId(), "**Please don't donate at all if you don't want to donate anything.**");
+			return;
+		}
+
+		if (args.at(1).toDouble() > donateMax) 
+		{
+			client.createMessage(message.channelId(), "You can't donate an amount more than **" + QString::number(donateMax) + getServerData(channel.guildId()).currencySymbol + "**");
+			return;
+		}
+
+		QList<Discord::User> mentions = message.mentions();
+		if (mentions.size() == 0) {
+			client.createMessage(message.channelId(), "**Who do you want to donate to? Please `@` all those people.**");
+			return;
+		}
+
+		for (auto user : mentions) 
+		{
+		if (user.id() == message.author().id()) 
+		{
+			client.createMessage(message.channelId(), "**You cannot donate to yourself!**\nPlease remove yourself from the list.");
+			return;
+		}
+		}
+
+		guildList[channel.guildId()][getUserIndex(channel.guildId(), message.author().id())].currency -= args.at(1).toDouble();
+
+		double donation = args.at(1).toDouble() / mentions.size();
+		QString desc = "<@" + QString::number(message.author().id()) + "> donated **" + QString::number(donation) + getServerData(channel.guildId()).currencySymbol + "** to";
+
+		for (auto user : mentions) 
+		{
+			auto index = getUserIndex(channel.guildId(), user.id());
+			desc += " <@" + QString::number(user.id()) + ">";
+			guildList[channel.guildId()][index].currency += donation;
+		}
+
+		Discord::Embed embed;
+		embed.setTitle("Donation by " + reinterpret_cast<UmikoBot*>(&client)->GetName(channel.guildId(), message.author().id()) + "!");
+		embed.setDescription(desc);
+		embed.setColor(qrand() % 16777216);
+
+		client.createMessage(message.channelId(), embed);
+
 		}
 	);
 }
