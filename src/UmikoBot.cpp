@@ -739,7 +739,8 @@ void UmikoBot::Load()
 		Command(CURRENCY_SET_PRIZE),
 		Command(CURRENCY_SET_PRIZE_EXPIRY),
 		Command(CURRENCY_SET_PRIZE_PROB),
-		Command(CURRENCY_RICH_LIST)
+		Command(CURRENCY_RICH_LIST),
+		Command(CURRENCY_DONATE)
 	};
 
 	QFile file("commands.json");

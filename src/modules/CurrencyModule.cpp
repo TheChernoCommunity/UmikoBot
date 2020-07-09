@@ -5,13 +5,15 @@
 #include <QtCore/QFile>
 #include <QtCore/QJsonDocument>
 #include <QtCore/qregexp.h>
-#include <iostream>
 
 //! Currency Config Location
 #define currenConfigLoc QString("currencyConfig")
 
 //! Maximum amount that can be bet
 #define gamblebetMax 100
+
+//! Maximum donation amount
+#define donateMax 200
 
 //! Gamble Timeout in seconds
 #define gambleTimeout 20
@@ -153,10 +155,11 @@ CurrencyModule::CurrencyModule(UmikoBot* client)
 
 			if (serverGamble.gamble) 
 			{
+				QString user = reinterpret_cast<UmikoBot*>(&client)->GetName(channel.guildId(), serverGamble.userId);
 				Discord::Embed embed;
 				embed.setColor(qrand() % 16777216);
 				embed.setTitle("Welcome to Gamble!");
-				embed.setDescription("**Sorry but this feature is currently in use by another person. Please try again later!**");
+				embed.setDescription("Sorry but this feature is currently in use by **" + user + "**. Please try again later!");
 				client.createMessage(message.channelId(), embed);
 				return;
 			}
@@ -188,9 +191,11 @@ CurrencyModule::CurrencyModule(UmikoBot* client)
 
 			serverGamble.timer->start();
 
+			QString name = reinterpret_cast<UmikoBot*>(&client)->GetName(channel.guildId(), serverGamble.userId);
+
 			Discord::Embed embed;
 			embed.setColor(qrand() % 16777216);
-			embed.setTitle("Welcome to Gamble!");
+			embed.setTitle("Welcome to Gamble " + name + "!");
 			embed.setDescription("All you need to do is guess a random number between "+ QString::number(config.minGuess) + " and " + QString::number(config.maxGuess) + " (inclusive) and if it is the same as the number I guess, you get **"+ QString::number(config.gambleReward) + config.currencySymbol + "**!\n\n**What number do you think of?** <:wesmart:388340133864407043>");
 			
 			client.createMessage(message.channelId(), embed);
@@ -211,16 +216,22 @@ CurrencyModule::CurrencyModule(UmikoBot* client)
 
 			if (serverGamble.gamble)
 			{
+				QString user = reinterpret_cast<UmikoBot*>(&client)->GetName(channel.guildId(), serverGamble.userId);
 				Discord::Embed embed;
 				embed.setColor(qrand() % 16777216);
 				embed.setTitle("Welcome to Gamble!");
-				embed.setDescription("**Sorry but this feature is currently in use by another person. Please try again later!**");
+				embed.setDescription("Sorry but this feature is currently in use by **" + user + "**. Please try again later!");
 				client.createMessage(message.channelId(), embed);
 				return;
 			}
 			if (args.at(1).toDouble() > gamblebetMax) 
 			{
 				client.createMessage(channel.id(), "You cannot bet an amount more than **" + QString::number(gamblebetMax) + config.currencySymbol+"**");
+				return;
+			}
+			if (args.at(1).toDouble() == 0) 
+			{
+				client.createMessage(message.channelId(), "<:aanger:730377398314467439> **BRUH. Don't you dare waste my time! I ain't interested in nothing.**");
 				return;
 			}
 			serverGamble.randNum = qrand() % (config.maxGuess - config.minGuess + 1) + config.minGuess;
@@ -250,11 +261,12 @@ CurrencyModule::CurrencyModule(UmikoBot* client)
 				});
 
 			serverGamble.timer->start();
+			QString name = reinterpret_cast<UmikoBot*>(&client)->GetName(channel.guildId(), serverGamble.userId);
 
 			Discord::Embed embed;
 			embed.setColor(qrand() % 16777216);
-			embed.setTitle("Welcome to Gamble (Double or Nothing)!");
-			embed.setDescription("All you need to do is guess a random number between " + QString::number(config.minGuess) + " and " + QString::number(config.maxGuess) + " (inclusive) and if it is the same as the number I guess, you get double the amount you just bet: **" + QString::number(2* serverGamble.betAmount) + config.currencySymbol + "**!\n\n**What number do you think of?**");
+			embed.setTitle("Welcome to Gamble (Double or Nothing) " + name + "!");
+			embed.setDescription("All you need to do is guess a random number between " + QString::number(config.minGuess) + " and " + QString::number(config.maxGuess) + " (inclusive) and if it is the same as the number I guess, you get double the amount you just bet: **" + QString::number(2* serverGamble.betAmount) + config.currencySymbol + "**!\n\n**What number do you think of?** <:wesmart:388340133864407043>");
 
 			client.createMessage(message.channelId(), embed);
 		}
@@ -766,6 +778,76 @@ CurrencyModule::CurrencyModule(UmikoBot* client)
 		
 		}
 	);
+
+	RegisterCommand(Commands::CURRENCY_DONATE, "donate", [this](Discord::Client& client, const Discord::Message& message, const Discord::Channel& channel) {
+
+		QStringList args = message.content().split(' ');
+		GuildSetting* setting = &GuildSettings::GetGuildSetting(channel.guildId());
+		QString prefix = setting->prefix;
+
+
+		if (args.first() != prefix + "donate")
+			return;
+
+		if (args.size() == 1 || args.size() == 2) {
+			client.createMessage(message.channelId(), "**Wrong Usage of Command!** ");
+			return;
+		}
+		QRegExp re("[+]?\\d*\\.?\\d+");
+		if (!re.exactMatch(args.at(1))) 
+		{
+				client.createMessage(message.channelId(), "**You can't donate in invalid amounts**");
+					return;
+		}
+
+		if (args.at(1).toDouble() == 0) 
+		{
+			client.createMessage(message.channelId(), "**Please don't donate at all if you don't want to donate anything.**");
+			return;
+		}
+
+		if (args.at(1).toDouble() > donateMax) 
+		{
+			client.createMessage(message.channelId(), "You can't donate an amount more than **" + QString::number(donateMax) + getServerData(channel.guildId()).currencySymbol + "**");
+			return;
+		}
+
+		QList<Discord::User> mentions = message.mentions();
+		if (mentions.size() == 0) {
+			client.createMessage(message.channelId(), "**Who do you want to donate to? Please `@` all those people.**");
+			return;
+		}
+
+		for (auto user : mentions) 
+		{
+		if (user.id() == message.author().id()) 
+		{
+			client.createMessage(message.channelId(), "**You cannot donate to yourself!**\nPlease remove yourself from the list.");
+			return;
+		}
+		}
+
+		guildList[channel.guildId()][getUserIndex(channel.guildId(), message.author().id())].currency -= args.at(1).toDouble();
+
+		double donation = args.at(1).toDouble() / mentions.size();
+		QString desc = "<@" + QString::number(message.author().id()) + "> donated **" + QString::number(donation) + getServerData(channel.guildId()).currencySymbol + "** to";
+
+		for (auto user : mentions) 
+		{
+			auto index = getUserIndex(channel.guildId(), user.id());
+			desc += " <@" + QString::number(user.id()) + ">";
+			guildList[channel.guildId()][index].currency += donation;
+		}
+
+		Discord::Embed embed;
+		embed.setTitle("Donation by " + reinterpret_cast<UmikoBot*>(&client)->GetName(channel.guildId(), message.author().id()) + "!");
+		embed.setDescription(desc);
+		embed.setColor(qrand() % 16777216);
+
+		client.createMessage(message.channelId(), embed);
+
+		}
+	);
 }
 
 void CurrencyModule::StatusCommand(QString& result, snowflake_t guild, snowflake_t user) 
@@ -853,6 +935,7 @@ void CurrencyModule::OnMessage(Discord::Client& client, const Discord::Message& 
 
 						gambleData[guildId].gamble = false;
 						gambleData[guildId].doubleOrNothing = false;
+						delete gambleData[guildId].timer;
 					}
 				}
 			}
