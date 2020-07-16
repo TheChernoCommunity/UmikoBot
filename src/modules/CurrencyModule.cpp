@@ -91,7 +91,7 @@ CurrencyModule::CurrencyModule(UmikoBot* client)
 			QString creditScore = QString::number(getUserData(channel.guildId(), message.author().id()).currency);
 			
 			QString desc = "**Current Credits: ** `" + creditScore + "` **" + config.currencySymbol + "** (" + config.currencyName +")";
-			embed.setTitle("Your Wallet");
+			embed.setTitle(reinterpret_cast<UmikoBot*>(&client)->GetName(channel.guildId(), message.author().id()) +"'s Wallet");
 			embed.setDescription(desc);
 			client.createMessage(message.channelId(), embed);
 		}
