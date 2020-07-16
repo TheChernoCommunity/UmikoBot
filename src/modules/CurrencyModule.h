@@ -34,6 +34,7 @@ private:
 		QString currencySymbol;
 		bool isRandomGiveawayDone{ false };
 		bool allowGiveaway{ false };
+		QTimer* freebieTimer{ nullptr };
 	};
 
 	std::random_device random_device;

@@ -25,7 +25,6 @@ CurrencyModule::CurrencyModule(UmikoBot* client)
 	m_timer.setInterval(24*60*60*1000); //!24hr timer
 	QObject::connect(&m_timer, &QTimer::timeout, [this, client]() 
 		{
-			
 			for (auto server : guildList.keys()) 
 			{
 				//!Clear the daily bonus for everyone
@@ -43,18 +42,25 @@ CurrencyModule::CurrencyModule(UmikoBot* client)
 					client->createMessage(serverConfig.giveawayChannelId, "Hey everyone! Today's freebie expires in **"+ QString::number(serverConfig.freebieExpireTime) +" seconds**. `!claim` it now!");
 
 					serverConfig.allowGiveaway = true;
+					
+					//! Delete the previously allocated thingy
+					if (serverConfig.freebieTimer != nullptr) {
+						delete serverConfig.freebieTimer;
+						serverConfig.freebieTimer = nullptr;
+					}
 
-					QTimer timer;
-					timer.setInterval(serverConfig.freebieExpireTime * 1000);
-					QObject::connect(&timer, &QTimer::timeout, 
+					serverConfig.freebieTimer = new QTimer;
+					serverConfig.freebieTimer->setInterval(serverConfig.freebieExpireTime * 1000);
+					serverConfig.freebieTimer->setSingleShot(true);
+					QObject::connect(serverConfig.freebieTimer, &QTimer::timeout,
 					[this, client, guildId] ()
 						{
 							auto& serverConfig = getServerData(guildId);
-							if(serverConfig.isRandomGiveawayDone)
-							serverConfig.isRandomGiveawayDone = false;
+							serverConfig.allowGiveaway = false;
 						});
+					serverConfig.freebieTimer->start();
 				}
-
+				serverConfig.isRandomGiveawayDone = false;
 			}
 		
 	});
@@ -307,6 +313,7 @@ CurrencyModule::CurrencyModule(UmikoBot* client)
 
 					client.createMessage(message.channelId(), embed);
 					getServerData(channel.guildId()).isRandomGiveawayDone = true;
+					getServerData(channel.guildId()).allowGiveaway = false;
 				}
 				else 
 				{
@@ -318,7 +325,7 @@ CurrencyModule::CurrencyModule(UmikoBot* client)
 				Discord::Embed embed;
 				embed.setColor(qrand()%11777216);
 				embed.setTitle("Claim FREEBIE");
-				embed.setDescription("Sorry, today's freebie has been claimed (or it expired) :cry: \n\n But you can always try again the next day!");
+				embed.setDescription("Sorry, today's freebie has been claimed :cry: \n\n But you can always try again the next day!");
 				client.createMessage(message.channelId(), embed);
 			}
 		}
@@ -871,7 +878,7 @@ void CurrencyModule::OnMessage(Discord::Client& client, const Discord::Message& 
 				//! Make sure the message is not a DM
 			{
 				auto guildId = channel.guildId();
-				auto& serverConfig = serverCurrencyConfig[guildId];
+				auto& serverConfig = getServerData(guildId);
 
 				if (!serverConfig.isRandomGiveawayDone && !serverConfig.allowGiveaway) 
 				{
