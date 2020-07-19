@@ -12,8 +12,8 @@
 //! Maximum amount that can be bet
 #define gamblebetMax 100
 
-//! Maximum donation amount
-#define donateMax 200
+//! Maximum debt that a user can be in
+#define debtMax -100
 
 //! Gamble Timeout in seconds
 #define gambleTimeout 20
@@ -158,7 +158,11 @@ CurrencyModule::CurrencyModule(UmikoBot* client)
 		{
 
 			auto& serverGamble = gambleData[channel.guildId()];
-
+			if (guildList[channel.guildId()][getUserIndex(channel.guildId(), message.author().id())].currency - getServerData(channel.guildId()).gambleLoss < debtMax) 
+			{
+				client.createMessage(message.channelId(), "**Nope, can't let you get to serious debt.**");
+				return;
+			}
 			if (serverGamble.gamble) 
 			{
 				QString user = reinterpret_cast<UmikoBot*>(&client)->GetName(channel.guildId(), serverGamble.userId);
@@ -220,6 +224,11 @@ CurrencyModule::CurrencyModule(UmikoBot* client)
 			auto& serverGamble = gambleData[channel.guildId()];
 			auto& config = getServerData(channel.guildId());
 
+			if (guildList[channel.guildId()][getUserIndex(channel.guildId(), message.author().id())].currency - args.at(1).toDouble() < debtMax)
+			{
+				client.createMessage(message.channelId(), "**Nope, can't let you get to serious debt.**");
+				return;
+			}
 			if (serverGamble.gamble)
 			{
 				QString user = reinterpret_cast<UmikoBot*>(&client)->GetName(channel.guildId(), serverGamble.userId);
@@ -817,9 +826,9 @@ CurrencyModule::CurrencyModule(UmikoBot* client)
 			return;
 		}
 
-		if (args.at(1).toDouble() > donateMax) 
+		if (guildList[channel.guildId()][getUserIndex(channel.guildId(), message.author().id())].currency - args.at(1).toDouble() < 0)
 		{
-			client.createMessage(message.channelId(), "You can't donate an amount more than **" + QString::number(donateMax) + getServerData(channel.guildId()).currencySymbol + "**");
+			client.createMessage(message.channelId(), "**I can't let you do that, otherwise you'll be in debt!**");
 			return;
 		}
 
