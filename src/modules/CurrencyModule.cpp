@@ -798,7 +798,7 @@ CurrencyModule::CurrencyModule(UmikoBot* client)
 					QString currency = QString::number(user.currency);
 
 					desc += "**" + QString::number(rank) + ") " + username + ":** ";
-					desc += "`" + currency + "`" + "**" + getServerData(channel.guildId()).currencySymbol + "** (" + getServerData(channel.guildId()).currencyName + ")\n";
+					desc += "`" + currency + "`" + "**" + getServerData(channel.guildId()).currencySymbol + "**\n";
 				}
 
 				embed.setColor(qrand() % 16777216);
