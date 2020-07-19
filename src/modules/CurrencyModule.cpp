@@ -19,7 +19,7 @@
 #define gambleTimeout 20
 
 CurrencyModule::CurrencyModule(UmikoBot* client)
-	: Module("currency", true)
+	: Module("currency", true), m_client(client)
 {
 
 	m_timer.setInterval(24*60*60*1000); //!24hr timer
@@ -766,9 +766,20 @@ CurrencyModule::CurrencyModule(UmikoBot* client)
 				//! Print the top 30 (or less depending on number of 
 				//! members) people in the leaderboard
 
-				auto leaderboard = guildList[channel.guildId()];
+				auto& leaderboard = guildList[channel.guildId()];
+
+				//! Remove the users which aren't in the server anymore
+				for (int i = 0; i < leaderboard.size(); i++) 
+				{
+					if (reinterpret_cast<UmikoBot*>(&client)->GetName(channel.guildId(), leaderboard[i].userId) == "") 
+					{
+						leaderboard.removeAt(i);
+					}
+				}
+
 				int offset{ 30 };
-				if (leaderboard.size() < 30) {
+				if (leaderboard.size() < 30) 
+				{
 					offset = leaderboard.size();
 				}
 
@@ -974,7 +985,11 @@ void CurrencyModule::OnSave(QJsonDocument& doc) const
 	{
 		QJsonObject serverJSON;
 		
-		for (auto user = guildList[server].begin(); user != guildList[server].end(); ++user) {
+		for (auto user = guildList[server].begin(); user != guildList[server].end(); user++) {
+			if (m_client->GetName(server, user->userId) == "")
+			{
+				continue;
+			}
 			QJsonObject obj;
 			obj["currency"] = user->currency;
 			obj["isDailyClaimed"] = user->isDailyClaimed;

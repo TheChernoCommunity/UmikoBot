@@ -58,6 +58,8 @@ private:
 	//! Map each !gamble (on a server) with its own gamble
 	QMap<snowflake_t, GambleData> gambleData;
 
+	UmikoBot* m_client;
+
 private:
 	void OnSave(QJsonDocument& doc) const override;
 	void OnLoad(const QJsonDocument& doc) override;
