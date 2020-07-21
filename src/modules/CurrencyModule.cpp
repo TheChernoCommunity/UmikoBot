@@ -792,7 +792,7 @@ CurrencyModule::CurrencyModule(UmikoBot* client)
 				embed.setTitle("Currency Leaderboard (Top 30)");
 				QString desc;
 				int rank = 0;
-				for (auto user : leaderboard) {
+				for (auto user : leaderboard.mid(0, offset)) {
 					rank++;
 					QString username = reinterpret_cast<UmikoBot*>(&client)->GetName(channel.guildId(), user.userId);
 					QString currency = QString::number(user.currency);
