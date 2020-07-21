@@ -34,6 +34,7 @@ private:
 		QString currencySymbol;
 		bool isRandomGiveawayDone{ false };
 		bool allowGiveaway{ false };
+		QTimer* freebieTimer{ nullptr };
 	};
 
 	std::random_device random_device;
@@ -56,6 +57,8 @@ private:
 	
 	//! Map each !gamble (on a server) with its own gamble
 	QMap<snowflake_t, GambleData> gambleData;
+
+	UmikoBot* m_client;
 
 private:
 	void OnSave(QJsonDocument& doc) const override;

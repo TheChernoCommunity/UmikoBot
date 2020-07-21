@@ -12,20 +12,19 @@
 //! Maximum amount that can be bet
 #define gamblebetMax 100
 
-//! Maximum donation amount
-#define donateMax 200
+//! Maximum debt that a user can be in
+#define debtMax -100
 
 //! Gamble Timeout in seconds
 #define gambleTimeout 20
 
 CurrencyModule::CurrencyModule(UmikoBot* client)
-	: Module("currency", true)
+	: Module("currency", true), m_client(client)
 {
 
 	m_timer.setInterval(24*60*60*1000); //!24hr timer
 	QObject::connect(&m_timer, &QTimer::timeout, [this, client]() 
 		{
-			
 			for (auto server : guildList.keys()) 
 			{
 				//!Clear the daily bonus for everyone
@@ -43,18 +42,25 @@ CurrencyModule::CurrencyModule(UmikoBot* client)
 					client->createMessage(serverConfig.giveawayChannelId, "Hey everyone! Today's freebie expires in **"+ QString::number(serverConfig.freebieExpireTime) +" seconds**. `!claim` it now!");
 
 					serverConfig.allowGiveaway = true;
+					
+					//! Delete the previously allocated thingy
+					if (serverConfig.freebieTimer != nullptr) {
+						delete serverConfig.freebieTimer;
+						serverConfig.freebieTimer = nullptr;
+					}
 
-					QTimer timer;
-					timer.setInterval(serverConfig.freebieExpireTime * 1000);
-					QObject::connect(&timer, &QTimer::timeout, 
+					serverConfig.freebieTimer = new QTimer;
+					serverConfig.freebieTimer->setInterval(serverConfig.freebieExpireTime * 1000);
+					serverConfig.freebieTimer->setSingleShot(true);
+					QObject::connect(serverConfig.freebieTimer, &QTimer::timeout,
 					[this, client, guildId] ()
 						{
 							auto& serverConfig = getServerData(guildId);
-							if(serverConfig.isRandomGiveawayDone)
-							serverConfig.isRandomGiveawayDone = false;
+							serverConfig.allowGiveaway = false;
 						});
+					serverConfig.freebieTimer->start();
 				}
-
+				serverConfig.isRandomGiveawayDone = false;
 			}
 		
 	});
@@ -85,7 +91,7 @@ CurrencyModule::CurrencyModule(UmikoBot* client)
 			QString creditScore = QString::number(getUserData(channel.guildId(), message.author().id()).currency);
 			
 			QString desc = "**Current Credits: ** `" + creditScore + "` **" + config.currencySymbol + "** (" + config.currencyName +")";
-			embed.setTitle("Your Wallet");
+			embed.setTitle(reinterpret_cast<UmikoBot*>(&client)->GetName(channel.guildId(), message.author().id()) +"'s Wallet");
 			embed.setDescription(desc);
 			client.createMessage(message.channelId(), embed);
 		}
@@ -152,7 +158,11 @@ CurrencyModule::CurrencyModule(UmikoBot* client)
 		{
 
 			auto& serverGamble = gambleData[channel.guildId()];
-
+			if (guildList[channel.guildId()][getUserIndex(channel.guildId(), message.author().id())].currency - getServerData(channel.guildId()).gambleLoss < debtMax) 
+			{
+				client.createMessage(message.channelId(), "**Nope, can't let you get to serious debt.**");
+				return;
+			}
 			if (serverGamble.gamble) 
 			{
 				QString user = reinterpret_cast<UmikoBot*>(&client)->GetName(channel.guildId(), serverGamble.userId);
@@ -214,6 +224,11 @@ CurrencyModule::CurrencyModule(UmikoBot* client)
 			auto& serverGamble = gambleData[channel.guildId()];
 			auto& config = getServerData(channel.guildId());
 
+			if (guildList[channel.guildId()][getUserIndex(channel.guildId(), message.author().id())].currency - args.at(1).toDouble() < debtMax)
+			{
+				client.createMessage(message.channelId(), "**Nope, can't let you get to serious debt.**");
+				return;
+			}
 			if (serverGamble.gamble)
 			{
 				QString user = reinterpret_cast<UmikoBot*>(&client)->GetName(channel.guildId(), serverGamble.userId);
@@ -307,6 +322,7 @@ CurrencyModule::CurrencyModule(UmikoBot* client)
 
 					client.createMessage(message.channelId(), embed);
 					getServerData(channel.guildId()).isRandomGiveawayDone = true;
+					getServerData(channel.guildId()).allowGiveaway = false;
 				}
 				else 
 				{
@@ -318,7 +334,7 @@ CurrencyModule::CurrencyModule(UmikoBot* client)
 				Discord::Embed embed;
 				embed.setColor(qrand()%11777216);
 				embed.setTitle("Claim FREEBIE");
-				embed.setDescription("Sorry, today's freebie has been claimed (or it expired) :cry: \n\n But you can always try again the next day!");
+				embed.setDescription("Sorry, today's freebie has been claimed :cry: \n\n But you can always try again the next day!");
 				client.createMessage(message.channelId(), embed);
 			}
 		}
@@ -449,6 +465,7 @@ CurrencyModule::CurrencyModule(UmikoBot* client)
 		GuildSetting* setting = &GuildSettings::GetGuildSetting(channel.guildId());
 		QString prefix = setting->prefix;
 
+
 		if (args.first() != prefix + "setdaily")
 			return;
 
@@ -483,6 +500,7 @@ CurrencyModule::CurrencyModule(UmikoBot* client)
 		QStringList args = message.content().split(' ');
 		GuildSetting* setting = &GuildSettings::GetGuildSetting(channel.guildId());
 		QString prefix = setting->prefix;
+
 
 		if (args.first() != prefix + "setprize")
 			return;
@@ -519,6 +537,7 @@ CurrencyModule::CurrencyModule(UmikoBot* client)
 		GuildSetting* setting = &GuildSettings::GetGuildSetting(channel.guildId());
 		QString prefix = setting->prefix;
 
+
 		if (args.first() != prefix + "setprizeprob")
 			return;
 
@@ -553,6 +572,7 @@ CurrencyModule::CurrencyModule(UmikoBot* client)
 		QStringList args = message.content().split(' ');
 		GuildSetting* setting = &GuildSettings::GetGuildSetting(channel.guildId());
 		QString prefix = setting->prefix;
+
 
 		if (args.first() != prefix + "setprizeexpiry")
 			return;
@@ -746,9 +766,20 @@ CurrencyModule::CurrencyModule(UmikoBot* client)
 				//! Print the top 30 (or less depending on number of 
 				//! members) people in the leaderboard
 
-				auto leaderboard = guildList[channel.guildId()];
+				auto& leaderboard = guildList[channel.guildId()];
+
+				//! Remove the users which aren't in the server anymore
+				for (int i = 0; i < leaderboard.size(); i++) 
+				{
+					if (reinterpret_cast<UmikoBot*>(&client)->GetName(channel.guildId(), leaderboard[i].userId) == "") 
+					{
+						leaderboard.removeAt(i);
+					}
+				}
+
 				int offset{ 30 };
-				if (leaderboard.size() < 30) {
+				if (leaderboard.size() < 30) 
+				{
 					offset = leaderboard.size();
 				}
 
@@ -761,13 +792,13 @@ CurrencyModule::CurrencyModule(UmikoBot* client)
 				embed.setTitle("Currency Leaderboard (Top 30)");
 				QString desc;
 				int rank = 0;
-				for (auto user : leaderboard) {
+				for (auto user : leaderboard.mid(0, offset)) {
 					rank++;
 					QString username = reinterpret_cast<UmikoBot*>(&client)->GetName(channel.guildId(), user.userId);
 					QString currency = QString::number(user.currency);
 
 					desc += "**" + QString::number(rank) + ") " + username + ":** ";
-					desc += "`" + currency + "`" + "**" + getServerData(channel.guildId()).currencySymbol + "** (" + getServerData(channel.guildId()).currencyName + ")\n";
+					desc += "`" + currency + "`" + "**" + getServerData(channel.guildId()).currencySymbol + "**\n";
 				}
 
 				embed.setColor(qrand() % 16777216);
@@ -806,9 +837,9 @@ CurrencyModule::CurrencyModule(UmikoBot* client)
 			return;
 		}
 
-		if (args.at(1).toDouble() > donateMax) 
+		if (guildList[channel.guildId()][getUserIndex(channel.guildId(), message.author().id())].currency - args.at(1).toDouble() < 0)
 		{
-			client.createMessage(message.channelId(), "You can't donate an amount more than **" + QString::number(donateMax) + getServerData(channel.guildId()).currencySymbol + "**");
+			client.createMessage(message.channelId(), "**I can't let you do that, otherwise you'll be in debt!**");
 			return;
 		}
 
@@ -867,7 +898,7 @@ void CurrencyModule::OnMessage(Discord::Client& client, const Discord::Message& 
 				//! Make sure the message is not a DM
 			{
 				auto guildId = channel.guildId();
-				auto& serverConfig = serverCurrencyConfig[guildId];
+				auto& serverConfig = getServerData(guildId);
 
 				if (!serverConfig.isRandomGiveawayDone && !serverConfig.allowGiveaway) 
 				{
@@ -954,7 +985,11 @@ void CurrencyModule::OnSave(QJsonDocument& doc) const
 	{
 		QJsonObject serverJSON;
 		
-		for (auto user = guildList[server].begin(); user != guildList[server].end(); ++user) {
+		for (auto user = guildList[server].begin(); user != guildList[server].end(); user++) {
+			if (m_client->GetName(server, user->userId) == "")
+			{
+				continue;
+			}
 			QJsonObject obj;
 			obj["currency"] = user->currency;
 			obj["isDailyClaimed"] = user->isDailyClaimed;
