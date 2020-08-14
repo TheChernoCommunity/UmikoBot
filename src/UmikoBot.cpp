@@ -691,6 +691,19 @@ QString UmikoBot::GetCommandHelp(QString commandName, QString prefix)
 	return description;
 }
 
+QList<Command> UmikoBot::GetAllCommands()
+{
+	// TDDO(fkp): As this doesn't change, cache it maybe?
+	QList<Command> result = m_commands;
+	
+	for (Module* module : m_modules)
+	{
+		result.append(module->GetCommands());
+	}
+
+	return result;
+}
+
 void UmikoBot::OnDisconnected()
 {
 	getGatewaySocket().reconnectToGateway();

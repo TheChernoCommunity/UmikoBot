@@ -1025,6 +1025,15 @@ void LevelModule::OnMessage(Discord::Client& client, const Discord::Message& mes
 		if(!GuildSettings::ExpAllowed(channel.guildId(), channel.id()))
 			return;
 
+		QList<Command> commands = UmikoBot::Instance().GetAllCommands();
+		GuildSetting setting = GuildSettings::GetGuildSetting(channel.guildId());
+
+		for (Command& command : commands)
+		{
+			if (message.content().startsWith(setting.prefix + command.name))
+				return;
+		}
+
 		for (GuildLevelData& data : exp) {
 			if (data.user == message.author().id()) {
 				data.messageCount++;

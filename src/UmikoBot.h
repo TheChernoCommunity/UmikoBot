@@ -80,6 +80,7 @@ public:
 	bool IsOwner(snowflake_t guild, snowflake_t user);
 
 	QString GetCommandHelp(QString commandName, QString prefix);
+	QList<Command> GetAllCommands();
 
 private slots:
 	void OnDisconnected();
