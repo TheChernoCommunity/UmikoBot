@@ -65,7 +65,9 @@ struct CommandInfo {
 class UmikoBot : public Discord::Client 
 {
 public:
-	UmikoBot(QObject* parent = nullptr);
+	static UmikoBot& Instance();
+	UmikoBot(const UmikoBot&) = delete;
+	void operator=(const UmikoBot&) = delete;
 	~UmikoBot();
 
 	QString GetNick(snowflake_t guild, snowflake_t user);
@@ -83,6 +85,8 @@ private slots:
 	void OnDisconnected();
 
 private:
+	UmikoBot(QObject* parent = nullptr);
+
 	void Save();
 	void Load();
 	void GetGuilds(snowflake_t after = 0);
