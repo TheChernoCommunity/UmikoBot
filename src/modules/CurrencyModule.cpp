@@ -29,8 +29,16 @@ CurrencyModule::CurrencyModule(UmikoBot* client) : Module("currency", true), m_c
 				//!Clear the daily bonus for everyone
 				for (int i = 0; i < guildList[server].size(); i++) 
 				{
-
 					auto user = guildList[server][i];
+					
+					if (!user.isDailyClaimed)
+					{
+						user.dailyStreak = 0;
+					}
+
+					user.isDailyClaimed = false;
+				}
+
 					if (UmikoBot::Instance().GetName(server, user.userId) != "") 
 					{
 						user.isDailyClaimed = false;
@@ -132,11 +140,15 @@ CurrencyModule::CurrencyModule(UmikoBot* client) : Module("currency", true), m_c
 		else 
 		{
 			auto index = getUserIndex(channel.guildId(), message.author().id());
-			
-			guildList[channel.guildId()][index].isDailyClaimed = true;
-			guildList[channel.guildId()][index].currency += getServerData(channel.guildId()).dailyReward;
+			unsigned int& dailyStreak = guildList[channel.guildId()][index].dailyStreak;
+			double todaysReward = getServerData(channel.guildId()).dailyReward * (1.0 + (dailyStreak * 0.05));
 
-			client.createMessage(message.channelId(), "**You now have "+ QString::number(getServerData(channel.guildId()).dailyReward) + " more " + getServerData(channel.guildId()).currencyName + "(s) in your wallet!**");
+			guildList[channel.guildId()][index].isDailyClaimed = true;
+			guildList[channel.guildId()][index].currency += todaysReward;
+			dailyStreak += 1;
+			
+			QString displayed { "**You now have " + QString::number(todaysReward) + " more " + getServerData(channel.guildId()).currencyName + "(s) in your wallet!**"};
+			client.createMessage(message.channelId(), displayed);
 		}
 
 		});
@@ -890,7 +902,11 @@ CurrencyModule::CurrencyModule(UmikoBot* client) : Module("currency", true), m_c
 void CurrencyModule::StatusCommand(QString& result, snowflake_t guild, snowflake_t user) 
 {
 	QString creditScore = QString::number(getUserData(guild, user).currency);
+	QString dailyStreak = QString::number(getUserData(guild, user).dailyStreak);
+
 	result += "**Wallet: **" + creditScore + " **" + getServerData(guild).currencySymbol +"**";
+	result+='\n';
+	result += "**Daily Streak: **" + dailyStreak;
 	result+='\n';
 }
 
@@ -996,6 +1012,7 @@ void CurrencyModule::OnSave(QJsonDocument& doc) const
 			QJsonObject obj;
 			obj["currency"] = user->currency;
 			obj["isDailyClaimed"] = user->isDailyClaimed;
+			obj["dailyStreak"] = (int) user->dailyStreak;
 
 			serverJSON[QString::number(user->userId)] = obj;
 		}
@@ -1059,6 +1076,7 @@ void CurrencyModule::OnLoad(const QJsonDocument& doc)
 			currencyData.userId = user.toULongLong();
 			currencyData.currency = obj[user].toObject()["currency"].toDouble();
 			currencyData.isDailyClaimed = obj[user].toObject()["isDailyClaimed"].toBool();
+			currencyData.dailyStreak = obj[user].toObject()["dailyStreak"].toInt();
 			list.append(currencyData);
 		}
 		guildList.insert(guildId, list);
