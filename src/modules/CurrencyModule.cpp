@@ -894,9 +894,9 @@ void CurrencyModule::StatusCommand(QString& result, snowflake_t guild, snowflake
 	QString creditScore = QString::number(getUserData(guild, user).currency);
 	QString dailyStreak = QString::number(getUserData(guild, user).dailyStreak);
 
-	result += "**Wallet: **" + creditScore + " **" + getServerData(guild).currencySymbol +"**";
+	result += "Wallet: " + creditScore + " " + getServerData(guild).currencySymbol;
 	result+='\n';
-	result += "**Daily Streak: **" + dailyStreak;
+	result += "Daily Streak: " + dailyStreak;
 	result+='\n';
 }
 
