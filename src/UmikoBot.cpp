@@ -8,6 +8,12 @@
 
 #include "Logger.h"
 
+UmikoBot& UmikoBot::Instance()
+{
+	static UmikoBot bot;
+	return bot;
+}
+
 UmikoBot::UmikoBot(QObject* parent)
 	: Client("umiko-bot", parent)
 {

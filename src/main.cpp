@@ -11,7 +11,6 @@ int main(int argc, char* argv[])
 	qputenv("QT_QPA_PLATFORM_PLUGIN_PATH", ".");
 
 	QApplication app(argc, argv);
-	UmikoBot     bot;
 
 	// Retrieve token from program arguments
 	QStringList arguments = app.arguments();
@@ -24,7 +23,7 @@ int main(int argc, char* argv[])
 	// Log in
 	Discord::Token token;
 	token.generate(arguments.last(), Discord::Token::Type::BOT);
-	bot.login(token);
+	UmikoBot::Instance().login(token);
 
 	return app.exec();
 }
