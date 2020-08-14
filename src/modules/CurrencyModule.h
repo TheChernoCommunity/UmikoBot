@@ -14,7 +14,7 @@ private:
 		snowflake_t userId;
 		double currency;
 		bool isDailyClaimed;
-
+		unsigned int dailyStreak = 0;
 	};
 
 	//! Map server id with user currency list
