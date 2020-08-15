@@ -141,14 +141,33 @@ CurrencyModule::CurrencyModule(UmikoBot* client) : Module("currency", true), m_c
 		{
 			auto index = getUserIndex(channel.guildId(), message.author().id());
 			unsigned int& dailyStreak = guildList[channel.guildId()][index].dailyStreak;
-			double todaysReward = getServerData(channel.guildId()).dailyReward * (1.0 + (dailyStreak * 0.05));
+			double todaysReward = 100.0;
+			bool bonus = false;
+
+			if (++dailyStreak % dailyBonusPeriod == 0)
+			{
+				todaysReward += dailyBonus;
+				bonus = true;
+			}
 
 			guildList[channel.guildId()][index].isDailyClaimed = true;
 			guildList[channel.guildId()][index].currency += todaysReward;
-			dailyStreak += 1;
-			
-			QString displayed { "**You now have " + QString::number(todaysReward) + " more " + getServerData(channel.guildId()).currencyName + "(s) in your wallet!**"};
-			client.createMessage(message.channelId(), displayed);
+			QString displayedMessage = "";
+
+			if (bonus)
+			{
+				displayedMessage += "**Bonus!** ";
+			}
+
+			displayedMessage += "You now have **" + QString::number(todaysReward) + "** more " + getServerData(channel.guildId()).currencyName + "s in your wallet!\n";
+			displayedMessage += "Streak: **" + QString::number(dailyStreak) + "/" + QString::number(dailyBonusPeriod) + "**";
+
+			if (dailyStreak % dailyBonusPeriod == 0)
+			{
+				dailyStreak = 0;
+			}
+
+			client.createMessage(message.channelId(), displayedMessage);
 		}
 
 		});
