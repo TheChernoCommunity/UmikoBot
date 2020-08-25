@@ -18,6 +18,24 @@
 //! Gamble Timeout in seconds
 #define gambleTimeout 20
 
+//! Bonus amount rewarded for !daily streak
+#define dailyBonus 50
+
+//! How often (in days) the daily bonus occurs
+#define dailyBonusPeriod 3
+
+//! The percentage of the !steal amount that will be fined
+#define stealFinePercent 50
+
+//! The chance that a steal will succeed
+#define stealSuccessChance 10
+
+//! The percentage of the fine that goes to the victim
+#define stealVictimBonusPercent 30
+
+//! The number of hours of jail time from a failed !steal
+#define stealFailedJailTime 3
+
 CurrencyModule::CurrencyModule(UmikoBot* client) : Module("currency", true), m_client(client)
 {
 
@@ -865,7 +883,7 @@ CurrencyModule::CurrencyModule(UmikoBot* client) : Module("currency", true), m_c
 		if (!re.exactMatch(args.at(1))) 
 		{
 				client.createMessage(message.channelId(), "**You can't donate in invalid amounts**");
-					return;
+				return;
 		}
 
 		if (args.at(1).toDouble() == 0) 
@@ -914,6 +932,90 @@ CurrencyModule::CurrencyModule(UmikoBot* client) : Module("currency", true), m_c
 
 		client.createMessage(message.channelId(), embed);
 
+		}
+	);
+
+	RegisterCommand(Commands::CURRENCY_STEAL, "steal", [this](Discord::Client& client, const Discord::Message& message, const Discord::Channel& channel)
+		{
+
+			QStringList args = message.content().split(' ');
+			GuildSetting* setting = &GuildSettings::GetGuildSetting(channel.guildId());
+			QString prefix = setting->prefix;
+			auto& config = getServerData(channel.guildId());
+			snowflake_t authorId = message.author().id();
+			
+			if (args.first() != prefix + "steal")
+				return;
+
+			if (args.size() != 3)
+			{
+				client.createMessage(message.channelId(), "**Wrong Usage of Command!**");
+				return;
+			}
+
+			QRegExp re("[+]?\\d*\\.?\\d+");
+			if (!re.exactMatch(args.at(1)))
+			{
+				client.createMessage(message.channelId(), "**You can't donate in invalid amounts**");
+				return;
+			}
+
+			double amountToSteal = args.at(1).toDouble();
+
+			if (amountToSteal == 0.0)
+			{
+				client.createMessage(message.channelId(), "**Don't bother me if you don't want to steal anything.**");
+				return;
+			}
+
+			if (guildList[channel.guildId()][getUserIndex(channel.guildId(), authorId)].currency - (amountToSteal * stealFinePercent / 100) < 0)
+			{
+				client.createMessage(message.channelId(), "**I can't let you do that, you might go into debt.**");
+				return;
+			}
+
+			QList<Discord::User> mentions = message.mentions();
+			if (mentions.size() == 0)
+			{
+				client.createMessage(message.channelId(), "**Who do you want to steal from? Please `@` that person.**");
+				return;
+			}
+			else if (mentions.size() > 1)
+			{
+				client.createMessage(message.channelId(), "**You can only steal from one person at a time.**");
+				return;
+			}
+
+			snowflake_t victimId = mentions[0].id();
+			if (victimId == authorId)
+			{
+				client.createMessage(message.channelId(), "**You cannot steal from yourself.**");
+				return;
+			}
+
+			if (guildList[channel.guildId()][getUserIndex(channel.guildId(), victimId)].currency - amountToSteal < 0)
+			{
+				client.createMessage(message.channelId(), "**I can't let you make your victim go into debt.**");
+				return;
+			}
+			
+			if (qrand() % 100 < stealSuccessChance)
+			{
+				guildList[channel.guildId()][getUserIndex(channel.guildId(), victimId)].currency -= amountToSteal;
+				guildList[channel.guildId()][getUserIndex(channel.guildId(), authorId)].currency += amountToSteal;
+				
+				client.createMessage(message.channelId(), "**Stolen!** You have successfully stolen " + QString::number(amountToSteal) + config.currencySymbol + " from " + UmikoBot::Instance().GetUsername(channel.guildId(), victimId) + "!");
+			}
+			else
+			{
+				guildList[channel.guildId()][getUserIndex(channel.guildId(), authorId)].currency -= amountToSteal * stealFinePercent / 100;
+				guildList[channel.guildId()][getUserIndex(channel.guildId(), victimId)].currency += amountToSteal * stealVictimBonusPercent / 100;
+				
+				QString output = "**Fined!** " + QString::number(amountToSteal * stealFinePercent / 100) + config.currencySymbol + " has been taken from your wallet.\n";
+				output += "You are in jail for **" + QString::number(stealFailedJailTime) + " hours**.\n";
+				output += "**" + UmikoBot::Instance().GetUsername(channel.guildId(), victimId) + "** has been given **" + QString::number(amountToSteal * stealVictimBonusPercent / 100) + config.currencySymbol + "**!";
+				client.createMessage(message.channelId(), output);
+			}
 		}
 	);
 }
