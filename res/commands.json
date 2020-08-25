@@ -189,5 +189,11 @@
 		"brief": "Distributes an equal amount of credits (specified by you) from your wallet among the people you listed (pinged).",
 		"usage": "donate <amount-to-distribute> <list-of-people>",
 		"additional": "**Example: ** `!donate 20 @Person1 @Person2` gives both Person1 and Person2 10 credits each."
+	},
+	"CURRENCY_STEAL": {
+		"brief": "Chance to steal an amount from a user, otherwise it will fine you.",
+		"usage": "steal <amount-to-steal> <person-to-steal-from>",
+		"additional": "**Example: ** `!steal 20 @Person1` will try to steal 20 credits from Person 1",
+		"admin": false
 	}
 }
