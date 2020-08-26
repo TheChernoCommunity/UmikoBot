@@ -1,6 +1,7 @@
 #include "CurrencyModule.h"
 #include "UmikoBot.h"
 #include "core/Permissions.h"
+#include "core/Utility.h"
 
 #include <QtCore/QFile>
 #include <QtCore/QJsonDocument>
@@ -134,7 +135,7 @@ CurrencyModule::CurrencyModule(UmikoBot* client) : Module("currency", true), m_c
 		QStringList args = message.content().split(' ');
 		GuildSetting* setting = &GuildSettings::GetGuildSetting(channel.guildId());
 		QString prefix = setting->prefix;
-
+		auto& config = getServerData(channel.guildId());
 
 		if (args.first() != prefix + "daily")
 			return;
@@ -143,17 +144,22 @@ CurrencyModule::CurrencyModule(UmikoBot* client) : Module("currency", true), m_c
 			client.createMessage(message.channelId(), "**Wrong Usage of Command!** ");
 			return;
 		}
+
+		int jailRemainingTime = guildList[channel.guildId()][getUserIndex(channel.guildId(), message.author().id())].jailTimer->remainingTime();
+		
 		if (getUserData(channel.guildId(), message.author().id()).isDailyClaimed)
 		{
-
-			int remainingTime = m_timer.remainingTime();
-
-			QTime conv(0, 0, 0);
-			conv = conv.addMSecs(remainingTime);
-			QString time = QString::number(conv.hour()) + "(hrs) " + QString::number(conv.minute()) + "(mins) " + QString::number(conv.second()) + "(secs)";
+			QString time = StringifyMilliseconds(m_timer.remainingTime());
 			QString desc = "**You have already claimed your daily credits.**\nCome back after `" + time + "` to get more rich!";
 
 			client.createMessage(message.channelId(), desc);
+		}
+		else if (jailRemainingTime > 0)
+		{
+			QString time = StringifyMilliseconds(jailRemainingTime);
+			QString desc = "**You are in jail!**\nCome back after " + time + " to collect your daily credits.";
+			client.createMessage(message.channelId(), desc);
+			return;
 		}
 		else 
 		{
@@ -162,9 +168,9 @@ CurrencyModule::CurrencyModule(UmikoBot* client) : Module("currency", true), m_c
 			double todaysReward = 100.0;
 			bool bonus = false;
 
-			if (++dailyStreak % dailyBonusPeriod == 0)
+			if (++dailyStreak % config.dailyBonusPeriod == 0)
 			{
-				todaysReward += dailyBonus;
+				todaysReward += config.dailyBonusAmount;
 				bonus = true;
 			}
 
@@ -178,9 +184,9 @@ CurrencyModule::CurrencyModule(UmikoBot* client) : Module("currency", true), m_c
 			}
 
 			displayedMessage += "You now have **" + QString::number(todaysReward) + "** more " + getServerData(channel.guildId()).currencyName + "s in your wallet!\n";
-			displayedMessage += "Streak: **" + QString::number(dailyStreak) + "/" + QString::number(dailyBonusPeriod) + "**";
+			displayedMessage += "Streak: **" + QString::number(dailyStreak) + "/" + QString::number(config.dailyBonusPeriod) + "**";
 
-			if (dailyStreak % dailyBonusPeriod == 0)
+			if (dailyStreak % config.dailyBonusPeriod == 0)
 			{
 				dailyStreak = 0;
 			}
@@ -207,6 +213,15 @@ CurrencyModule::CurrencyModule(UmikoBot* client) : Module("currency", true), m_c
 			return;
 		}
 
+		int jailRemainingTime = guildList[channel.guildId()][getUserIndex(channel.guildId(), message.author().id())].jailTimer->remainingTime();
+		if (jailRemainingTime > 0)
+		{
+			QString time = StringifyMilliseconds(jailRemainingTime);
+			QString desc = "**You are in jail!**\nCome back after " + time + " to gamble.";
+			client.createMessage(message.channelId(), desc);
+			return;
+		}
+		
 		//! Normal Mode
 		if (args.size() == 1)
 		{
@@ -358,12 +373,22 @@ CurrencyModule::CurrencyModule(UmikoBot* client) : Module("currency", true), m_c
 			return;
 		}
 
+		
 		if (args.size() == 1) 
 		{
 			if (!getServerData(channel.guildId()).isRandomGiveawayDone) 
 			{
 				if (getServerData(channel.guildId()).allowGiveaway)
 				{
+					int jailRemainingTime = guildList[channel.guildId()][getUserIndex(channel.guildId(), message.author().id())].jailTimer->remainingTime();
+					if (jailRemainingTime > 0)
+					{
+						QString time = StringifyMilliseconds(jailRemainingTime);
+						QString desc = "**You are in jail!**\nYou can't make claims to freebies for another " + time;
+						client.createMessage(message.channelId(), desc);
+						return;
+					}
+					
 					auto& config = getServerData(channel.guildId());
 					Discord::Embed embed;
 					embed.setColor(qrand() % 11777216);
@@ -953,10 +978,19 @@ CurrencyModule::CurrencyModule(UmikoBot* client) : Module("currency", true), m_c
 				return;
 			}
 
+			int jailRemainingTime = guildList[channel.guildId()][getUserIndex(channel.guildId(), authorId)].jailTimer->remainingTime();
+			if (jailRemainingTime > 0)
+			{
+				QString time = StringifyMilliseconds(jailRemainingTime);
+				QString desc = "**You are in jail!**\nCome back after " + time + " to steal more.";
+				client.createMessage(message.channelId(), desc);
+				return;
+			}
+
 			QRegExp re("[+]?\\d*\\.?\\d+");
 			if (!re.exactMatch(args.at(1)))
 			{
-				client.createMessage(message.channelId(), "**You can't donate in invalid amounts**");
+				client.createMessage(message.channelId(), "**You can't steal invalid amounts**");
 				return;
 			}
 
@@ -968,7 +1002,7 @@ CurrencyModule::CurrencyModule(UmikoBot* client) : Module("currency", true), m_c
 				return;
 			}
 
-			if (guildList[channel.guildId()][getUserIndex(channel.guildId(), authorId)].currency - (amountToSteal * stealFinePercent / 100) < 0)
+			if (guildList[channel.guildId()][getUserIndex(channel.guildId(), authorId)].currency - (amountToSteal * config.stealFinePercent / 100) < 0)
 			{
 				client.createMessage(message.channelId(), "**I can't let you do that, you might go into debt.**");
 				return;
@@ -999,7 +1033,7 @@ CurrencyModule::CurrencyModule(UmikoBot* client) : Module("currency", true), m_c
 				return;
 			}
 			
-			if (qrand() % 100 < stealSuccessChance)
+			if (qrand() % 100 < config.stealSuccessChance)
 			{
 				guildList[channel.guildId()][getUserIndex(channel.guildId(), victimId)].currency -= amountToSteal;
 				guildList[channel.guildId()][getUserIndex(channel.guildId(), authorId)].currency += amountToSteal;
@@ -1008,26 +1042,257 @@ CurrencyModule::CurrencyModule(UmikoBot* client) : Module("currency", true), m_c
 			}
 			else
 			{
-				guildList[channel.guildId()][getUserIndex(channel.guildId(), authorId)].currency -= amountToSteal * stealFinePercent / 100;
-				guildList[channel.guildId()][getUserIndex(channel.guildId(), victimId)].currency += amountToSteal * stealVictimBonusPercent / 100;
+				guildList[channel.guildId()][getUserIndex(channel.guildId(), authorId)].currency -= amountToSteal * config.stealFinePercent / 100;
+				guildList[channel.guildId()][getUserIndex(channel.guildId(), victimId)].currency += amountToSteal * config.stealVictimBonusPercent / 100;
 				
-				QString output = "**Fined!** " + QString::number(amountToSteal * stealFinePercent / 100) + config.currencySymbol + " has been taken from your wallet.\n";
-				output += "You are in jail for **" + QString::number(stealFailedJailTime) + " hours**.\n";
-				output += "**" + UmikoBot::Instance().GetUsername(channel.guildId(), victimId) + "** has been given **" + QString::number(amountToSteal * stealVictimBonusPercent / 100) + config.currencySymbol + "**!";
+				guildList[channel.guildId()][getUserIndex(channel.guildId(), authorId)].jailTimer->start(config.stealFailedJailTime * 60 * 60 * 1000);
+
+				QString output = "**Fined!** " + QString::number(amountToSteal * config.stealFinePercent / 100) + config.currencySymbol + " has been taken from your wallet.\n";
+				output += "You are in jail for **" + QString::number(config.stealFailedJailTime) + " hours**.\n";
+				output += "**" + UmikoBot::Instance().GetUsername(channel.guildId(), victimId) + "** has been given **" + QString::number(amountToSteal * config.stealVictimBonusPercent / 100) + config.currencySymbol + "**!";
 				client.createMessage(message.channelId(), output);
 			}
 		}
 	);
+
+	RegisterCommand(Commands::CURRENCY_SET_STEAL_SUCCESS_CHANCE, "setstealsuccesschance", [this](Discord::Client& client, const Discord::Message& message, const Discord::Channel& channel) 
+	{
+
+		QStringList args = message.content().split(' ');
+		GuildSetting* setting = &GuildSettings::GetGuildSetting(channel.guildId());
+		QString prefix = setting->prefix;
+
+
+		if (args.first() != prefix + "setstealsuccesschance")
+			return;
+
+		Permissions::ContainsPermission(client, channel.guildId(), message.author().id(), CommandPermission::ADMIN,
+			[this, args, &client, message, channel](bool result) 
+			{
+				GuildSetting* setting = &GuildSettings::GetGuildSetting(channel.guildId());
+				if (!result)
+				{
+					client.createMessage(message.channelId(), "**You don't have permissions to use this command.**");
+					return;
+				}
+
+				if (args.size() == 1 || args.size() > 2)
+				{
+					client.createMessage(message.channelId(), "**Wrong Usage of Command!** ");
+					return;
+				}
+
+				if (args.size() == 2)
+				{
+					auto& config = getServerData(channel.guildId());
+					config.stealSuccessChance = args.at(1).toInt();
+					client.createMessage(message.channelId(), "**Steal Success Chance set to **" + QString::number(config.stealSuccessChance) + "%");
+				}
+
+			}
+		);
+	});
+
+	RegisterCommand(Commands::CURRENCY_SET_STEAL_FINE_PERCENT, "setstealfine", [this](Discord::Client& client, const Discord::Message& message, const Discord::Channel& channel) 
+	{
+
+		QStringList args = message.content().split(' ');
+		GuildSetting* setting = &GuildSettings::GetGuildSetting(channel.guildId());
+		QString prefix = setting->prefix;
+
+
+		if (args.first() != prefix + "setstealfine")
+			return;
+
+		Permissions::ContainsPermission(client, channel.guildId(), message.author().id(), CommandPermission::ADMIN,
+			[this, args, &client, message, channel](bool result) 
+			{
+				GuildSetting* setting = &GuildSettings::GetGuildSetting(channel.guildId());
+				if (!result)
+				{
+					client.createMessage(message.channelId(), "**You don't have permissions to use this command.**");
+					return;
+				}
+
+				if (args.size() == 1 || args.size() > 2)
+				{
+					client.createMessage(message.channelId(), "**Wrong Usage of Command!** ");
+					return;
+				}
+
+				if (args.size() == 2)
+				{
+					auto& config = getServerData(channel.guildId());
+					config.stealFinePercent = args.at(1).toInt();
+					client.createMessage(message.channelId(), "**Steal Fine Amount set to **" + QString::number(config.stealFinePercent) + "%");
+				}
+
+			}
+		);
+	});
+
+	RegisterCommand(Commands::CURRENCY_SET_STEAL_VICTIM_BONUS_PERCENT, "setstealvictimbonus", [this](Discord::Client& client, const Discord::Message& message, const Discord::Channel& channel) 
+	{
+
+		QStringList args = message.content().split(' ');
+		GuildSetting* setting = &GuildSettings::GetGuildSetting(channel.guildId());
+		QString prefix = setting->prefix;
+
+
+		if (args.first() != prefix + "setstealvictimbonus")
+			return;
+
+		Permissions::ContainsPermission(client, channel.guildId(), message.author().id(), CommandPermission::ADMIN,
+			[this, args, &client, message, channel](bool result) 
+			{
+				GuildSetting* setting = &GuildSettings::GetGuildSetting(channel.guildId());
+				if (!result)
+				{
+					client.createMessage(message.channelId(), "**You don't have permissions to use this command.**");
+					return;
+				}
+
+				if (args.size() == 1 || args.size() > 2)
+				{
+					client.createMessage(message.channelId(), "**Wrong Usage of Command!** ");
+					return;
+				}
+
+				if (args.size() == 2)
+				{
+					auto& config = getServerData(channel.guildId());
+					config.stealVictimBonusPercent = args.at(1).toInt();
+					client.createMessage(message.channelId(), "**Steal Victim Bonus set to **" + QString::number(config.stealVictimBonusPercent) + "%");
+				}
+
+			}
+		);
+	});
+
+	RegisterCommand(Commands::CURRENCY_SET_STEAL_JAIL_HOURS, "setstealjailhours", [this](Discord::Client& client, const Discord::Message& message, const Discord::Channel& channel) 
+	{
+
+		QStringList args = message.content().split(' ');
+		GuildSetting* setting = &GuildSettings::GetGuildSetting(channel.guildId());
+		QString prefix = setting->prefix;
+
+
+		if (args.first() != prefix + "setstealjailhours")
+			return;
+
+		Permissions::ContainsPermission(client, channel.guildId(), message.author().id(), CommandPermission::ADMIN,
+			[this, args, &client, message, channel](bool result) 
+			{
+				GuildSetting* setting = &GuildSettings::GetGuildSetting(channel.guildId());
+				if (!result)
+				{
+					client.createMessage(message.channelId(), "**You don't have permissions to use this command.**");
+					return;
+				}
+
+				if (args.size() == 1 || args.size() > 2)
+				{
+					client.createMessage(message.channelId(), "**Wrong Usage of Command!** ");
+					return;
+				}
+
+				if (args.size() == 2)
+				{
+					auto& config = getServerData(channel.guildId());
+					config.stealFailedJailTime = args.at(1).toInt();
+					client.createMessage(message.channelId(), "**Steal Jail Time set to **" + QString::number(config.stealFailedJailTime) + " hours");
+				}
+
+			}
+		);
+	});
+
+	RegisterCommand(Commands::CURRENCY_SET_DAILY_BONUS_AMOUNT, "setdailybonus", [this](Discord::Client& client, const Discord::Message& message, const Discord::Channel& channel) 
+	{
+
+		QStringList args = message.content().split(' ');
+		GuildSetting* setting = &GuildSettings::GetGuildSetting(channel.guildId());
+		QString prefix = setting->prefix;
+
+
+		if (args.first() != prefix + "setdailybonus")
+			return;
+
+		Permissions::ContainsPermission(client, channel.guildId(), message.author().id(), CommandPermission::ADMIN,
+			[this, args, &client, message, channel](bool result) 
+			{
+				GuildSetting* setting = &GuildSettings::GetGuildSetting(channel.guildId());
+				if (!result)
+				{
+					client.createMessage(message.channelId(), "**You don't have permissions to use this command.**");
+					return;
+				}
+
+				if (args.size() == 1 || args.size() > 2)
+				{
+					client.createMessage(message.channelId(), "**Wrong Usage of Command!** ");
+					return;
+				}
+
+				if (args.size() == 2)
+				{
+					auto& config = getServerData(channel.guildId());
+					config.dailyBonusAmount = args.at(1).toInt();
+					client.createMessage(message.channelId(), "**Daily Bonus Amount set to **" + QString::number(config.dailyBonusAmount));
+				}
+
+			}
+		);
+	});
+
+	RegisterCommand(Commands::CURRENCY_SET_DAILY_BONUS_PERIOD, "setdailybonusperiod", [this](Discord::Client& client, const Discord::Message& message, const Discord::Channel& channel) 
+	{
+
+		QStringList args = message.content().split(' ');
+		GuildSetting* setting = &GuildSettings::GetGuildSetting(channel.guildId());
+		QString prefix = setting->prefix;
+
+
+		if (args.first() != prefix + "setdailybonusperiod")
+			return;
+
+		Permissions::ContainsPermission(client, channel.guildId(), message.author().id(), CommandPermission::ADMIN,
+			[this, args, &client, message, channel](bool result) 
+			{
+				GuildSetting* setting = &GuildSettings::GetGuildSetting(channel.guildId());
+				if (!result)
+				{
+					client.createMessage(message.channelId(), "**You don't have permissions to use this command.**");
+					return;
+				}
+
+				if (args.size() == 1 || args.size() > 2)
+				{
+					client.createMessage(message.channelId(), "**Wrong Usage of Command!** ");
+					return;
+				}
+
+				if (args.size() == 2)
+				{
+					auto& config = getServerData(channel.guildId());
+					config.dailyBonusPeriod = args.at(1).toInt();
+					client.createMessage(message.channelId(), "**Daily Bonus will occur every **" + QString::number(config.dailyBonusPeriod) + " days");
+				}
+
+			}
+		);
+	});
 }
 
 void CurrencyModule::StatusCommand(QString& result, snowflake_t guild, snowflake_t user) 
 {
 	QString creditScore = QString::number(getUserData(guild, user).currency);
 	QString dailyStreak = QString::number(getUserData(guild, user).dailyStreak);
+	auto& config = getServerData(guild);
 
 	result += "Wallet: " + creditScore + " " + getServerData(guild).currencySymbol;
 	result+='\n';
-	result += "Daily Streak: " + dailyStreak + "/" + QString::number(dailyBonusPeriod);
+	result += "Daily Streak: " + dailyStreak + "/" + QString::number(config.dailyBonusPeriod);
 	result+='\n';
 }
 
@@ -1166,6 +1431,12 @@ void CurrencyModule::OnSave(QJsonDocument& doc) const
 			obj["gambleMaxGuess"] = QString::number(config.maxGuess);
 			obj["freebieProb"] = QString::number(config.randGiveawayProb);
 			obj["freebieExpireTime"] = QString::number(config.freebieExpireTime);
+			obj["dailyBonusAmount"] = QString::number(config.dailyBonusAmount);
+			obj["dailyBonusPeriod"] = QString::number(config.dailyBonusPeriod);
+			obj["stealSuccessChance"] = QString::number(config.stealSuccessChance);
+			obj["stealFinePercent"] = QString::number(config.stealFinePercent);
+			obj["stealVictimBonusPercent"] = QString::number(config.stealVictimBonusPercent);
+			obj["stealFailedJailTime"] = QString::number(config.stealFailedJailTime);
 
 			serverList[QString::number(server)] = obj;
 			
@@ -1193,11 +1464,12 @@ void CurrencyModule::OnLoad(const QJsonDocument& doc)
 
 		QList<UserCurrency> list;
 		for (auto user : users) {
-			UserCurrency currencyData;
-			currencyData.userId = user.toULongLong();
-			currencyData.currency = obj[user].toObject()["currency"].toDouble();
-			currencyData.isDailyClaimed = obj[user].toObject()["isDailyClaimed"].toBool();
-			currencyData.dailyStreak = obj[user].toObject()["dailyStreak"].toInt();
+			UserCurrency currencyData {
+				user.toULongLong(),
+				obj[user].toObject()["currency"].toDouble(),
+				obj[user].toObject()["isDailyClaimed"].toBool(),
+				(unsigned int) obj[user].toObject()["dailyStreak"].toInt(),
+			};
 			list.append(currencyData);
 		}
 		guildList.insert(guildId, list);
@@ -1225,6 +1497,13 @@ void CurrencyModule::OnLoad(const QJsonDocument& doc)
 			config.maxGuess = serverObj["gambleMaxGuess"].toString().toInt();
 			config.randGiveawayProb = serverObj["freebieProb"].toString().toDouble();
 			config.freebieExpireTime = serverObj["freebieExpireTime"].toString().toUInt();
+			config.dailyBonusAmount = serverObj["dailyBonusAmount"].toString().toUInt();
+			config.dailyBonusPeriod = serverObj["dailyBonusPeriod"].toString().toUInt();
+			config.stealSuccessChance = serverObj["stealSuccessChance"].toString().toUInt();
+			config.stealFinePercent = serverObj["stealFinePercent"].toString().toUInt();
+			config.stealVictimBonusPercent = serverObj["stealVictimBonusPercent"].toString().toUInt();
+			config.stealFailedJailTime = serverObj["stealFailedJailTime"].toString().toUInt();
+
 			auto guildId = server.toULongLong();
 			serverCurrencyConfig.insert(guildId, config);
 		}

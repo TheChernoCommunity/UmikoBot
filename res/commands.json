@@ -195,5 +195,35 @@
 		"usage": "steal <amount-to-steal> <person-to-steal-from>",
 		"additional": "**Example: ** `!steal 20 @Person1` will try to steal 20 credits from Person 1",
 		"admin": false
-	}
+	},
+	"CURRENCY_SET_STEAL_SUCCESS_CHANCE": {
+		"brief": "Sets the chance (as a percentage) that a !steal will succeed.",
+		"usage": "setstealsuccesschance <chance>",
+		"admin": true
+	},
+	"CURRENCY_SET_STEAL_FINE_PERCENT": {
+		"brief": "Sets the amount (as a percentage of what they tried to steal) that the theif will get fined.",
+		"usage": "setstealfine <amount>",
+		"admin": true
+	},
+	"CURRENCY_SET_STEAL_VICTIM_BONUS": {
+		"brief": "Sets the amount (as a percentage of what the theif tried to steal) that the victim will get.",
+		"usage": "setstealvictimbonus <amount>",
+		"admin": true
+	},
+	"CURRENCY_SET_STEAL_JAIL_HOURS": {
+		"brief": "Sets the number of hours that a theif will spend in jail.",
+		"usage": "setstealjailhours <amount>",
+		"admin": true
+	},
+	"CURRENCY_SET_DAILY_BONUS_AMOUNT": {
+		"brief": "Sets the bonus amount for dailies.",
+		"usage": "setdailybonus <amount>",
+		"admin": true
+	},
+	"CURRENCY_SET_DAILY_BONUS_PERIOD": {
+		"brief": "Sets how often (in days) the bonus is granted.",
+		"usage": "setdailybonusperiod <amount>",
+		"admin": true
+	},
 }
