@@ -14,7 +14,45 @@ private:
 		snowflake_t userId;
 		double currency;
 		bool isDailyClaimed;
-		unsigned int dailyStreak = 0;
+		unsigned int dailyStreak;
+		QTimer* jailTimer;
+
+		UserCurrency(snowflake_t userId, double currency, bool isDailyClaimed, unsigned int dailyStreak)
+			: userId(userId), currency(currency), isDailyClaimed(isDailyClaimed), dailyStreak(dailyStreak), jailTimer(new QTimer())
+		{
+			jailTimer->setSingleShot(true);
+		}
+
+		~UserCurrency()
+		{
+			delete jailTimer;
+		}
+
+		UserCurrency(const UserCurrency& other)
+			: userId(other.userId), currency(other.currency), isDailyClaimed(other.isDailyClaimed), dailyStreak(other.dailyStreak), jailTimer(new QTimer())
+		{
+			jailTimer->setSingleShot(true);
+
+			if (other.jailTimer->remainingTime() > 0)
+			{
+				jailTimer->start(other.jailTimer->remainingTime());
+			}
+		}
+
+		UserCurrency& operator=(const UserCurrency& other)
+		{
+			userId = other.userId;
+			currency = other.currency;
+			isDailyClaimed = other.isDailyClaimed;
+			dailyStreak = other.dailyStreak;
+			jailTimer = new QTimer();
+			jailTimer->setSingleShot(true);
+
+			if (other.jailTimer->remainingTime() > 0)
+			{
+				jailTimer->start(other.jailTimer->remainingTime());
+			}
+		}
 	};
 
 	//! Map server id with user currency list
@@ -35,6 +73,12 @@ private:
 		bool isRandomGiveawayDone{ false };
 		bool allowGiveaway{ false };
 		QTimer* freebieTimer{ nullptr };
+		int dailyBonusAmount { 50 };
+		int dailyBonusPeriod { 3 };
+		int stealSuccessChance { 30 };
+		int stealFinePercent { 50 };
+		int stealVictimBonusPercent { 30 };
+		int stealFailedJailTime { 3 };
 	};
 
 	std::random_device random_device;
@@ -75,7 +119,7 @@ private:
 		}
 
 		//! If user is not added to the system, make a new one
-		UserCurrency user{ id, 0, false };
+		UserCurrency user { id, 0, false, 0 };
 
 		guildList[guild].append(user);
 		return guildList[guild].back();
@@ -88,7 +132,7 @@ private:
 			}
 		}
 		//! If user is not added to the system, make a new one
-		guildList[guild].append(UserCurrency{ id, 0, false });
+		guildList[guild].append(UserCurrency { id, 0, false, 0 });
 		return std::distance(guildList[guild].begin(), std::prev(guildList[guild].end()));
 	}
 
