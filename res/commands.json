@@ -225,5 +225,5 @@
 		"brief": "Sets how often (in days) the bonus is granted.",
 		"usage": "setdailybonusperiod <amount>",
 		"admin": true
-	},
+	}
 }

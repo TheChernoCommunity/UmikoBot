@@ -491,7 +491,7 @@ CurrencyModule::CurrencyModule(UmikoBot* client) : Module("currency", true), m_c
 				{
 					auto& config = getServerData(channel.guildId());
 					config.currencyName = args.at(1);
-					client.createMessage(message.channelId(), "**Currency Name set to** " + config.currencyName);
+					client.createMessage(message.channelId(), "Currency Name set to **" + config.currencyName + "**");
 				}
 		});
 	});
@@ -532,7 +532,7 @@ CurrencyModule::CurrencyModule(UmikoBot* client) : Module("currency", true), m_c
 				{
 					auto& config = getServerData(channel.guildId());
 					config.currencySymbol = args.at(1);
-					client.createMessage(message.channelId(), "**Currency Symbol set to** " + config.currencySymbol);
+					client.createMessage(message.channelId(), "Currency Symbol set to **" + config.currencySymbol + "**");
 				}
 		});
 	});
@@ -568,7 +568,7 @@ CurrencyModule::CurrencyModule(UmikoBot* client) : Module("currency", true), m_c
 				{
 					auto& config = getServerData(channel.guildId());
 					config.dailyReward = args.at(1).toInt();
-					client.createMessage(message.channelId(), "**Daily Reward Amount set to **" + QString::number(config.dailyReward));
+					client.createMessage(message.channelId(), "Daily Reward Amount set to **" + QString::number(config.dailyReward) + "**");
 				}
 			});
 	});
@@ -604,7 +604,7 @@ CurrencyModule::CurrencyModule(UmikoBot* client) : Module("currency", true), m_c
 				{
 					auto& config = getServerData(channel.guildId());
 					config.freebieReward = args.at(1).toInt();
-					client.createMessage(message.channelId(), "**Freebie Reward Amount set to **" + QString::number(config.freebieReward));
+					client.createMessage(message.channelId(), "Freebie Reward Amount set to **" + QString::number(config.freebieReward) + "**");
 				}
 		});
 	});
@@ -640,7 +640,7 @@ CurrencyModule::CurrencyModule(UmikoBot* client) : Module("currency", true), m_c
 				{
 					auto& config = getServerData(channel.guildId());
 					config.randGiveawayProb = args.at(1).toDouble();
-					client.createMessage(message.channelId(), "**Giveaway Probability Amount set to **" + QString::number(config.randGiveawayProb));
+					client.createMessage(message.channelId(), "Giveaway Probability Amount set to **" + QString::number(config.randGiveawayProb) + "**");
 				}
 		});
 	});
@@ -676,7 +676,7 @@ CurrencyModule::CurrencyModule(UmikoBot* client) : Module("currency", true), m_c
 				{
 					auto& config = getServerData(channel.guildId());
 					config.freebieExpireTime = args.at(1).toUInt();
-					client.createMessage(message.channelId(), "**Freebie Expiry Time (secs) set to **" + QString::number(config.freebieExpireTime));
+					client.createMessage(message.channelId(), "Freebie Expiry Time (secs) set to **" + QString::number(config.freebieExpireTime) + "**");
 				}
 
 		});
@@ -712,7 +712,7 @@ CurrencyModule::CurrencyModule(UmikoBot* client) : Module("currency", true), m_c
 				{
 					auto& config = getServerData(channel.guildId());
 					config.gambleLoss = args.at(1).toInt();
-					client.createMessage(message.channelId(), "**Gamble Loss Amount set to **" + QString::number(config.gambleLoss));
+					client.createMessage(message.channelId(), "Gamble Loss Amount set to **" + QString::number(config.gambleLoss) + "**");
 				}
 		});
 	});
@@ -746,7 +746,7 @@ CurrencyModule::CurrencyModule(UmikoBot* client) : Module("currency", true), m_c
 				{
 					auto& config = getServerData(channel.guildId());
 					config.maxGuess = args.at(1).toInt();
-					client.createMessage(message.channelId(), "**Gamble Max Guess set to **" + QString::number(config.maxGuess));
+					client.createMessage(message.channelId(), "Gamble Max Guess set to **" + QString::number(config.maxGuess) + "**");
 				}
 		});
 	});
@@ -782,7 +782,7 @@ CurrencyModule::CurrencyModule(UmikoBot* client) : Module("currency", true), m_c
 				{
 					auto& config = getServerData(channel.guildId());
 					config.minGuess = args.at(1).toInt();
-					client.createMessage(message.channelId(), "**Gamble Min Guess set to **" + QString::number(config.minGuess));
+					client.createMessage(message.channelId(), "Gamble Min Guess set to **" + QString::number(config.minGuess) + "**");
 				}
 		});
 	});
@@ -818,7 +818,7 @@ CurrencyModule::CurrencyModule(UmikoBot* client) : Module("currency", true), m_c
 				{
 					auto& config = getServerData(channel.guildId());
 					config.gambleReward = args.at(1).toInt();
-					client.createMessage(message.channelId(), "**Gamble Reward Amount set to **" + QString::number(config.gambleReward));
+					client.createMessage(message.channelId(), "Gamble Reward Amount set to **" + QString::number(config.gambleReward) + "**");
 				}
 
 		});
@@ -1002,9 +1002,9 @@ CurrencyModule::CurrencyModule(UmikoBot* client) : Module("currency", true), m_c
 				return;
 			}
 
-			if (guildList[channel.guildId()][getUserIndex(channel.guildId(), authorId)].currency - (amountToSteal * config.stealFinePercent / 100) < 0)
+			if (guildList[channel.guildId()][getUserIndex(channel.guildId(), authorId)].currency - (amountToSteal * config.stealFinePercent / 100) < debtMax)
 			{
-				client.createMessage(message.channelId(), "**I can't let you do that, you might go into debt.**");
+				client.createMessage(message.channelId(), "**I can't let you do that, you might go into serious debt.**");
 				return;
 			}
 
@@ -1027,9 +1027,9 @@ CurrencyModule::CurrencyModule(UmikoBot* client) : Module("currency", true), m_c
 				return;
 			}
 
-			if (guildList[channel.guildId()][getUserIndex(channel.guildId(), victimId)].currency - amountToSteal < 0)
+			if (guildList[channel.guildId()][getUserIndex(channel.guildId(), victimId)].currency - amountToSteal < debtMax)
 			{
-				client.createMessage(message.channelId(), "**I can't let you make your victim go into debt.**");
+				client.createMessage(message.channelId(), "**I can't let you make your victim go into serious debt.**");
 				return;
 			}
 			
@@ -1086,7 +1086,7 @@ CurrencyModule::CurrencyModule(UmikoBot* client) : Module("currency", true), m_c
 				{
 					auto& config = getServerData(channel.guildId());
 					config.stealSuccessChance = args.at(1).toInt();
-					client.createMessage(message.channelId(), "**Steal Success Chance set to **" + QString::number(config.stealSuccessChance) + "%");
+					client.createMessage(message.channelId(), "Steal Success Chance set to **" + QString::number(config.stealSuccessChance) + "%**");
 				}
 
 			}
@@ -1124,7 +1124,7 @@ CurrencyModule::CurrencyModule(UmikoBot* client) : Module("currency", true), m_c
 				{
 					auto& config = getServerData(channel.guildId());
 					config.stealFinePercent = args.at(1).toInt();
-					client.createMessage(message.channelId(), "**Steal Fine Amount set to **" + QString::number(config.stealFinePercent) + "%");
+					client.createMessage(message.channelId(), "Steal Fine Amount set to **" + QString::number(config.stealFinePercent) + "%**");
 				}
 
 			}
@@ -1162,7 +1162,7 @@ CurrencyModule::CurrencyModule(UmikoBot* client) : Module("currency", true), m_c
 				{
 					auto& config = getServerData(channel.guildId());
 					config.stealVictimBonusPercent = args.at(1).toInt();
-					client.createMessage(message.channelId(), "**Steal Victim Bonus set to **" + QString::number(config.stealVictimBonusPercent) + "%");
+					client.createMessage(message.channelId(), "Steal Victim Bonus set to **" + QString::number(config.stealVictimBonusPercent) + "%**");
 				}
 
 			}
@@ -1200,7 +1200,7 @@ CurrencyModule::CurrencyModule(UmikoBot* client) : Module("currency", true), m_c
 				{
 					auto& config = getServerData(channel.guildId());
 					config.stealFailedJailTime = args.at(1).toInt();
-					client.createMessage(message.channelId(), "**Steal Jail Time set to **" + QString::number(config.stealFailedJailTime) + " hours");
+					client.createMessage(message.channelId(), "Steal Jail Time set to **" + QString::number(config.stealFailedJailTime) + " hours**");
 				}
 
 			}
@@ -1238,7 +1238,7 @@ CurrencyModule::CurrencyModule(UmikoBot* client) : Module("currency", true), m_c
 				{
 					auto& config = getServerData(channel.guildId());
 					config.dailyBonusAmount = args.at(1).toInt();
-					client.createMessage(message.channelId(), "**Daily Bonus Amount set to **" + QString::number(config.dailyBonusAmount));
+					client.createMessage(message.channelId(), "Daily Bonus Amount set to **" + QString::number(config.dailyBonusAmount) + "**");
 				}
 
 			}
@@ -1276,7 +1276,7 @@ CurrencyModule::CurrencyModule(UmikoBot* client) : Module("currency", true), m_c
 				{
 					auto& config = getServerData(channel.guildId());
 					config.dailyBonusPeriod = args.at(1).toInt();
-					client.createMessage(message.channelId(), "**Daily Bonus will occur every **" + QString::number(config.dailyBonusPeriod) + " days");
+					client.createMessage(message.channelId(), "Daily Bonus will occur every **" + QString::number(config.dailyBonusPeriod) + " days**");
 				}
 
 			}
