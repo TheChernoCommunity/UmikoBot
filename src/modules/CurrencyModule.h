@@ -52,6 +52,8 @@ private:
 			{
 				jailTimer->start(other.jailTimer->remainingTime());
 			}
+
+			return *this;
 		}
 	};
 
@@ -77,7 +79,7 @@ private:
 		int dailyBonusPeriod { 3 };
 		int stealSuccessChance { 30 };
 		int stealFinePercent { 50 };
-		int stealVictimBonusPercent { 30 };
+		int stealVictimBonusPercent { 25 };
 		int stealFailedJailTime { 3 };
 	};
 
