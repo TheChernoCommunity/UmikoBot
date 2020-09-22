@@ -1,7 +1,7 @@
 #pragma once
-#include <QTCore/QTimer>
+#include <QtCore/QTimer>
 #include <QtCore/QString>
-#include <QTCore/QTime>
+#include <QtCore/QTime>
 
 QString StringifyMilliseconds(int milliseconds)
 {
