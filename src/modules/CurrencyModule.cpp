@@ -91,7 +91,7 @@ CurrencyModule::CurrencyModule(UmikoBot* client)
 			QString creditScore = QString::number(getUserData(channel.guildId(), message.author().id()).currency);
 			
 			QString desc = "**Current Credits: ** `" + creditScore + "` **" + config.currencySymbol + "** (" + config.currencyName +")";
-			embed.setTitle(reinterpret_cast<UmikoBot*>(&client)->GetName(channel.guildId(), message.author().id()) +"'s Wallet");
+			embed.setTitle(UmikoBot::Instance().GetName(channel.guildId(), message.author().id()) + "'s Wallet");
 			embed.setDescription(desc);
 			client.createMessage(message.channelId(), embed);
 		}
@@ -165,7 +165,7 @@ CurrencyModule::CurrencyModule(UmikoBot* client)
 			}
 			if (serverGamble.gamble) 
 			{
-				QString user = reinterpret_cast<UmikoBot*>(&client)->GetName(channel.guildId(), serverGamble.userId);
+				QString user = UmikoBot::Instance().GetName(channel.guildId(), serverGamble.userId);
 				Discord::Embed embed;
 				embed.setColor(qrand() % 16777216);
 				embed.setTitle("Welcome to Gamble!");
@@ -201,12 +201,12 @@ CurrencyModule::CurrencyModule(UmikoBot* client)
 
 			serverGamble.timer->start();
 
-			QString name = reinterpret_cast<UmikoBot*>(&client)->GetName(channel.guildId(), serverGamble.userId);
+			QString name = UmikoBot::Instance().GetName(channel.guildId(), serverGamble.userId);
 
 			Discord::Embed embed;
 			embed.setColor(qrand() % 16777216);
 			embed.setTitle("Welcome to Gamble " + name + "!");
-			embed.setDescription("All you need to do is guess a random number between "+ QString::number(config.minGuess) + " and " + QString::number(config.maxGuess) + " (inclusive) and if it is the same as the number I guess, you get **"+ QString::number(config.gambleReward) + config.currencySymbol + "**!\n\n**What number do you think of?** <:wesmart:388340133864407043>");
+			embed.setDescription("All you need to do is guess a random number between " + QString::number(config.minGuess) + " and " + QString::number(config.maxGuess) + " (inclusive) and if it is the same as the number I think of, you get **" + QString::number(config.gambleReward) + config.currencySymbol + "**!\n\n**What number do you think of?** <:wesmart:388340133864407043>");
 			
 			client.createMessage(message.channelId(), embed);
 		}
@@ -231,7 +231,7 @@ CurrencyModule::CurrencyModule(UmikoBot* client)
 			}
 			if (serverGamble.gamble)
 			{
-				QString user = reinterpret_cast<UmikoBot*>(&client)->GetName(channel.guildId(), serverGamble.userId);
+				QString user = UmikoBot::Instance().GetName(channel.guildId(), serverGamble.userId);
 				Discord::Embed embed;
 				embed.setColor(qrand() % 16777216);
 				embed.setTitle("Welcome to Gamble!");
@@ -276,7 +276,7 @@ CurrencyModule::CurrencyModule(UmikoBot* client)
 				});
 
 			serverGamble.timer->start();
-			QString name = reinterpret_cast<UmikoBot*>(&client)->GetName(channel.guildId(), serverGamble.userId);
+			QString name = UmikoBot::Instance().GetName(channel.guildId(), serverGamble.userId);
 
 			Discord::Embed embed;
 			embed.setColor(qrand() % 16777216);
@@ -771,7 +771,7 @@ CurrencyModule::CurrencyModule(UmikoBot* client)
 				//! Remove the users which aren't in the server anymore
 				for (int i = 0; i < leaderboard.size(); i++) 
 				{
-					if (reinterpret_cast<UmikoBot*>(&client)->GetName(channel.guildId(), leaderboard[i].userId) == "") 
+					if (UmikoBot::Instance().GetName(channel.guildId(), leaderboard[i].userId) == "")
 					{
 						leaderboard.removeAt(i);
 					}
@@ -783,7 +783,7 @@ CurrencyModule::CurrencyModule(UmikoBot* client)
 					offset = leaderboard.size();
 				}
 
-				qSort(leaderboard.begin(), leaderboard.begin() + offset, [](UserCurrency u1, UserCurrency u2)
+				qSort(leaderboard.begin(), leaderboard.end(), [](UserCurrency u1, UserCurrency u2)
 					{
 						return u1.currency > u2.currency;
 					});
@@ -792,9 +792,9 @@ CurrencyModule::CurrencyModule(UmikoBot* client)
 				embed.setTitle("Currency Leaderboard (Top 30)");
 				QString desc;
 				int rank = 0;
-				for (auto user : leaderboard.mid(0, offset)) {
+				for (auto& user : leaderboard.mid(0, offset)) {
 					rank++;
-					QString username = reinterpret_cast<UmikoBot*>(&client)->GetName(channel.guildId(), user.userId);
+					QString username = UmikoBot::Instance().GetName(channel.guildId(), user.userId);
 					QString currency = QString::number(user.currency);
 
 					desc += "**" + QString::number(rank) + ") " + username + ":** ";
@@ -871,7 +871,7 @@ CurrencyModule::CurrencyModule(UmikoBot* client)
 		}
 
 		Discord::Embed embed;
-		embed.setTitle("Donation by " + reinterpret_cast<UmikoBot*>(&client)->GetName(channel.guildId(), message.author().id()) + "!");
+		embed.setTitle("Donation by " + UmikoBot::Instance().GetName(channel.guildId(), message.author().id()) + "!");
 		embed.setDescription(desc);
 		embed.setColor(qrand() % 16777216);
 
