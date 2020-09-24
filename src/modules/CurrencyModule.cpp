@@ -181,7 +181,11 @@ CurrencyModule::CurrencyModule(UmikoBot* client) : Module("currency", true), m_c
 
 			auto& config = getServerData(channel.guildId());
 
-			serverGamble.randNum = qrand() % (config.maxGuess - config.minGuess +1) + config.minGuess;
+			std::random_device device;
+			std::mt19937 rng(device());
+			std::uniform_int_distribution<std::mt19937::result_type> dist(config.minGuess, config.maxGuess);
+
+			serverGamble.randNum = dist(rng);
 			serverGamble.channelId = message.channelId();
 			serverGamble.gamble = true;
 			serverGamble.userId = message.author().id();
@@ -254,7 +258,12 @@ CurrencyModule::CurrencyModule(UmikoBot* client) : Module("currency", true), m_c
 				client.createMessage(message.channelId(), "<:aanger:730377398314467439> **BRUH. Don't you dare waste my time! I ain't interested in nothing.**");
 				return;
 			}
-			serverGamble.randNum = qrand() % (config.maxGuess - config.minGuess + 1) + config.minGuess;
+
+			std::random_device device;
+			std::mt19937 rng(device());
+			std::uniform_int_distribution<std::mt19937::result_type> dist(config.minGuess, config.maxGuess);
+
+			serverGamble.randNum = dist(rng);
 			serverGamble.channelId = message.channelId();
 			serverGamble.gamble = true;
 			serverGamble.userId = message.author().id();
@@ -923,50 +932,49 @@ void CurrencyModule::OnMessage(Discord::Client& client, const Discord::Message& 
 				if (re.exactMatch(message.content())) 
 				{
 		
-					if (gambleData[guildId].gamble && !message.author().bot() && message.channelId() == gambleData[guildId].channelId && message.author().id() == gambleData[guildId].userId)
-					{
+					auto gambleAllowed = gambleData[guildId].gamble;
+					auto isbotAuthor = message.author().bot();
 
-						if (message.content().toInt() > serverConfig.maxGuess || message.content().toInt() < serverConfig.minGuess)
+					auto isGambleChannel = message.channelId() == gambleData[guildId].channelId;
+
+					auto isUserGambler = message.author().id() == gambleData[guildId].userId;
+
+					if (gambleAllowed && !isbotAuthor && isGambleChannel && isUserGambler)
+					{
+						auto guess = message.content().toInt();
+
+						if (guess > serverConfig.maxGuess || guess < serverConfig.minGuess)
 						{
 
 							client.createMessage(message.channelId(), "**Your guess is out of range!** \nTry a number between " + QString::number(serverConfig.minGuess) + " and " + QString::number(serverConfig.maxGuess) + " (inclusive). ");
 							return;
 
 						}
-						if (message.content().toInt() == gambleData[guildId].randNum) 
+						auto playerWon = guess == gambleData[guildId].randNum;
+						if (playerWon) 
 						{
-							if (!gambleData[guildId].doubleOrNothing) 
-							{
-								auto index = getUserIndex(guildId, message.author().id());
-								guildList[guildId][index].currency += serverConfig.gambleReward;
-								client.createMessage(message.channelId(), "**You guessed CORRECTLY!**\n(**" + QString::number(serverConfig.gambleReward) + serverConfig.currencySymbol + "** have been added to your wallet!)");
-							}
-							else 
-							{
-								auto index = getUserIndex(guildId, message.author().id());
-								guildList[guildId][index].currency += 2 * gambleData[guildId].betAmount;
-								client.createMessage(message.channelId(), "**You guessed CORRECTLY!**\n(**" + QString::number(2 * gambleData[guildId].betAmount) + serverConfig.currencySymbol + "** have been added to your wallet!)");
-							}
+
+							auto prize = gambleData[guildId].doubleOrNothing ? 2 * gambleData[guildId].betAmount : serverConfig.gambleReward;
+
+							auto index = getUserIndex(guildId, 
+								message.author().id());
+							guildList[guildId][index].currency += prize;
+							client.createMessage(message.channelId(),
+								"**You guessed CORRECTLY!**\n(**" +
+								QString::number(prize) +
+								serverConfig.currencySymbol + 
+								"** have been added to your wallet!)");
 
 						}
-
-						//! Player lost
 						else 
 						{
-							if (!gambleData[guildId].doubleOrNothing) 
-							{
+
+							auto loss = gambleData[guildId].doubleOrNothing ? gambleData[guildId].betAmount : serverConfig.gambleLoss;
+							auto symbol = serverConfig.currencySymbol;
+
 								auto index = getUserIndex(guildId, message.author().id());
-								guildList[guildId][index].currency -= serverConfig.gambleLoss;
-								client.createMessage(message.channelId(), "**Better Luck next time!**\n*(psst! I took **" + QString::number(serverConfig.gambleLoss) + serverConfig.currencySymbol
-									+ "** from your wallet for my time...)*");
-							}
-							else 
-							{
-								auto index = getUserIndex(guildId, message.author().id());
-								guildList[guildId][index].currency -= gambleData[guildId].betAmount;
-								client.createMessage(message.channelId(), "**Better Luck next time!**\n*(psst! I took **" + QString::number(gambleData[guildId].betAmount) + serverConfig.currencySymbol
-									+ "** from your wallet...)*");
-							}
+								guildList[guildId][index].currency -= loss;
+								client.createMessage(message.channelId(), "**Better Luck next time! The number was `" + QString::number(gambleData[guildId].randNum) +"`**\n*(psst! I took **" + QString::number(loss) + symbol + "** from your wallet for my time...)*");
 
 						}
 
