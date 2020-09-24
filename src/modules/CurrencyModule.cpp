@@ -18,28 +18,35 @@
 //! Gamble Timeout in seconds
 #define gambleTimeout 20
 
-CurrencyModule::CurrencyModule(UmikoBot* client)
-	: Module("currency", true), m_client(client)
+CurrencyModule::CurrencyModule(UmikoBot* client) : Module("currency", true), m_client(client)
 {
 
 	m_timer.setInterval(24*60*60*1000); //!24hr timer
 	QObject::connect(&m_timer, &QTimer::timeout, [this, client]() 
 		{
-			for (auto server : guildList.keys()) 
+		for (auto server : guildList.keys()) 
+		{
+			//!Clear the daily bonus for everyone
+			for (int i = 0; i < guildList[server].size(); i++) 
 			{
-				//!Clear the daily bonus for everyone
-				for (auto user = guildList[server].begin(); user != guildList[server].end(); ++user
-					) 
-				{
-					user->isDailyClaimed = false;
-				}
 
+				auto user = guildList[server][i];
+				if (UmikoBot::Instance().GetName(server, user.userId) != "") 
+				{
+					user.isDailyClaimed = false;
+				}
+				else 
+				{
+					//remove if the user is no longer in the server
+					guildList[server].removeAt(i);
+				}
+			}
 				auto guildId = server;
 				auto& serverConfig = getServerData(guildId);
 
 				if (!serverConfig.isRandomGiveawayDone) 
 				{
-					client->createMessage(serverConfig.giveawayChannelId, "Hey everyone! Today's freebie expires in **"+ QString::number(serverConfig.freebieExpireTime) +" seconds**. `!claim` it now!");
+					client->createMessage(serverConfig.giveawayChannelId, "Hey everyone! Today's freebie expires in **" + QString::number(serverConfig.freebieExpireTime) + " seconds**. `!claim` it now!");
 
 					serverConfig.allowGiveaway = true;
 					
@@ -62,7 +69,6 @@ CurrencyModule::CurrencyModule(UmikoBot* client)
 				}
 				serverConfig.isRandomGiveawayDone = false;
 			}
-		
 	});
 
 	m_timer.start();
@@ -985,11 +991,8 @@ void CurrencyModule::OnSave(QJsonDocument& doc) const
 	{
 		QJsonObject serverJSON;
 		
-		for (auto user = guildList[server].begin(); user != guildList[server].end(); user++) {
-			if (m_client->GetName(server, user->userId) == "")
-			{
-				continue;
-			}
+		for (auto user = guildList[server].begin(); user != guildList[server].end(); user++) 
+		{	
 			QJsonObject obj;
 			obj["currency"] = user->currency;
 			obj["isDailyClaimed"] = user->isDailyClaimed;
