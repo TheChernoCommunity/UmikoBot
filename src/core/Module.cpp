@@ -42,7 +42,7 @@ void Module::RegisterCommand(unsigned int id, const QString& name, Command::Call
 void Module::Save() const
 {
 	QFile file("configs/" + m_name + ".json");
-	if (file.open(QFile::ReadWrite))
+	if (file.open(QFile::ReadWrite | QFile::Truncate))
 	{
 		QJsonDocument doc;
 		OnSave(doc);
