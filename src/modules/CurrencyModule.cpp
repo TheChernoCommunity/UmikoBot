@@ -773,15 +773,6 @@ CurrencyModule::CurrencyModule(UmikoBot* client) : Module("currency", true), m_c
 
 				auto& leaderboard = guildList[channel.guildId()];
 
-				//! Remove the users which aren't in the server anymore
-				for (int i = 0; i < leaderboard.size(); i++) 
-				{
-					if (UmikoBot::Instance().GetName(channel.guildId(), leaderboard[i].userId) == "")
-					{
-						leaderboard.removeAt(i);
-					}
-				}
-
 				int offset{ 30 };
 				if (leaderboard.size() < 30) 
 				{
@@ -797,9 +788,19 @@ CurrencyModule::CurrencyModule(UmikoBot* client) : Module("currency", true), m_c
 				embed.setTitle("Currency Leaderboard (Top 30)");
 				QString desc;
 				int rank = 0;
-				for (auto& user : leaderboard.mid(0, offset)) {
-					rank++;
+				for (auto i = 0; i < offset && i < leaderboard.size(); i++) 
+				{
+					const auto& user = leaderboard[i];
 					QString username = UmikoBot::Instance().GetName(channel.guildId(), user.userId);
+
+					if (username == "") 
+					{
+						offset++;
+						continue;
+					}
+
+					rank++;
+
 					QString currency = QString::number(user.currency);
 
 					desc += "**" + QString::number(rank) + ") " + username + ":** ";
