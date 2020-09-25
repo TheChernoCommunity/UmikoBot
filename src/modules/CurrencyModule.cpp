@@ -24,50 +24,50 @@ CurrencyModule::CurrencyModule(UmikoBot* client) : Module("currency", true), m_c
 	m_timer.setInterval(24*60*60*1000); //!24hr timer
 	QObject::connect(&m_timer, &QTimer::timeout, [this, client]() 
 		{
-		for (auto server : guildList.keys()) 
-		{
-			//!Clear the daily bonus for everyone
-			for (int i = 0; i < guildList[server].size(); i++) 
+			for (auto server : guildList.keys()) 
 			{
-
-				auto user = guildList[server][i];
-				if (UmikoBot::Instance().GetName(server, user.userId) != "") 
+				//!Clear the daily bonus for everyone
+				for (int i = 0; i < guildList[server].size(); i++) 
 				{
-					user.isDailyClaimed = false;
-				}
-				else 
-				{
-					//remove if the user is no longer in the server
-					guildList[server].removeAt(i);
-				}
-			}
-			auto guildId = server;
-			auto& serverConfig = getServerData(guildId);
 
-			if (!serverConfig.isRandomGiveawayDone) 
-			{
-				client->createMessage(serverConfig.giveawayChannelId, "Hey everyone! Today's freebie expires in **" + QString::number(serverConfig.freebieExpireTime) + " seconds**. `!claim` it now!");
-
-				serverConfig.allowGiveaway = true;
-					
-				//! Delete the previously allocated thingy
-				if (serverConfig.freebieTimer != nullptr) {
-					delete serverConfig.freebieTimer;
-					serverConfig.freebieTimer = nullptr;
-				}
-
-				serverConfig.freebieTimer = new QTimer;
-				serverConfig.freebieTimer->setInterval(serverConfig.freebieExpireTime * 1000);
-				serverConfig.freebieTimer->setSingleShot(true);
-				QObject::connect(serverConfig.freebieTimer, &QTimer::timeout, [this, client, guildId] ()
+					auto user = guildList[server][i];
+					if (UmikoBot::Instance().GetName(server, user.userId) != "") 
 					{
-						auto& serverConfig = getServerData(guildId);
-						serverConfig.allowGiveaway = false;
-					});
-				serverConfig.freebieTimer->start();
+						user.isDailyClaimed = false;
+					}
+					else 
+					{
+						//remove if the user is no longer in the server
+						guildList[server].removeAt(i);
+					}
+				}
+				auto guildId = server;
+				auto& serverConfig = getServerData(guildId);
+
+				if (!serverConfig.isRandomGiveawayDone) 
+				{
+					client->createMessage(serverConfig.giveawayChannelId, "Hey everyone! Today's freebie expires in **" + QString::number(serverConfig.freebieExpireTime) + " seconds**. `!claim` it now!");
+
+					serverConfig.allowGiveaway = true;
+					
+					//! Delete the previously allocated thingy
+					if (serverConfig.freebieTimer != nullptr) {
+						delete serverConfig.freebieTimer;
+						serverConfig.freebieTimer = nullptr;
+					}
+
+					serverConfig.freebieTimer = new QTimer;
+					serverConfig.freebieTimer->setInterval(serverConfig.freebieExpireTime * 1000);
+					serverConfig.freebieTimer->setSingleShot(true);
+					QObject::connect(serverConfig.freebieTimer, &QTimer::timeout, [this, client, guildId] ()
+						{
+							auto& serverConfig = getServerData(guildId);
+							serverConfig.allowGiveaway = false;
+						});
+					serverConfig.freebieTimer->start();
+				}
+				serverConfig.isRandomGiveawayDone = false;
 			}
-			serverConfig.isRandomGiveawayDone = false;
-		}
 	});
 
 	m_timer.start();
