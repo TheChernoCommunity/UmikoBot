@@ -41,34 +41,33 @@ CurrencyModule::CurrencyModule(UmikoBot* client) : Module("currency", true), m_c
 					guildList[server].removeAt(i);
 				}
 			}
-				auto guildId = server;
-				auto& serverConfig = getServerData(guildId);
+			auto guildId = server;
+			auto& serverConfig = getServerData(guildId);
 
-				if (!serverConfig.isRandomGiveawayDone) 
-				{
-					client->createMessage(serverConfig.giveawayChannelId, "Hey everyone! Today's freebie expires in **" + QString::number(serverConfig.freebieExpireTime) + " seconds**. `!claim` it now!");
+			if (!serverConfig.isRandomGiveawayDone) 
+			{
+				client->createMessage(serverConfig.giveawayChannelId, "Hey everyone! Today's freebie expires in **" + QString::number(serverConfig.freebieExpireTime) + " seconds**. `!claim` it now!");
 
-					serverConfig.allowGiveaway = true;
+				serverConfig.allowGiveaway = true;
 					
-					//! Delete the previously allocated thingy
-					if (serverConfig.freebieTimer != nullptr) {
-						delete serverConfig.freebieTimer;
-						serverConfig.freebieTimer = nullptr;
-					}
-
-					serverConfig.freebieTimer = new QTimer;
-					serverConfig.freebieTimer->setInterval(serverConfig.freebieExpireTime * 1000);
-					serverConfig.freebieTimer->setSingleShot(true);
-					QObject::connect(serverConfig.freebieTimer, &QTimer::timeout,
-					[this, client, guildId] ()
-						{
-							auto& serverConfig = getServerData(guildId);
-							serverConfig.allowGiveaway = false;
-						});
-					serverConfig.freebieTimer->start();
+				//! Delete the previously allocated thingy
+				if (serverConfig.freebieTimer != nullptr) {
+					delete serverConfig.freebieTimer;
+					serverConfig.freebieTimer = nullptr;
 				}
-				serverConfig.isRandomGiveawayDone = false;
+
+				serverConfig.freebieTimer = new QTimer;
+				serverConfig.freebieTimer->setInterval(serverConfig.freebieExpireTime * 1000);
+				serverConfig.freebieTimer->setSingleShot(true);
+				QObject::connect(serverConfig.freebieTimer, &QTimer::timeout, [this, client, guildId] ()
+					{
+						auto& serverConfig = getServerData(guildId);
+						serverConfig.allowGiveaway = false;
+					});
+				serverConfig.freebieTimer->start();
 			}
+			serverConfig.isRandomGiveawayDone = false;
+		}
 	});
 
 	m_timer.start();
