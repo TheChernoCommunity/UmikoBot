@@ -11,7 +11,7 @@ Module::Module(const QString& name, bool enabledByDefault)
 
 Module::~Module()
 {
-	Save();
+	
 }
 
 void Module::OnMessage(Discord::Client& client, const Discord::Message& message)
