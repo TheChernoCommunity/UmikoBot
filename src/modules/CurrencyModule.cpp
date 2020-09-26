@@ -972,9 +972,9 @@ void CurrencyModule::OnMessage(Discord::Client& client, const Discord::Message& 
 							auto loss = gambleData[guildId].doubleOrNothing ? gambleData[guildId].betAmount : serverConfig.gambleLoss;
 							auto symbol = serverConfig.currencySymbol;
 
-								auto index = getUserIndex(guildId, message.author().id());
-								guildList[guildId][index].currency -= loss;
-								client.createMessage(message.channelId(), "**Better Luck next time! The number was `" + QString::number(gambleData[guildId].randNum) +"`**\n*(psst! I took **" + QString::number(loss) + symbol + "** from your wallet for my time...)*");
+							auto index = getUserIndex(guildId, message.author().id());
+							guildList[guildId][index].currency -= loss;
+							client.createMessage(message.channelId(), "**Better Luck next time! The number was `" + QString::number(gambleData[guildId].randNum) +"`**\n*(psst! I took **" + QString::number(loss) + symbol + "** from your wallet for my time...)*");
 
 						}
 
