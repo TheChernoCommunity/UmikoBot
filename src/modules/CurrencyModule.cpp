@@ -19,24 +19,6 @@
 //! Gamble Timeout in seconds
 #define gambleTimeout 20
 
-//! Bonus amount rewarded for !daily streak
-#define dailyBonus 50
-
-//! How often (in days) the daily bonus occurs
-#define dailyBonusPeriod 3
-
-//! The percentage of the !steal amount that will be fined
-#define stealFinePercent 50
-
-//! The chance that a steal will succeed
-#define stealSuccessChance 10
-
-//! The percentage of the fine that goes to the victim
-#define stealVictimBonusPercent 30
-
-//! The number of hours of jail time from a failed !steal
-#define stealFailedJailTime 3
-
 CurrencyModule::CurrencyModule(UmikoBot* client) : Module("currency", true), m_client(client)
 {
 
@@ -56,7 +38,6 @@ CurrencyModule::CurrencyModule(UmikoBot* client) : Module("currency", true), m_c
 					}
 
 					user.isDailyClaimed = false;
-				}
 
 					if (UmikoBot::Instance().GetName(server, user.userId) != "") 
 					{
