@@ -830,6 +830,75 @@ LevelModule::LevelModule(UmikoBot* client)
 		else
 			printHelp();
 	});
+
+	RegisterCommand(Commands::LEVEL_MODULE_WHO_IS, "whois",
+		[this](Discord::Client& client, const Discord::Message& message, const Discord::Channel& channel)
+	{
+		QStringList args = message.content().split(' ');
+		GuildSetting* setting = &GuildSettings::GetGuildSetting(channel.guildId());
+		QString prefix = setting->prefix;
+		snowflake_t authorId = message.author().id();
+
+		if (args.first() != prefix + "whois")
+			return;
+		
+		if (args.size() > 2)
+		{
+			client.createMessage(message.channelId(), "**Wrong Usage of Command!**");
+			return;
+		}
+
+		QList<Discord::User> mentions = message.mentions();
+		if (mentions.size() == 0)
+		{
+			// TODO(fkp): Check for names
+			client.createMessage(message.channelId(), "Please **mention someone** whose description you want to see.");
+			return;
+		}
+
+		snowflake_t victimId = mentions[0].id();
+
+		if (guildList[channel.guildId()][getUserIndex(channel.guildId(), victimId)].description == "")
+		{
+			QString msg = UmikoBot::Instance().GetUsername(channel.guildId(), victimId) + " prefers an air of mystery around them...";
+			client.createMessage(message.channelId(), msg);
+		}
+		else
+		{
+			QString msg = guildList[channel.guildId()][getUserIndex(channel.guildId(), victimId)].description;
+			client.createMessage(message.channelId(), msg);
+		}
+	});
+
+	RegisterCommand(Commands::LEVEL_MODULE_I_AM, "iam",
+		[this](Discord::Client& client, const Discord::Message& message, const Discord::Channel& channel)
+	{
+		QStringList args = message.content().split(' ');
+		GuildSetting* setting = &GuildSettings::GetGuildSetting(channel.guildId());
+		QString prefix = setting->prefix;
+		snowflake_t authorId = message.author().id();
+
+		if (args.first() != prefix + "iam")
+			return;
+		
+		if (args.size() <= 1)
+		{
+			client.createMessage(message.channelId(), "**Wrong Usage of Command!**");
+			return;
+		}
+
+		// There might be a better way to do this that I don't know of.
+		// I just need to get the rest of the message (excluding the 
+		// command) as a string
+		QString description = "**" + UmikoBot::Instance().GetUsername(channel.guildId(), authorId) + "'s Description:**\n";
+		for (int i = 1; i < args.size(); i++)
+		{
+			description += args[i] + " ";
+		}
+		guildList[channel.guildId()][getUserIndex(channel.guildId(), authorId)].description = description;
+
+		client.createMessage(message.channelId(), "Description set!");
+	});
 }
 
 void LevelModule::OnSave(QJsonDocument& doc) const

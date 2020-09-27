@@ -47,4 +47,28 @@ private:
 	QTimer m_timer;
 
 	UmikoBot* m_client;
+
+	// TODO(fkp): This stuff is kinda code duplication from CurrencyModule.h
+	// To map the user IDs to their descriptions (whois)
+	struct UserDescription
+	{
+		snowflake_t userId;
+		QString description;
+	};
+
+	QMap<snowflake_t, QList<UserDescription>> guildList;
+
+	snowflake_t getUserIndex(snowflake_t guild, snowflake_t id)
+	{
+		for (auto it = guildList[guild].begin(); it != guildList[guild].end(); ++it)
+		{
+			if (it->userId == id)
+			{
+				return std::distance(guildList[guild].begin(), it);
+			}
+		}
+		//! If user is not added to the system, make a new one
+		guildList[guild].append(UserDescription { id, "" });
+		return std::distance(guildList[guild].begin(), std::prev(guildList[guild].end()));
+	}
 };
