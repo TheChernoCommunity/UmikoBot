@@ -81,7 +81,7 @@ CurrencyModule::CurrencyModule(UmikoBot* client) : Module("currency", true), m_c
 	m_timer.start();
 
 	RegisterCommand(Commands::CURRENCY_WALLET, "wallet", [this](Discord::Client& client, const Discord::Message& message, const Discord::Channel& channel) 
-		{
+	{
 		QStringList args = message.content().split(' ');
 		GuildSetting* setting = &GuildSettings::GetGuildSetting(channel.guildId());
 		QString prefix = setting->prefix;
@@ -116,10 +116,12 @@ CurrencyModule::CurrencyModule(UmikoBot* client) : Module("currency", true), m_c
 
 		QString credits = QString::number(getUserData(guild, user).currency);
 		QString dailyStreak = QString::number(getUserData(guild, user).dailyStreak);
+		QString dailyClaimed = getUserData(guild, user).isDailyClaimed ? "Yes" : "No";
 
 		QString desc = "**Current Credits: **`" + credits + "` **" + config.currencySymbol + "** (" + config.currencyName + ")";
 		desc += "\n";
-		desc += "**Daily Streak: **`" + dailyStreak + "/" + QString::number(config.dailyBonusPeriod)+ "`";
+		desc += "**Daily Streak: **`" + dailyStreak + "/" + QString::number(config.dailyBonusPeriod)+ "`\n";
+		desc += "**Today's Daily Claimed?** `" + dailyClaimed + "`";
 		embed.setTitle(UmikoBot::Instance().GetName(guild, user) + "'s Wallet");
 		embed.setDescription(desc);
 		client.createMessage(message.channelId(), embed);
