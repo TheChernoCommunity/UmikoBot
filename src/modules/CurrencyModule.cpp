@@ -88,27 +88,42 @@ CurrencyModule::CurrencyModule(UmikoBot* client) : Module("currency", true), m_c
 
 		if (args.first() != prefix + "wallet")
 			return;
-		if (args.size() > 1) 
+		if (args.size() > 2) 
 		{
 			client.createMessage(message.channelId(), "**Wrong Usage of Command!** ");
 			return;
 		}
-		if (args.size() == 1) 
-		{
-			Discord::Embed embed;
-			embed.setColor(11777216);
 
-			//! Get User and Sever Data
-			auto config = getServerData(channel.guildId());
+		snowflake_t user;
 
-			QString creditScore = QString::number(getUserData(channel.guildId(), message.author().id()).currency);
-			
-			QString desc = "**Current Credits: ** `" + creditScore + "` **" + config.currencySymbol + "** (" + config.currencyName +")";
-			embed.setTitle(UmikoBot::Instance().GetName(channel.guildId(), message.author().id()) + "'s Wallet");
-			embed.setDescription(desc);
-			client.createMessage(message.channelId(), embed);
+		if (args.size() == 2) {
+			user = UmikoBot::Instance().GetUserFromArg(channel.guildId(), args, 1);
+			if (user == 0) {
+				client.createMessage(message.channelId(), "**Couldn't find " + args.at(1) + "**");
+				return;
+			}
 		}
-		});
+		else {
+			user = message.author().id();
+		}
+
+		Discord::Embed embed;
+		embed.setColor(11777216);
+
+		//! Get User and Sever Data
+		auto guild = channel.guildId();
+		auto config = getServerData(guild);
+
+		QString credits = QString::number(getUserData(guild, user).currency);
+		QString dailyStreak = QString::number(getUserData(guild, user).dailyStreak);
+
+		QString desc = "**Current Credits: **`" + credits + "` **" + config.currencySymbol + "** (" + config.currencyName + ")";
+		desc += "\n";
+		desc += "**Daily Streak: **`" + dailyStreak + "/" + QString::number(config.dailyBonusPeriod)+ "`";
+		embed.setTitle(UmikoBot::Instance().GetName(guild, user) + "'s Wallet");
+		embed.setDescription(desc);
+		client.createMessage(message.channelId(), embed);
+	});
 
 	RegisterCommand(Commands::CURRENCY_DAILY, "daily", [this](Discord::Client& client, const Discord::Message& message, const Discord::Channel& channel) 
 		{
@@ -1313,12 +1328,9 @@ CurrencyModule::CurrencyModule(UmikoBot* client) : Module("currency", true), m_c
 void CurrencyModule::StatusCommand(QString& result, snowflake_t guild, snowflake_t user) 
 {
 	QString creditScore = QString::number(getUserData(guild, user).currency);
-	QString dailyStreak = QString::number(getUserData(guild, user).dailyStreak);
 	auto& config = getServerData(guild);
 
 	result += "Wallet: " + creditScore + " " + getServerData(guild).currencySymbol;
-	result+='\n';
-	result += "Daily Streak: " + dailyStreak + "/" + QString::number(config.dailyBonusPeriod);
 	result+='\n';
 }
 
