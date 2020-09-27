@@ -5,7 +5,7 @@
 #include "modules/TimezoneModule.h"
 #include "modules/CurrencyModule.h"
 #include "modules/ModerationModule.h"
-#include "modules/FunUtil.h"
+#include "modules/FunModule.h"
 
 #include "Logger.h"
 
@@ -32,7 +32,7 @@ UmikoBot::UmikoBot(QObject* parent)
 	m_modules.push_back(new TimezoneModule);
 	m_modules.push_back(new CurrencyModule(this));
 	m_modules.push_back(new ModerationModule);
-	m_modules.push_back(new FunUtilModule);
+	m_modules.push_back(new FunModule);
 	
 	Q_FOREACH(Module* module, m_modules)
 	{
@@ -762,9 +762,9 @@ void UmikoBot::Load()
 		Command(CURRENCY_SET_PRIZE_PROB),
 		Command(CURRENCY_RICH_LIST),
 		Command(CURRENCY_DONATE),
-		Command(CURRENCY_STEAL)
+		Command(CURRENCY_STEAL),
 
-		Command(UFUN_MEME)
+		Command(FUN_MEME)
 	};
 
 	QFile file("commands.json");

@@ -1,13 +1,12 @@
-#include "FunUtil.h"
+#include "FunModule.h"
 #include <QtNetwork>
 #include <QtCore/QFile>
 #include <QtCore/QJsonDocument>
-#include <QtCore/QDir>
 
-FunUtilModule::FunUtilModule() : Module("funutil", true) 
+FunModule::FunModule() : Module("funutil", true) 
 {
 
-	RegisterCommand(Commands::UFUN_MEME, "meme", [this](Discord::Client& client, const Discord::Message& message, const Discord::Channel& channel) 
+	RegisterCommand(Commands::FUN_MEME, "meme", [this](Discord::Client& client, const Discord::Message& message, const Discord::Channel& channel) 
 		{
 
 		QStringList args = message.content().split(' ');
