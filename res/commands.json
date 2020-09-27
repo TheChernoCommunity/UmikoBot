@@ -77,6 +77,18 @@
 		"additional": "",
 		"admin": true
 	},
+	"USER_MODULE_WHO_IS": {
+		"brief": "Returns a description on the person requested.",
+		"usage": "whois @Person",
+		"additional": "",
+		"admin": false
+	},
+	"USER_MODULE_I_AM": {
+		"brief": "Allows the user to set information about themselves.",
+		"usage": "iam",
+		"additional": "",
+		"admin:": false
+	},
 	"TIMEZONE_MODULE_TIMEOFFSET": {
 		"brief": "Sets the timezone offset of the user.",
 		"usage": "timeoffset <offset>",
