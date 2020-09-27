@@ -3,10 +3,10 @@
 #include "core/Module.h"
 #include "UmikoBot.h"
 
-class FunUtilModule : public Module, public QObject 
+class FunModule : public Module, public QObject 
 {
 private:
 	
 public:
-	FunUtilModule();
+	FunModule();
 };
