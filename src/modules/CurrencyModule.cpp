@@ -146,7 +146,7 @@ CurrencyModule::CurrencyModule(UmikoBot* client) : Module("currency", true), m_c
 		{
 			auto index = getUserIndex(channel.guildId(), message.author().id());
 			unsigned int& dailyStreak = guildList[channel.guildId()][index].dailyStreak;
-			double todaysReward = 100.0;
+			double todaysReward = config.dailyReward;
 			bool bonus = false;
 
 			if (++dailyStreak % config.dailyBonusPeriod == 0)
@@ -1271,6 +1271,42 @@ CurrencyModule::CurrencyModule(UmikoBot* client) : Module("currency", true), m_c
 
 			}
 		);
+	});
+
+	RegisterCommand(Commands::CURRENCY_COMPENSATE, "compensate", [this](Discord::Client& client, const Discord::Message& message, const Discord::Channel& channel) 
+	{
+
+		QStringList args = message.content().split(' ');
+		GuildSetting* setting = &GuildSettings::GetGuildSetting(channel.guildId());
+		QString prefix = setting->prefix;
+
+		if (args.first() != prefix + "compensate")
+			return;
+
+		Permissions::ContainsPermission(client, channel.guildId(), message.author().id(), CommandPermission::ADMIN,
+			[this, args, &client, message, channel](bool result) 
+			{
+				if (!result) {
+					client.createMessage(message.channelId(), "**You don't have permissions to use this command.**");
+					return;
+				}
+
+				if (args.size() != 2) 
+				{
+					client.createMessage(message.channelId(), "**Wrong Usage of Command!** ");
+					return;
+				}
+
+				auto& config = getServerData(channel.guildId());
+				auto amt = args.at(1).toDouble();
+
+				for (auto& user : guildList[channel.guildId()]) {
+					user.currency += amt;
+				}
+
+				client.createMessage(message.channelId(), "**Everyone has been compensated with `" + QString::number(amt) + config.currencySymbol + "`**\nSorry for any inconvenience!");
+			});
+
 	});
 }
 

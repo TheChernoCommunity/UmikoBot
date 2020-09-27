@@ -763,6 +763,7 @@ void UmikoBot::Load()
 		Command(CURRENCY_RICH_LIST),
 		Command(CURRENCY_DONATE),
 		Command(CURRENCY_STEAL),
+		Command(CURRENCY_COMPENSATE),
 
 		Command(FUN_MEME)
 	};
