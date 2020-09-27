@@ -6,6 +6,7 @@
 #include "modules/CurrencyModule.h"
 #include "modules/ModerationModule.h"
 #include "modules/FunModule.h"
+#include "modules/UserModule.h"
 
 #include "Logger.h"
 
@@ -33,6 +34,7 @@ UmikoBot::UmikoBot(QObject* parent)
 	m_modules.push_back(new CurrencyModule(this));
 	m_modules.push_back(new ModerationModule);
 	m_modules.push_back(new FunModule);
+	m_modules.push_back(new UserModule);
 	
 	Q_FOREACH(Module* module, m_modules)
 	{
