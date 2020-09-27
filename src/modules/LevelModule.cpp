@@ -965,8 +965,23 @@ void LevelModule::OnSave(QJsonDocument& doc) const
 			backups[QString::number(it.key())] = backup;
 		}
 
+	QJsonObject descriptions;
+	
+	for (snowflake_t guildId : guildList.keys())
+	{
+		QJsonObject description;
+		
+		for (const UserDescription& desc : guildList[guildId])
+		{
+			description[QString::number(desc.userId)] = desc.description;
+		}
+
+		descriptions[QString::number(guildId)] = description;
+	}
+	
 	json["levels"] = levels;
 	json["backups"] = backups;
+	json["descriptions"] = descriptions;
 	doc.setObject(json);
 }
 
@@ -976,6 +991,7 @@ void LevelModule::OnLoad(const QJsonDocument& doc)
 
 	QJsonObject backups = json["backups"].toObject();
 	QJsonObject levels = json["levels"].toObject();
+	QJsonObject descriptions = json["descriptions"].toObject();
 
 	QStringList guildIds = levels.keys();
 
@@ -985,12 +1001,16 @@ void LevelModule::OnLoad(const QJsonDocument& doc)
 
 		QJsonObject level = levels[guild].toObject();
 		QJsonObject backup = backups[guild].toObject();
+		QJsonObject description = descriptions[guild].toObject();
 
 		for (const QString& user : level.keys())
 			m_exp[guildId].append({ user.toULongLong(), level[user].toInt(), 0 });
 
 		for (const QString& user : backup.keys())
 			m_backupexp[guildId].append({ user.toULongLong(), backup[user].toInt(), 0 });
+
+		for (const QString& user : description.keys())
+			guildList[guildId].append({ user.toULongLong(), description[user].toString() });
 	}
 }
 
