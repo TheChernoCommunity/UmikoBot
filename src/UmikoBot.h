@@ -20,9 +20,8 @@ namespace Commands {
 		LEVEL_MODULE_EXP_TAKE,
 		LEVEL_MODULE_BLOCK_EXP,
 
-		// TODO(fkp): This doesn't fit in the level module
-		LEVEL_MODULE_WHO_IS,
-		LEVEL_MODULE_I_AM,
+		USER_MODULE_WHO_IS,
+		USER_MODULE_I_AM,
 
 		TIMEZONE_MODULE_TIMEOFFSET,
 
