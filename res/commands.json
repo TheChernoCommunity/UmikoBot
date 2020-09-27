@@ -90,9 +90,9 @@
 		"admin": true
 	},
 	"CURRENCY_WALLET": {
-		"brief": "Shows the user's current amount of credits.",
-		"usage": "wallet",
-		"additional": "",
+		"brief": "Shows the user's wallet which contains information related to the user's currency.",
+		"usage": "wallet [name/@mention/id]",
+		"additional": "If no argument is provided, it shows the wallet of the user who queried.",
 		"admin": false
 	},
 	"CURRENCY_DAILY": {
@@ -136,43 +136,43 @@
 		"usage": "setdaily",
 		"additional": "",
 		"admin": true
-	}, 
+	},
 	"CURRENCY_SET_PRIZE": {
 		"brief": "Sets the freebie reward amount.",
 		"usage": "setprize",
 		"additional": "",
 		"admin": true
-	}, 
+	},
 	"CURRENCY_SET_GAMBLE_LOSS": {
 		"brief": "Sets the amount to be taken when the player loses in the normal gamble mode.",
 		"usage": "setgambleloss",
 		"additional": "",
 		"admin": true
-	}, 
+	},
 	"CURRENCY_SET_GAMBLE_REWARD": {
 		"brief": "Sets the amount to be rewarded when the player wins in the normal gamble mode.",
 		"usage": "setgamblereward",
 		"additional": "",
 		"admin": true
-	}, 
+	},
 	"CURRENCY_SET_GAMBLE_MIN_GUESS": {
 		"brief": "Sets the minimum guess number for the gamble mode.",
 		"usage": "setgambleminguess",
 		"additional": "",
 		"admin": true
-	}, 
+	},
 	"CURRENCY_SET_GAMBLE_MAX_GUESS": {
 		"brief": "Sets the maximum guess number for the gamble mode.",
 		"usage": "setgamblemaxguess",
 		"additional": "",
 		"admin": true
-	}, 
+	},
 	"CURRENCY_SET_PRIZE_PROB": {
 		"brief": "Sets the probability that the freebie giveaway occurs for each message.",
 		"usage": "setprizeprob",
 		"additional": "",
 		"admin": true
-	}, 
+	},
 	"CURRENCY_SET_PRIZE_EXPIRY": {
 		"brief": "Sets the expriy time (in seconds) for the freebie giveaway at the end of the day (when it has not been claimed).",
 		"usage": "setprizeexpiry",
@@ -225,5 +225,15 @@
 		"brief": "Sets how often (in days) the bonus is granted.",
 		"usage": "setdailybonusperiod <amount>",
 		"admin": true
+	},
+	"CURRENCY_COMPENSATE": {
+		"brief": "Adds some amount to everyone's currency. Intended to be used as a compensation for when the bot is down.",
+		"usage": "compensate <amount>",
+		"admin": true
+	},
+	"FUN_MEME": {
+		"brief": "Shows memes from reddit.",
+		"usage": "meme",
+		"admin": false
 	}
 }
