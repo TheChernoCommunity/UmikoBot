@@ -27,10 +27,10 @@ CurrencyModule::CurrencyModule(UmikoBot* client) : Module("currency", true), m_c
 		{
 			for (auto server : guildList.keys()) 
 			{
-				//!Clear the daily bonus for everyone
+				//!Reset the daily claimed bool for everyone
 				for (int i = 0; i < guildList[server].size(); i++) 
 				{
-					auto user = guildList[server][i];
+					auto& user = guildList[server][i];
 					
 					if (!user.isDailyClaimed)
 					{
