@@ -33,6 +33,7 @@ private:
 	struct DescriptionData
 	{
 		bool isBeingUsed = false;
+		snowflake_t messageId; // The iam message that started it
 		snowflake_t userId = 0;
 		QTimer* timer;
 		unsigned int questionUpTo = 0;

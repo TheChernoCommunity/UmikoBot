@@ -108,6 +108,7 @@ UserModule::UserModule()
 
 		data.isBeingUsed = true;
 		data.userId = authorId;
+		data.messageId = message.id();
 		data.questionUpTo = 0;
 		data.currentUserDescription = &userDescriptions[guildId][getUserIndex(guildId, authorId)];
 		data.oldUserDescription = *data.currentUserDescription;
@@ -218,6 +219,12 @@ void UserModule::OnMessage(Discord::Client& client, const Discord::Message& mess
 			snowflake_t authorId = message.author().id();
 			QString messageContent = message.content();
 			
+			if (descriptionData.messageId == message.id())
+			{
+				// This is the !iam command, ignore it
+				return;
+			}
+
 			if (descriptionData.isBeingUsed && descriptionData.userId == authorId)
 			{
 				QString contentToWrite = messageContent;
