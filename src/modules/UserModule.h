@@ -43,55 +43,24 @@ private:
 	};
 
 	QMap<snowflake_t, DescriptionData> guildDescriptionData;
+	using questionFunc = void (*)(UserDescription& desc, const QString& value);
 
-	const std::array<QString, 6> descriptionQuestions = {
-		"What is your name?",
-		"Where are you from?",
-		"What industry do you work in?",
-		"What areas of programming are you interested in?",
-		"What are you currently working on?",
-		"Link to a GitHub profile:"
+#define QUESTION(question, field) std::make_pair(question, [](UserDescription& desc, const QString& value)		\
+	{																											\
+		desc.field = value;																						\
+	})
+
+	const std::array<std::pair<QString, questionFunc>, 6> descriptionQuestions = {
+		QUESTION("What is your name?", name),
+		QUESTION("Where are you from?", location),
+		QUESTION("What industry do you work in?", industry),
+		QUESTION("What areas of programming are you interested in?", programmingInterests),
+		QUESTION("What are you currently working on?", currentlyWorkingOn),
+		QUESTION("Link to a GitHub profile:", githubLink),
 	};
+
+#undef QUESTION
 	
-	snowflake_t getUserIndex(snowflake_t guild, snowflake_t id)
-	{
-		QList<UserDescription>& guildDescriptions = userDescriptions[guild];
-
-		for (auto it = guildDescriptions.begin(); it != guildDescriptions.end(); ++it)
-		{
-			if (it->userId == id)
-			{
-				return std::distance(guildDescriptions.begin(), it);
-			}
-		}
-
-		// If user is not added to the system, make a new one
-		guildDescriptions.append(UserDescription { id, "" });
-		return std::distance(guildDescriptions.begin(), std::prev(guildDescriptions.end()));
-	}
-
-	QString formDescriptionMessage(const UserDescription& desc) const
-	{
-		QString msg;
-
-		if (desc.name != "")
-			msg += "**Name: **" + desc.name + "\n";
-		
-		if (desc.location != "")
-			msg += "**Location: **" + desc.location + "\n";
-		
-		if (desc.industry != "")
-			msg += "**Industry: **" + desc.industry + "\n";
-		
-		if (desc.programmingInterests != "")
-			msg += "**Programming Interests: **" + desc.programmingInterests + "\n";
-		
-		if (desc.currentlyWorkingOn != "")
-			msg += "**Currently working on: **" + desc.currentlyWorkingOn + "\n";
-		
-		if (desc.githubLink != "")
-			msg += "**GitHub: **" + desc.githubLink + "\n";
-
-		return msg;
-	}
+	snowflake_t UserModule::getUserIndex(snowflake_t guild, snowflake_t id);
+	QString UserModule::formDescriptionMessage(const UserDescription& desc) const;
 };
