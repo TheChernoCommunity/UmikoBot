@@ -7,7 +7,7 @@ UserModule::UserModule()
 	: Module("users", true)
 {
 	RegisterCommand(Commands::USER_MODULE_WHO_IS, "whois",
-		[this](Discord::Client& client, const Discord::Message& message, const Discord::Channel& channel)
+					[this](Discord::Client& client, const Discord::Message& message, const Discord::Channel& channel)
 	{
 		QStringList args = message.content().split(' ');
 		GuildSetting* setting = &GuildSettings::GetGuildSetting(channel.guildId());
@@ -16,7 +16,7 @@ UserModule::UserModule()
 
 		if (args.first() != prefix + "whois")
 			return;
-		
+
 		if (args.size() > 2)
 		{
 			client.createMessage(message.channelId(), "**Wrong Usage of Command!**");
@@ -25,7 +25,7 @@ UserModule::UserModule()
 
 		QList<Discord::User> mentions = message.mentions();
 		snowflake_t userId;
-		
+
 		if (mentions.size() > 0)
 		{
 			userId = mentions[0].id();
@@ -39,7 +39,7 @@ UserModule::UserModule()
 				return;
 			}
 		}
-		
+
 		DescriptionData& data = guildDescriptionData[channel.guildId()];
 
 		if (data.isBeingUsed && data.userId == userId)
@@ -50,10 +50,10 @@ UserModule::UserModule()
 			client.createMessage(message.channelId(), msg);
 			return;
 		}
-		
+
 		UserDescription& desc = userDescriptions[channel.guildId()][getUserIndex(channel.guildId(), userId)];
 		QString msg = formDescriptionMessage(desc);
-		
+
 		if (msg == "")
 		{
 			msg = UmikoBot::Instance().GetName(channel.guildId(), userId) + " prefers an air of mystery around them...";
@@ -61,15 +61,19 @@ UserModule::UserModule()
 		}
 		else
 		{
-			Discord::Embed embed;
-			QString icon = "https://cdn.discordapp.com/avatars/" + QString::number(userId) + "/" + message.author().avatar() + ".png";
-			QString name = UmikoBot::Instance().GetName(channel.guildId(), userId);
-			embed.setAuthor(Discord::EmbedAuthor(name, "", icon));
-			embed.setColor(qrand() % 16777216);
-			embed.setTitle("Description");
-			embed.setDescription(msg);
-				
-			client.createMessage(message.channelId(), embed);
+			UmikoBot::Instance().GetAvatar(channel.guildId(), userId).then(
+				[this, msg, userId, channel, &client, message](const QString& icon)
+				{
+					Discord::Embed embed;
+					QString name = UmikoBot::Instance().GetName(channel.guildId(), userId);
+					embed.setAuthor(Discord::EmbedAuthor(name, "", icon));
+					embed.setColor(qrand() % 16777216);
+					embed.setTitle("Description");
+					embed.setDescription(msg);
+
+					client.createMessage(message.channelId(), embed);
+				}
+			);
 		}
 	});
 
