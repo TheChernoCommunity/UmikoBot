@@ -6,7 +6,8 @@
 class FunModule : public Module, public QObject 
 {
 private:
-	
+	QNetworkAccessManager m_MemeManager;
+	snowflake_t m_memeChannel;
 public:
 	FunModule();
 };
