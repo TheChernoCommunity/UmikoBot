@@ -54,7 +54,7 @@ UserModule::UserModule()
 		UserDescription& desc = userDescriptions[channel.guildId()][getUserIndex(channel.guildId(), userId)];
 		QString msg = formDescriptionMessage(desc);
 
-		if (msg == "")
+		if (msg.isEmpty())
 		{
 			msg = UmikoBot::Instance().GetName(channel.guildId(), userId) + " prefers an air of mystery around them...";
 			client.createMessage(message.channelId(), msg);
@@ -120,6 +120,7 @@ UserModule::UserModule()
 			{
 				data.isBeingUsed = false;
 				delete data.timer;
+				data.timer = nullptr;
 				client.createMessage(message.channelId(), "**Description timeout due to no valid response.**");
 			}
 		});
@@ -130,7 +131,7 @@ UserModule::UserModule()
 			"\t\tskip - to skip the current question (and clear the answer)\n"
 			"\t\tcontinue - to skip the current question (and leave the answer)\n"
 			"\t\tcancel - to revert all changes\n\n";
-		msg += descriptionQuestions[0];
+		msg += descriptionQuestions[0].first;
 		client.createMessage(message.channelId(), msg);
 	});
 }
@@ -243,35 +244,15 @@ void UserModule::OnMessage(Discord::Client& client, const Discord::Message& mess
 					*descriptionData.currentUserDescription = descriptionData.oldUserDescription;
 					descriptionData.isBeingUsed = false;
 					delete descriptionData.timer;
+					descriptionData.timer = nullptr;
 
 					client.createMessage(message.channelId(), "**Cancelled setting description\n**Reverting to old values.");
-					
 					return;
 				}
 
 				if (shouldWrite)
 				{
-					switch (descriptionData.questionUpTo)
-					{
-					case 0:
-						descriptionData.currentUserDescription->name = contentToWrite;
-						break;
-					case 1:
-						descriptionData.currentUserDescription->location = contentToWrite;
-						break;
-					case 2:
-						descriptionData.currentUserDescription->industry = contentToWrite;
-						break;
-					case 3:
-						descriptionData.currentUserDescription->programmingInterests = contentToWrite;
-						break;
-					case 4:
-						descriptionData.currentUserDescription->currentlyWorkingOn = contentToWrite;
-						break;
-					case 5:
-						descriptionData.currentUserDescription->githubLink = contentToWrite;
-						break;
-					}
+					descriptionQuestions[descriptionData.questionUpTo].second(*descriptionData.currentUserDescription, contentToWrite);
 				}
 
 				descriptionData.questionUpTo += 1;
@@ -281,15 +262,58 @@ void UserModule::OnMessage(Discord::Client& client, const Discord::Message& mess
 					client.createMessage(message.channelId(), "**All done!** Thanks for your time.");
 					descriptionData.isBeingUsed = false;
 					delete descriptionData.timer;
+					descriptionData.timer = nullptr;
 					
 					return;
 				}
 
-				QString msg = descriptionQuestions[descriptionData.questionUpTo];
+				QString msg = descriptionQuestions[descriptionData.questionUpTo].first;
 				client.createMessage(message.channelId(), msg);
 			}
 		}
 	);
 
 	Module::OnMessage(client, message);
+}
+
+snowflake_t UserModule::getUserIndex(snowflake_t guild, snowflake_t id)
+{
+	QList<UserDescription>& guildDescriptions = userDescriptions[guild];
+
+	for (auto it = guildDescriptions.begin(); it != guildDescriptions.end(); ++it)
+	{
+		if (it->userId == id)
+		{
+			return std::distance(guildDescriptions.begin(), it);
+		}
+	}
+
+	// If user is not added to the system, make a new one
+	guildDescriptions.append(UserDescription { id, "" });
+	return std::distance(guildDescriptions.begin(), std::prev(guildDescriptions.end()));
+}
+
+QString UserModule::formDescriptionMessage(const UserDescription& desc) const
+{
+	QString msg;
+
+	if (desc.name != "")
+		msg += "**Name: **" + desc.name + "\n";
+		
+	if (desc.location != "")
+		msg += "**Location: **" + desc.location + "\n";
+		
+	if (desc.industry != "")
+		msg += "**Industry: **" + desc.industry + "\n";
+		
+	if (desc.programmingInterests != "")
+		msg += "**Programming Interests: **" + desc.programmingInterests + "\n";
+		
+	if (desc.currentlyWorkingOn != "")
+		msg += "**Currently working on: **" + desc.currentlyWorkingOn + "\n";
+		
+	if (desc.githubLink != "")
+		msg += "**GitHub: **" + desc.githubLink + "\n";
+
+	return msg;
 }
