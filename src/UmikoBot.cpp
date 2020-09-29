@@ -147,8 +147,8 @@ UmikoBot::UmikoBot(QObject* parent)
 		QStringList args = message.content().split(" ");
 
 		auto printStatus = [this](const Discord::Channel& channel, const Discord::Message& message, snowflake_t user, QString nickname) {
-			getGuildMember(channel.guildId(), user).then(
-				[this, message, channel, user, nickname](const Discord::GuildMember& member)
+			GetAvatar(channel.guildId(), user).then(
+				[this, message, channel, user, nickname](const QString& icon)
 			{
 				QString status = "";
 				Q_FOREACH(Module* module, m_modules)
@@ -158,7 +158,6 @@ UmikoBot::UmikoBot(QObject* parent)
 				}
 
 				Discord::Embed embed;
-				QString icon = "https://cdn.discordapp.com/avatars/" + QString::number(user) + "/" + member.user().avatar() + ".png";
 				embed.setAuthor(Discord::EmbedAuthor(nickname, "", icon));
 				embed.setColor(qrand() % 16777216);
 				embed.setTitle("Status");
@@ -189,8 +188,8 @@ UmikoBot::UmikoBot(QObject* parent)
 				printStatus(channel, message, result, GetName(channel.guildId(), result));
 		}
 		else
-			getGuildMember(channel.guildId(), message.author().id()).then(
-				[this, message, channel](const Discord::GuildMember& member)
+			GetAvatar(channel.guildId(), message.author().id()).then(
+				[this, message, channel](const QString& icon)
 			{
 				QString status = "";
 				Q_FOREACH(Module* module, m_modules)
@@ -200,7 +199,6 @@ UmikoBot::UmikoBot(QObject* parent)
 				}
 
 				Discord::Embed embed;
-				QString icon = "https://cdn.discordapp.com/avatars/" + QString::number(member.user().id()) + "/" + member.user().avatar() + ".png";
 				embed.setAuthor(Discord::EmbedAuthor(GetName(channel.guildId(), message.author().id()), "", icon));
 				embed.setColor(qrand() % 16777216);
 				embed.setTitle("Status");
@@ -581,6 +579,29 @@ QString UmikoBot::GetName(snowflake_t guild, snowflake_t user)
 	if (m_guildDatas[guild].userdata[user].nickname != "")
 		return m_guildDatas[guild].userdata[user].nickname;
 	return m_guildDatas[guild].userdata[user].username;
+}
+
+Discord::Promise<QString>& UmikoBot::GetAvatar(snowflake_t guild, snowflake_t user)
+{
+	Discord::Promise<QString>* promise = new Discord::Promise<QString>();
+
+	getGuildMember(guild, user).then([promise, user](const Discord::GuildMember& member)
+	{
+		QString icon = member.user().avatar();
+
+		if (icon != "")
+		{
+			icon = "https://cdn.discordapp.com/avatars/" + QString::number(user) + "/" + icon + ".png";
+		}
+		else
+		{
+			icon = "https://cdn.discordapp.com/embed/avatars/" + QString::number(member.user().discriminator().toULongLong() % 5) + ".png";
+		}
+
+		promise->resolve(icon);
+	});
+
+	return (*promise);
 }
 
 snowflake_t UmikoBot::GetUserFromArg(snowflake_t guild, QStringList args, int startIndex) {

@@ -86,6 +86,7 @@ public:
 	QString GetNick(snowflake_t guild, snowflake_t user);
 	QString GetUsername(snowflake_t guild, snowflake_t user);
 	QString GetName(snowflake_t guild, snowflake_t user);
+	Discord::Promise<QString>& GetAvatar(snowflake_t guild, snowflake_t user);
 
 	snowflake_t GetUserFromArg(snowflake_t guild, QStringList args, int startIndex);
 
