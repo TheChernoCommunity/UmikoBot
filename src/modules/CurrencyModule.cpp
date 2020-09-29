@@ -1138,7 +1138,7 @@ CurrencyModule::CurrencyModule(UmikoBot* client) : Module("currency", true), m_c
 		);
 	});
 
-	RegisterCommand(Commands::CURRENCY_SET_STEAL_VICTIM_BONUS_PERCENT, "setstealvictimbonus", [this](Discord::Client& client, const Discord::Message& message, const Discord::Channel& channel) 
+	RegisterCommand(Commands::CURRENCY_SET_STEAL_VICTIM_BONUS, "setstealvictimbonus", [this](Discord::Client& client, const Discord::Message& message, const Discord::Channel& channel) 
 	{
 
 		QStringList args = message.content().split(' ');
@@ -1536,12 +1536,12 @@ void CurrencyModule::OnLoad(const QJsonDocument& doc)
 			config.maxGuess = serverObj["gambleMaxGuess"].toString().toInt();
 			config.randGiveawayProb = serverObj["freebieProb"].toString().toDouble();
 			config.freebieExpireTime = serverObj["freebieExpireTime"].toString().toUInt();
-			config.dailyBonusAmount = serverObj["dailyBonusAmount"].toString().toUInt();
-			config.dailyBonusPeriod = serverObj["dailyBonusPeriod"].toString().toUInt();
-			config.stealSuccessChance = serverObj["stealSuccessChance"].toString().toUInt();
-			config.stealFinePercent = serverObj["stealFinePercent"].toString().toUInt();
-			config.stealVictimBonusPercent = serverObj["stealVictimBonusPercent"].toString().toUInt();
-			config.stealFailedJailTime = serverObj["stealFailedJailTime"].toString().toUInt();
+			config.dailyBonusAmount = serverObj["dailyBonusAmount"].toString("50").toUInt();
+			config.dailyBonusPeriod = serverObj["dailyBonusPeriod"].toString("3").toUInt();
+			config.stealSuccessChance = serverObj["stealSuccessChance"].toString("30").toUInt();
+			config.stealFinePercent = serverObj["stealFinePercent"].toString("50").toUInt();
+			config.stealVictimBonusPercent = serverObj["stealVictimBonusPercent"].toString("25").toUInt();
+			config.stealFailedJailTime = serverObj["stealFailedJailTime"].toString("3").toUInt();
 
 			auto guildId = server.toULongLong();
 			serverCurrencyConfig.insert(guildId, config);
