@@ -56,14 +56,21 @@ UserModule::UserModule()
 		
 		if (msg == "")
 		{
-			msg = UmikoBot::Instance().GetUsername(channel.guildId(), userId) + " prefers an air of mystery around them...";
+			msg = UmikoBot::Instance().GetName(channel.guildId(), userId) + " prefers an air of mystery around them...";
+			client.createMessage(message.channelId(), msg);
 		}
 		else
 		{
-			msg = "**" + UmikoBot::Instance().GetUsername(channel.guildId(), userId) + "'s Description**\n" + msg;
+			Discord::Embed embed;
+			QString icon = "https://cdn.discordapp.com/avatars/" + QString::number(userId) + "/" + message.author().avatar() + ".png";
+			QString name = UmikoBot::Instance().GetName(channel.guildId(), userId);
+			embed.setAuthor(Discord::EmbedAuthor(name, "", icon));
+			embed.setColor(qrand() % 16777216);
+			embed.setTitle("Description");
+			embed.setDescription(msg);
+				
+			client.createMessage(message.channelId(), embed);
 		}
-		
-		client.createMessage(message.channelId(), msg);
 	});
 
 	RegisterCommand(Commands::USER_MODULE_I_AM, "iam",
