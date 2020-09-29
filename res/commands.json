@@ -79,7 +79,7 @@
 	},
 	"USER_MODULE_WHO_IS": {
 		"brief": "Returns a description on the person requested.",
-		"usage": "whois @Person",
+		"usage": "whois Person",
 		"additional": "",
 		"admin": false
 	},

@@ -1,7 +1,7 @@
 #include "UserModule.h"
 #include "UmikoBot.h"
 
-#define descriptionTimeout 120
+#define descriptionTimeout 60
 
 UserModule::UserModule()
 	: Module("users", true)
@@ -24,14 +24,22 @@ UserModule::UserModule()
 		}
 
 		QList<Discord::User> mentions = message.mentions();
-		if (mentions.size() == 0)
+		snowflake_t userId;
+		
+		if (mentions.size() > 0)
 		{
-			// TODO(fkp): Check for names
-			client.createMessage(message.channelId(), "Please **mention someone** whose description you want to see.");
-			return;
+			userId = mentions[0].id();
 		}
-
-		snowflake_t userId = mentions[0].id();
+		else
+		{
+			userId = UmikoBot::Instance().GetUserFromArg(channel.guildId(), args, 1);
+			if (userId == 0)
+			{
+				client.createMessage(message.channelId(), "Could not find user!");
+				return;
+			}
+		}
+		
 		DescriptionData& data = guildDescriptionData[channel.guildId()];
 
 		if (data.isBeingUsed && data.userId == userId)
