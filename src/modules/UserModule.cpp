@@ -1,6 +1,8 @@
 #include "UserModule.h"
 #include "UmikoBot.h"
 
+#define descriptionTimeout 120
+
 UserModule::UserModule()
 	: Module("users", true)
 {
@@ -30,6 +32,17 @@ UserModule::UserModule()
 		}
 
 		snowflake_t userId = mentions[0].id();
+		DescriptionData& data = guildDescriptionData[channel.guildId()];
+
+		if (data.isBeingUsed && data.userId == userId)
+		{
+			QString msg = "**Sorry,";
+			msg += UmikoBot::Instance().GetUsername(channel.guildId(), data.userId);
+			msg += " is currently setting their description.**\nTry again later...";
+			client.createMessage(message.channelId(), msg);
+			return;
+		}
+		
 		UserDescription& desc = userDescriptions[channel.guildId()][getUserIndex(channel.guildId(), userId)];
 		QString msg = formDescriptionMessage(desc);
 		
@@ -57,25 +70,46 @@ UserModule::UserModule()
 		if (args.first() != prefix + "iam")
 			return;
 		
+		DescriptionData& data = guildDescriptionData[guildId];
+
+		if (data.isBeingUsed)
+		{
+			QString msg = "**Sorry, ";
+			msg += UmikoBot::Instance().GetUsername(channel.guildId(), data.userId);
+			msg += " is currently setting their description.**\nTry again later...";
+			client.createMessage(message.channelId(), msg);
+			return;
+		}
+		
 		if (args.size() > 1)
 		{
 			client.createMessage(message.channelId(), "**Wrong Usage of Command!**");
 			return;
 		}
 
-		DescriptionData& data = guildDescriptionData[guildId];
 		data.isBeingUsed = true;
 		data.userId = authorId;
-		data.timer = nullptr; // TODO(fkp): Timer
 		data.questionUpTo = 0;
 		data.currentUserDescription = &userDescriptions[guildId][getUserIndex(guildId, authorId)];
 		data.oldUserDescription = *data.currentUserDescription;
+
+		data.timer = new QTimer();
+		data.timer->setInterval(descriptionTimeout * 1000);
+		QObject::connect(data.timer, &QTimer::timeout, [this, &client, &data, message]() {
+			if (data.isBeingUsed)
+			{
+				data.isBeingUsed = false;
+				delete data.timer;
+				client.createMessage(message.channelId(), "**Description timeout due to no valid response.**");
+			}
+		});
+		data.timer->start();
 		
 		QString msg =
 			"**Tell me about yourself!** At any time, you can type:\n"
-			"\tskip - to skip the current question (and clear the answer)\n"
-			"\tcontinue - to skip the current question (and leave the answer)\n"
-			"\tcancel - to revert all changes\n\n";
+			"\t\tskip - to skip the current question (and clear the answer)\n"
+			"\t\tcontinue - to skip the current question (and leave the answer)\n"
+			"\t\tcancel - to revert all changes\n\n";
 		msg += descriptionQuestions[0];
 		client.createMessage(message.channelId(), msg);
 	});
@@ -183,6 +217,9 @@ void UserModule::OnMessage(Discord::Client& client, const Discord::Message& mess
 					*descriptionData.currentUserDescription = descriptionData.oldUserDescription;
 					descriptionData.isBeingUsed = false;
 					delete descriptionData.timer;
+
+					client.createMessage(message.channelId(), "**Cancelled setting description\n**Reverting to old values.");
+					
 					return;
 				}
 
