@@ -6,6 +6,9 @@
 #include <QtCore/QFile>
 #include <QtCore/QJsonDocument>
 #include <QtCore/qregexp.h>
+#include <QtCore/QtMath>
+
+#include <random>
 
 //! Currency Config Location
 #define currenConfigLoc QString("currencyConfig")
@@ -1039,24 +1042,47 @@ CurrencyModule::CurrencyModule(UmikoBot* client) : Module("currency", true), m_c
 				client.createMessage(message.channelId(), "**I can't let you make your victim go into serious debt.**");
 				return;
 			}
+
+			// https://www.desmos.com/calculator/z6b0k7wb1t
+			// This success chance is in the range of 0 to 1
+			double successChance = (config.stealSuccessChance / 100.0) * qExp(-0.0001 * qPow(amountToSteal, 1.5));
 			
-			if (qrand() % 100 < config.stealSuccessChance)
+			QString thiefName = UmikoBot::Instance().GetName(channel.guildId(), authorId);
+			QString victimName = UmikoBot::Instance().GetName(channel.guildId(), victimId);
+		
+			std::random_device device;
+			std::mt19937 prng { device() };
+			std::discrete_distribution<> distribution { { 1 - successChance, successChance } };
+			int roll = distribution(prng);
+			
+			if (roll)
 			{
 				guildList[channel.guildId()][getUserIndex(channel.guildId(), victimId)].currency -= amountToSteal;
 				guildList[channel.guildId()][getUserIndex(channel.guildId(), authorId)].currency += amountToSteal;
 				
-				client.createMessage(message.channelId(), "**Stolen!** You have successfully stolen " + QString::number(amountToSteal) + config.currencySymbol + " from " + UmikoBot::Instance().GetUsername(channel.guildId(), victimId) + "!");
+				QString stealAmount = QString::number(amountToSteal);
+				QString output = QString(
+					":man_detective: **Steal success!** :man_detective:\n"
+					"*%1* has discreetly stolen **`%2 %3`** from under *%4's* nose.\n"
+				).arg(thiefName, stealAmount, config.currencySymbol, victimName);
+				
+				client.createMessage(message.channelId(), output);
 			}
 			else
 			{
 				guildList[channel.guildId()][getUserIndex(channel.guildId(), authorId)].currency -= amountToSteal * config.stealFinePercent / 100;
 				guildList[channel.guildId()][getUserIndex(channel.guildId(), victimId)].currency += amountToSteal * config.stealVictimBonusPercent / 100;
-				
 				guildList[channel.guildId()][getUserIndex(channel.guildId(), authorId)].jailTimer->start(config.stealFailedJailTime * 60 * 60 * 1000);
 
-				QString output = "**Fined!** " + QString::number(amountToSteal * config.stealFinePercent / 100) + config.currencySymbol + " has been taken from your wallet.\n";
-				output += "You are in jail for **" + QString::number(config.stealFailedJailTime) + " hours**.\n";
-				output += "**" + UmikoBot::Instance().GetUsername(channel.guildId(), victimId) + "** has been given **" + QString::number(amountToSteal * config.stealVictimBonusPercent / 100) + config.currencySymbol + "**!";
+				QString fineAmount = QString::number(amountToSteal * config.stealFinePercent / 100.0);
+				QString victimBonus = QString::number(amountToSteal * config.stealVictimBonusPercent / 100.0);
+				QString jailTime = QString::number(config.stealFailedJailTime);
+				QString output = QString(
+					":rotating_light: **You got caught!** :rotating_light:\n"
+					"*%1* has been fined **`%2 %3`** and placed in jail for %4 hours.\n"
+					"*%5* has been granted **`%6 %3`** in insurance."
+				).arg(thiefName, fineAmount, config.currencySymbol, jailTime, victimName, victimBonus);
+				
 				client.createMessage(message.channelId(), output);
 			}
 		}
