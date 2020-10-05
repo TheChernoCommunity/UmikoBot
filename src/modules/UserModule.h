@@ -56,7 +56,7 @@ private:
 		QUESTION("What industry do you work in?", industry),
 		QUESTION("What areas of programming are you interested in?", programmingInterests),
 		QUESTION("What are you currently working on?", currentlyWorkingOn),
-		QUESTION("Link to a GitHub profile:", githubLink),
+		QUESTION("Link to a GitHub profile:", githubLink)
 	};
 
 #undef QUESTION
