@@ -61,6 +61,6 @@ private:
 
 #undef QUESTION
 	
-	snowflake_t UserModule::getUserIndex(snowflake_t guild, snowflake_t id);
-	QString UserModule::formDescriptionMessage(const UserDescription& desc) const;
+	snowflake_t getUserIndex(snowflake_t guild, snowflake_t id);
+	QString formDescriptionMessage(const UserDescription& desc) const;
 };
