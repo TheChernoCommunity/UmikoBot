@@ -2,7 +2,7 @@
 
 #include <qtimer.h>
 #include <array>
-#include <pair>
+#include <utility>
 #include "core/Module.h"
 
 class UmikoBot;
