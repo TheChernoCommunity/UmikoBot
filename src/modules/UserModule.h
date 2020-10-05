@@ -47,15 +47,15 @@ private:
 	QMap<snowflake_t, DescriptionData> guildDescriptionData;
 	using questionFunc = void (*)(UserDescription& desc, const QString& value);
 
-#define QUESTION(question, field) { question, [](UserDescription& desc, const QString& value) { desc.field = value; } }
+#define QUESTION(question, field) qMakePair<QString, questionFunc>(question, [](UserDescription& desc, const QString& value) { desc.field = value; })
 
-	const QMap<QString, questionFunc> descriptionQuestions = {
+	const QList<QPair<QString, questionFunc>> descriptionQuestions = {
 		QUESTION("What is your name?", name),
 		QUESTION("Where are you from?", location),
 		QUESTION("What industry do you work in?", industry),
 		QUESTION("What areas of programming are you interested in?", programmingInterests),
 		QUESTION("What are you currently working on?", currentlyWorkingOn),
-		QUESTION("Link to a GitHub profile:", githubLink)
+		QUESTION("Link to a GitHub profile:", githubLink),
 	};
 
 #undef QUESTION
