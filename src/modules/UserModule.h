@@ -2,6 +2,7 @@
 
 #include <qtimer.h>
 #include <array>
+#include <pair>
 #include "core/Module.h"
 
 class UmikoBot;
@@ -45,10 +46,7 @@ private:
 	QMap<snowflake_t, DescriptionData> guildDescriptionData;
 	using questionFunc = void (*)(UserDescription& desc, const QString& value);
 
-#define QUESTION(question, field) std::make_pair(question, [](UserDescription& desc, const QString& value)		\
-	{																											\
-		desc.field = value;																						\
-	})
+#define QUESTION(question, field) std::make_pair(question, [](UserDescription& desc, const QString& value) { desc.field = value; })
 
 	const std::array<std::pair<QString, questionFunc>, 6> descriptionQuestions = {
 		QUESTION("What is your name?", name),
