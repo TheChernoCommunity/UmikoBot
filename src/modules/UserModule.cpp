@@ -17,7 +17,7 @@ UserModule::UserModule()
 		if (args.first() != prefix + "whois")
 			return;
 
-		if (args.size() > 2)
+		if (args.size() != 2)
 		{
 			client.createMessage(message.channelId(), "**Wrong Usage of Command!**");
 			return;
