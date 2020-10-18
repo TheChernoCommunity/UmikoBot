@@ -254,6 +254,11 @@
 		"usage": "meme",
 		"admin": false
 	},
+	"FUN_ROLL": {
+		"brief": "Gets a random number.",
+		"usage": "roll <min> <max>",
+		"admin": false
+  	},
 	"FUN_POLL": {
 		"brief": "Creates a new poll.",
 		"usage": "poll [options] <new-line> <reaction-1> <text-1> <new-line> <reaction-2> <text-2> <newline> ...",
