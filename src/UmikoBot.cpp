@@ -813,7 +813,8 @@ void UmikoBot::Load()
 		Command(FUN_MEME),
 		Command(FUN_POLL),
 		Command(FUN_GIVE_NEW_POLL_ACCESS),
-		Command(FUN_TAKE_NEW_POLL_ACCESS)
+		Command(FUN_TAKE_NEW_POLL_ACCESS),
+		Command(FUN_ROLL)
 	};
 
 	QFile file("commands.json");
