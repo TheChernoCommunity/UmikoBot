@@ -98,36 +98,52 @@ CurrencyModule::CurrencyModule(UmikoBot* client) : Module("currency", true), m_c
 		}
 
 		snowflake_t user;
+		QList<Discord::User> mentions = message.mentions();
 
-		if (args.size() == 2) {
-			user = UmikoBot::Instance().GetUserFromArg(channel.guildId(), args, 1);
-			if (user == 0) {
-				client.createMessage(message.channelId(), "**Couldn't find " + args.at(1) + "**");
-				return;
+		if (mentions.size() > 0)
+		{
+			user = mentions[0].id();
+		}
+		else
+		{
+			if (args.size() == 2)
+			{
+				user = UmikoBot::Instance().GetUserFromArg(channel.guildId(), args, 1);
+
+				if (user == 0)
+				{
+					client.createMessage(message.channelId(), "**Couldn't find " + args.at(1) + "**");
+					return;
+				}
+			}
+			else
+			{
+				user = message.author().id();
 			}
 		}
-		else {
-			user = message.author().id();
-		}
 
-		Discord::Embed embed;
-		embed.setColor(11777216);
+		UmikoBot::Instance().GetAvatar(channel.guildId(), user).then(
+			[this, user, channel, &client, message](const QString& icon)
+		{
+			//! Get User and Sever Data
+			auto guild = channel.guildId();
+			auto config = getServerData(guild);
 
-		//! Get User and Sever Data
-		auto guild = channel.guildId();
-		auto config = getServerData(guild);
+			Discord::Embed embed;
+			embed.setColor(qrand() % 11777216);
+			embed.setAuthor(Discord::EmbedAuthor(UmikoBot::Instance().GetName(channel.guildId(), user) + "'s Wallet", "", icon));
 
-		QString credits = QString::number(getUserData(guild, user).currency);
-		QString dailyStreak = QString::number(getUserData(guild, user).dailyStreak);
-		QString dailyClaimed = getUserData(guild, user).isDailyClaimed ? "Yes" : "No";
+			QString credits = QString::number(getUserData(guild, user).currency);
+			QString dailyStreak = QString::number(getUserData(guild, user).dailyStreak);
+			QString dailyClaimed = getUserData(guild, user).isDailyClaimed ? "Yes" : "No";
 
-		QString desc = "**Current Credits: **`" + credits + "` **" + config.currencySymbol + "** (" + config.currencyName + ")";
-		desc += "\n";
-		desc += "**Daily Streak: **`" + dailyStreak + "/" + QString::number(config.dailyBonusPeriod)+ "`\n";
-		desc += "**Today's Daily Claimed?** `" + dailyClaimed + "`";
-		embed.setTitle(UmikoBot::Instance().GetName(guild, user) + "'s Wallet");
-		embed.setDescription(desc);
-		client.createMessage(message.channelId(), embed);
+			QString desc = "Current Credits: **" + credits + " " + config.currencySymbol + "** (" + config.currencyName + ")";
+			desc += "\n";
+			desc += "Daily Streak: **" + dailyStreak + "/" + QString::number(config.dailyBonusPeriod) + "**\n";
+			desc += "Today's Daily Claimed? **" + dailyClaimed + "**";
+			embed.setDescription(desc);
+			client.createMessage(message.channelId(), embed);
+		});
 	});
 
 	RegisterCommand(Commands::CURRENCY_DAILY, "daily", [this](Discord::Client& client, const Discord::Message& message, const Discord::Channel& channel) 
