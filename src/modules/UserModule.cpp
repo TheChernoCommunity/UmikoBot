@@ -256,6 +256,7 @@ void UserModule::OnMessage(Discord::Client& client, const Discord::Message& mess
 				}
 
 				descriptionData.questionUpTo += 1;
+				descriptionData.timer->start();
 
 				if (descriptionData.questionUpTo == descriptionQuestions.size())
 				{
