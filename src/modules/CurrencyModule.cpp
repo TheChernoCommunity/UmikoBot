@@ -888,6 +888,8 @@ CurrencyModule::CurrencyModule(UmikoBot* client) : Module("currency", true), m_c
 				embed.setTitle("Currency Leaderboard (Top 30)");
 				QString desc;
 				int rank = 0;
+				int numberOfDigits = QString::number(offset).size();
+
 				for (auto i = 0; i < offset && i < leaderboard.size(); i++) 
 				{
 					const auto& user = leaderboard[i];
@@ -903,8 +905,8 @@ CurrencyModule::CurrencyModule(UmikoBot* client) : Module("currency", true), m_c
 
 					QString currency = QString::number(user.currency);
 
-					desc += "**" + QString::number(rank) + ") " + username + ":** ";
-					desc += "`" + currency + "`" + "**" + getServerData(channel.guildId()).currencySymbol + "**\n";
+					desc += "`" + QString::number(rank).rightJustified(numberOfDigits, ' ') + "`) **" + username + "** - ";
+					desc += currency + " " + getServerData(channel.guildId()).currencySymbol + "\n";
 				}
 
 				embed.setColor(qrand() % 16777216);

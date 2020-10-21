@@ -73,6 +73,8 @@ LevelModule::LevelModule(UmikoBot* client)
 				return;
 			}
 
+			unsigned int numberOfDigits = QString::number(std::min(count, exp.size())).size();
+
 			for (int i = 0; i < count; i++) 
 			{
 				if (i >= exp.size())
@@ -82,7 +84,7 @@ LevelModule::LevelModule(UmikoBot* client)
 				}
 
 				LevelModule::GuildLevelData& curr = exp[i];
-				desc += QString::number(i + 1) + ". ";
+				desc += "`" + QString::number(i + 1).rightJustified(numberOfDigits, ' ') + "`) ";
 				desc += "**" + reinterpret_cast<UmikoBot*>(&client)->GetName(channel.guildId(), exp[i].user) + "**";
 
 				unsigned int xp = GetData(channel.guildId(), exp[i].user).exp;
@@ -162,6 +164,7 @@ LevelModule::LevelModule(UmikoBot* client)
 				return;
 			}
 
+			unsigned int numberOfDigits = QString::number(std::min(count2, exp.size())).size();
 
 			for (int i = count1 - 1; i < count2; i++)
 			{
@@ -173,7 +176,7 @@ LevelModule::LevelModule(UmikoBot* client)
 				}
 
 				LevelModule::GuildLevelData& curr = exp[i];
-				desc += QString::number(i + 1) + ". ";
+				desc += "`" + QString::number(i + 1).rightJustified(numberOfDigits, ' ') + "`) ";
 				desc += "**" + reinterpret_cast<UmikoBot*>(&client)->GetName(channel.guildId(), exp[i].user) + "**";
 
 				unsigned int xp = GetData(channel.guildId(), exp[i].user).exp;
