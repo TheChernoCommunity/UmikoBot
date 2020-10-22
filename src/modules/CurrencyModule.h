@@ -74,6 +74,7 @@ private:
 		QString currencySymbol;
 		bool isRandomGiveawayDone{ false };
 		bool allowGiveaway{ false };
+		snowflake_t giveawayClaimer { 0 };
 		QTimer* freebieTimer{ nullptr };
 		int dailyBonusAmount { 50 };
 		int dailyBonusPeriod { 3 };

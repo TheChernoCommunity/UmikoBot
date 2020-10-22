@@ -74,10 +74,12 @@ CurrencyModule::CurrencyModule(UmikoBot* client) : Module("currency", true), m_c
 						{
 							auto& serverConfig = getServerData(guildId);
 							serverConfig.allowGiveaway = false;
+							serverConfig.giveawayClaimer = 0;
 						});
 					serverConfig.freebieTimer->start();
 				}
 				serverConfig.isRandomGiveawayDone = false;
+				serverConfig.giveawayClaimer = 0;
 			}
 	});
 
@@ -416,6 +418,7 @@ CurrencyModule::CurrencyModule(UmikoBot* client) : Module("currency", true), m_c
 					}
 					
 					auto& config = getServerData(channel.guildId());
+					config.giveawayClaimer = message.author().id();
 					Discord::Embed embed;
 					embed.setColor(qrand() % 11777216);
 					embed.setTitle("Claim FREEBIE");
@@ -436,10 +439,11 @@ CurrencyModule::CurrencyModule(UmikoBot* client) : Module("currency", true), m_c
 			}
 			else 
 			{
+				auto& config = getServerData(channel.guildId());
 				Discord::Embed embed;
 				embed.setColor(qrand()%11777216);
 				embed.setTitle("Claim FREEBIE");
-				embed.setDescription("Sorry, today's freebie has been claimed :cry: \n\n But you can always try again the next day!");
+				embed.setDescription("Sorry, today's freebie has been claimed by " + UmikoBot::Instance().GetName(channel.guildId(), config.giveawayClaimer) + " :cry: \n\n But you can always try again the next day!");
 				client.createMessage(message.channelId(), embed);
 			}
 		}
