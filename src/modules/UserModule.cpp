@@ -1,4 +1,5 @@
 #include "UserModule.h"
+#include "CurrencyModule.h"
 #include "UmikoBot.h"
 
 #define descriptionTimeout 60
@@ -182,7 +183,16 @@ UserModule::UserModule()
 				embed.setAuthor(Discord::EmbedAuthor(name + "'s Statistics", "", icon));
 				embed.setColor(qrand() % 16777216);
 
-				QString desc = "Date Joined: " + member.joinedAt().date().toString();
+				QString desc = "Date Joined: **" + member.joinedAt().date().toString() + "**\n";
+
+				CurrencyModule* currencyModule = static_cast<CurrencyModule*>(UmikoBot::Instance().GetModuleByName("currency"));
+				if (currencyModule)
+				{
+					const CurrencyModule::UserCurrency& userCurrency = currencyModule->getUserData(channel.guildId(), userId);
+					desc += "`daily`s claimed: **" + QString::number(userCurrency.numberOfDailysClaimed) + "**\n";
+					desc += "`claim`s claimed: **" + QString::number(userCurrency.numberOfGiveawaysClaimed) + "**\n";
+				}
+
 				embed.setDescription(desc);
 
 				client.createMessage(message.channelId(), embed);

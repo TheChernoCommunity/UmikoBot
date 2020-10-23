@@ -8,7 +8,7 @@ class UmikoBot;
 
 class CurrencyModule : public Module 
 {
-private:
+public:
 	struct UserCurrency 
 	{
 		snowflake_t userId;
@@ -16,9 +16,11 @@ private:
 		bool isDailyClaimed;
 		unsigned int dailyStreak;
 		QTimer* jailTimer;
+		unsigned int numberOfDailysClaimed;
+		unsigned int numberOfGiveawaysClaimed;
 
-		UserCurrency(snowflake_t userId, double currency, bool isDailyClaimed, unsigned int dailyStreak)
-			: userId(userId), currency(currency), isDailyClaimed(isDailyClaimed), dailyStreak(dailyStreak), jailTimer(new QTimer())
+		UserCurrency(snowflake_t userId, double currency, bool isDailyClaimed, unsigned int dailyStreak, unsigned int numberOfDailysClaimed, unsigned int numberOfGiveawaysClaimed)
+			: userId(userId), currency(currency), isDailyClaimed(isDailyClaimed), dailyStreak(dailyStreak), jailTimer(new QTimer()), numberOfDailysClaimed(numberOfDailysClaimed), numberOfGiveawaysClaimed(numberOfGiveawaysClaimed)
 		{
 			jailTimer->setSingleShot(true);
 		}
@@ -29,7 +31,7 @@ private:
 		}
 
 		UserCurrency(const UserCurrency& other)
-			: userId(other.userId), currency(other.currency), isDailyClaimed(other.isDailyClaimed), dailyStreak(other.dailyStreak), jailTimer(new QTimer())
+			: userId(other.userId), currency(other.currency), isDailyClaimed(other.isDailyClaimed), dailyStreak(other.dailyStreak), jailTimer(new QTimer()), numberOfDailysClaimed(other.numberOfDailysClaimed), numberOfGiveawaysClaimed(other.numberOfGiveawaysClaimed)
 		{
 			jailTimer->setSingleShot(true);
 
@@ -45,6 +47,9 @@ private:
 			currency = other.currency;
 			isDailyClaimed = other.isDailyClaimed;
 			dailyStreak = other.dailyStreak;
+			numberOfDailysClaimed = other.numberOfDailysClaimed;
+			numberOfGiveawaysClaimed = other.numberOfGiveawaysClaimed;
+
 			jailTimer = new QTimer();
 			jailTimer->setSingleShot(true);
 
@@ -57,6 +62,7 @@ private:
 		}
 	};
 
+private:
 	//! Map server id with user currency list
 	QMap<snowflake_t, QList<UserCurrency>> guildList;
 
@@ -111,22 +117,6 @@ private:
 	void OnSave(QJsonDocument& doc) const override;
 	void OnLoad(const QJsonDocument& doc) override;
 	
-	UserCurrency getUserData(snowflake_t guild, snowflake_t id) 
-	{
-		for (auto user : guildList[guild]) 
-		{
-			if (user.userId == id) 
-			{
-				return user;
-			}
-		}
-
-		//! If user is not added to the system, make a new one
-		UserCurrency user { id, 0, false, 0 };
-
-		guildList[guild].append(user);
-		return guildList[guild].back();
-	}
 	snowflake_t getUserIndex(snowflake_t guild, snowflake_t id) {
 
 		for (auto it = guildList[guild].begin(); it != guildList[guild].end(); ++it) {
@@ -135,7 +125,7 @@ private:
 			}
 		}
 		//! If user is not added to the system, make a new one
-		guildList[guild].append(UserCurrency { id, 0, false, 0 });
+		guildList[guild].append(UserCurrency { id, 0, false, 0, 0, 0 });
 		return std::distance(guildList[guild].begin(), std::prev(guildList[guild].end()));
 	}
 
@@ -148,4 +138,21 @@ public:
 	CurrencyModule(UmikoBot* client);
 	void StatusCommand(QString& result, snowflake_t guild, snowflake_t user) override;
 	void OnMessage(Discord::Client& client, const Discord::Message& message) override;
+
+	UserCurrency getUserData(snowflake_t guild, snowflake_t id)
+	{
+		for (auto user : guildList[guild])
+		{
+			if (user.userId == id)
+			{
+				return user;
+			}
+		}
+
+		//! If user is not added to the system, make a new one
+		UserCurrency user { id, 0, false, 0, 0, 0 };
+
+		guildList[guild].append(user);
+		return guildList[guild].back();
+	}
 };

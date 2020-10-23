@@ -90,6 +90,7 @@ public:
 	Discord::Promise<QString>& GetAvatar(snowflake_t guild, snowflake_t user);
 
 	snowflake_t GetUserFromArg(snowflake_t guild, QStringList args, int startIndex);
+	Module* GetModuleByName(const QString& name);
 
 	const QList<Discord::Role>& GetRoles(snowflake_t guild);
 	bool IsOwner(snowflake_t guild, snowflake_t user);

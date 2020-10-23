@@ -669,6 +669,19 @@ snowflake_t UmikoBot::GetUserFromArg(snowflake_t guild, QStringList args, int st
 		return 0;
 }
 
+Module* UmikoBot::GetModuleByName(const QString& name)
+{
+	for (Module* theModule : m_modules)
+	{
+		if (theModule->GetName() == name)
+		{
+			return theModule;
+		}
+	}
+
+	return nullptr;
+}
+
 const QList<Discord::Role>& UmikoBot::GetRoles(snowflake_t guild)
 {
 	return m_guildDatas[guild].roles;
