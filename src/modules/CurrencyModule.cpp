@@ -195,6 +195,7 @@ CurrencyModule::CurrencyModule(UmikoBot* client) : Module("currency", true), m_c
 
 			guildList[channel.guildId()][index].isDailyClaimed = true;
 			guildList[channel.guildId()][index].currency += todaysReward;
+			guildList[channel.guildId()][index].numberOfDailysClaimed += 1;
 			QString displayedMessage = "";
 
 			if (bonus)
@@ -427,6 +428,7 @@ CurrencyModule::CurrencyModule(UmikoBot* client) : Module("currency", true), m_c
 					auto index = getUserIndex(channel.guildId(), message.author().id());
 
 					guildList[channel.guildId()][index].currency += config.freebieReward;
+					guildList[channel.guildId()][index].numberOfGiveawaysClaimed += 1;
 
 					client.createMessage(message.channelId(), embed);
 					getServerData(channel.guildId()).isRandomGiveawayDone = true;
@@ -1486,6 +1488,8 @@ void CurrencyModule::OnSave(QJsonDocument& doc) const
 			obj["currency"] = user->currency;
 			obj["isDailyClaimed"] = user->isDailyClaimed;
 			obj["dailyStreak"] = (int) user->dailyStreak;
+			obj["numberOfDailysClaimed"] = (int) user->numberOfDailysClaimed;
+			obj["numberOfGiveawaysClaimed"] = (int) user->numberOfGiveawaysClaimed;
 
 			serverJSON[QString::number(user->userId)] = obj;
 		}
@@ -1556,6 +1560,8 @@ void CurrencyModule::OnLoad(const QJsonDocument& doc)
 				obj[user].toObject()["currency"].toDouble(),
 				obj[user].toObject()["isDailyClaimed"].toBool(),
 				(unsigned int) obj[user].toObject()["dailyStreak"].toInt(),
+				(unsigned int) obj[user].toObject()["numberOfDailysClaimed"].toInt(),
+				(unsigned int) obj[user].toObject()["numberOfGiveawayssClaimed"].toInt(),
 			};
 			list.append(currencyData);
 		}
