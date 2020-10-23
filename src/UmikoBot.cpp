@@ -669,7 +669,6 @@ snowflake_t UmikoBot::GetUserFromArg(snowflake_t guild, QStringList args, int st
 		return 0;
 }
 
-
 const QList<Discord::Role>& UmikoBot::GetRoles(snowflake_t guild)
 {
 	return m_guildDatas[guild].roles;
@@ -767,6 +766,7 @@ void UmikoBot::Load()
 		
 		Command(USER_MODULE_WHO_IS),
 		Command(USER_MODULE_I_AM),
+		Command(USER_MODULE_STATS),
 
 		Command(TIMEZONE_MODULE_TIMEOFFSET),
 		Command(MODERATION_INVITATION_TOGGLE),

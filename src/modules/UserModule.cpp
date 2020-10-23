@@ -134,6 +134,62 @@ UserModule::UserModule()
 		msg += descriptionQuestions[0].first;
 		client.createMessage(message.channelId(), msg);
 	});
+
+	RegisterCommand(Commands::USER_MODULE_STATS, "stats",
+		[this](Discord::Client& client, const Discord::Message& message, const Discord::Channel& channel)
+	{
+		QStringList args = message.content().split(' ');
+		GuildSetting* setting = &GuildSettings::GetGuildSetting(channel.guildId());
+		QString prefix = setting->prefix;
+
+		if (args.first() != prefix + "stats")
+			return;
+
+		if (args.size() > 2)
+		{
+			client.createMessage(message.channelId(), "**Wrong Usage of Command!**");
+			return;
+		}
+
+		snowflake_t userId;
+
+		if (args.size() == 1)
+		{
+			userId = message.author().id();
+		}
+		else if (message.mentions().size() > 0)
+		{
+			userId = message.mentions()[0].id();
+		}
+		else
+		{
+			userId = UmikoBot::Instance().GetUserFromArg(channel.guildId(), args, 1);
+			if (userId == 0)
+			{
+				client.createMessage(message.channelId(), "Could not find user!");
+				return;
+			}
+		}
+
+		UmikoBot::Instance().getGuildMember(channel.guildId(), userId).then(
+			[this, &client, userId, channel, message](const Discord::GuildMember& member)
+		{
+			UmikoBot::Instance().GetAvatar(channel.guildId(), userId).then(
+				[this, userId, channel, &client, message, member](const QString& icon)
+			{
+				Discord::Embed embed;
+				QString name = UmikoBot::Instance().GetName(channel.guildId(), userId);
+				embed.setAuthor(Discord::EmbedAuthor(name + "'s Statistics", "", icon));
+				embed.setColor(qrand() % 16777216);
+
+				QString desc = "Date Joined: " + member.joinedAt().date().toString();
+				embed.setDescription(desc);
+
+				client.createMessage(message.channelId(), embed);
+			});
+		});
+
+	});
 }
 
 void UserModule::OnSave(QJsonDocument& doc) const
