@@ -89,6 +89,12 @@
 		"additional": "",
 		"admin:": false
 	},
+	"USER_MODULE_STATS": {
+		"brief": "Shows statistics about a user's time in the server.",
+		"usage": "stats <Person>",
+		"additional": "",
+		"admin:": false
+	},
 	"TIMEZONE_MODULE_TIMEOFFSET": {
 		"brief": "Sets the timezone offset of the user.",
 		"usage": "timeoffset <offset>",
