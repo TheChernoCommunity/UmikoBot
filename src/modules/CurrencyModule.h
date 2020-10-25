@@ -11,17 +11,22 @@ class CurrencyModule : public Module
 public:
 	struct UserCurrency 
 	{
+	private:
+		double m_Currency;
+
+	public:
 		snowflake_t userId;
-		double currency;
 		bool isDailyClaimed;
+		double maxCurrency;
 		unsigned int dailyStreak;
 		QTimer* jailTimer;
 		unsigned int numberOfDailysClaimed;
 		unsigned int numberOfGiveawaysClaimed;
 
-		UserCurrency(snowflake_t userId, double currency, bool isDailyClaimed, unsigned int dailyStreak, unsigned int numberOfDailysClaimed, unsigned int numberOfGiveawaysClaimed)
-			: userId(userId), currency(currency), isDailyClaimed(isDailyClaimed), dailyStreak(dailyStreak), jailTimer(new QTimer()), numberOfDailysClaimed(numberOfDailysClaimed), numberOfGiveawaysClaimed(numberOfGiveawaysClaimed)
+		UserCurrency(snowflake_t userId, double currency, double maxCurrency, bool isDailyClaimed, unsigned int dailyStreak, unsigned int numberOfDailysClaimed, unsigned int numberOfGiveawaysClaimed)
+			: userId(userId), maxCurrency(maxCurrency), isDailyClaimed(isDailyClaimed), dailyStreak(dailyStreak), jailTimer(new QTimer()), numberOfDailysClaimed(numberOfDailysClaimed), numberOfGiveawaysClaimed(numberOfGiveawaysClaimed)
 		{
+			setCurrency(currency);
 			jailTimer->setSingleShot(true);
 		}
 
@@ -31,8 +36,9 @@ public:
 		}
 
 		UserCurrency(const UserCurrency& other)
-			: userId(other.userId), currency(other.currency), isDailyClaimed(other.isDailyClaimed), dailyStreak(other.dailyStreak), jailTimer(new QTimer()), numberOfDailysClaimed(other.numberOfDailysClaimed), numberOfGiveawaysClaimed(other.numberOfGiveawaysClaimed)
+			: userId(other.userId), maxCurrency(other.maxCurrency), isDailyClaimed(other.isDailyClaimed), dailyStreak(other.dailyStreak), jailTimer(new QTimer()), numberOfDailysClaimed(other.numberOfDailysClaimed), numberOfGiveawaysClaimed(other.numberOfGiveawaysClaimed)
 		{
+			setCurrency(other.currency());
 			jailTimer->setSingleShot(true);
 
 			if (other.jailTimer->remainingTime() > 0)
@@ -44,7 +50,8 @@ public:
 		UserCurrency& operator=(const UserCurrency& other)
 		{
 			userId = other.userId;
-			currency = other.currency;
+			maxCurrency = other.maxCurrency;
+			setCurrency(other.currency());
 			isDailyClaimed = other.isDailyClaimed;
 			dailyStreak = other.dailyStreak;
 			numberOfDailysClaimed = other.numberOfDailysClaimed;
@@ -60,22 +67,32 @@ public:
 
 			return *this;
 		}
+
+		double currency() const
+		{
+			return m_Currency;
+		}
+
+		void setCurrency(double value)
+		{
+			m_Currency = value;
+
+			if (maxCurrency < currency())
+				maxCurrency = currency();
+		}
 	};
 
-private:
-	//! Map server id with user currency list
-	QMap<snowflake_t, QList<UserCurrency>> guildList;
-
-	struct CurrencyConfig {
-		double randGiveawayProb{ 0.001 };
-		unsigned int freebieExpireTime{ 60 };	//in seconds
-		int dailyReward{ 100 };
-		int freebieReward{ 300 };
-		int gambleReward{ 50 };
-		int minGuess{ 0 };
-		int maxGuess{ 5 };
-		int gambleLoss{ 10 };
-		snowflake_t giveawayChannelId{ 0 };
+	struct CurrencyConfig
+	{
+		double randGiveawayProb { 0.001 };
+		unsigned int freebieExpireTime { 60 };	//in seconds
+		int dailyReward { 100 };
+		int freebieReward { 300 };
+		int gambleReward { 50 };
+		int minGuess { 0 };
+		int maxGuess { 5 };
+		int gambleLoss { 10 };
+		snowflake_t giveawayChannelId { 0 };
 		QString currencyName;
 		QString currencySymbol;
 		bool isRandomGiveawayDone{ false };
@@ -89,6 +106,10 @@ private:
 		int stealVictimBonusPercent { 25 };
 		int stealFailedJailTime { 3 };
 	};
+
+private:
+	//! Map server id with user currency list
+	QMap<snowflake_t, QList<UserCurrency>> guildList;
 
 	std::random_device random_device;
 	std::mt19937 random_engine{ random_device() };
@@ -125,13 +146,8 @@ private:
 			}
 		}
 		//! If user is not added to the system, make a new one
-		guildList[guild].append(UserCurrency { id, 0, false, 0, 0, 0 });
+		guildList[guild].append(UserCurrency { id, 0, 0, false, 0, 0, 0 });
 		return std::distance(guildList[guild].begin(), std::prev(guildList[guild].end()));
-	}
-
-	CurrencyConfig& getServerData(snowflake_t guild) 
-	{
-		return serverCurrencyConfig[guild];
 	}
 
 public:
@@ -150,9 +166,14 @@ public:
 		}
 
 		//! If user is not added to the system, make a new one
-		UserCurrency user { id, 0, false, 0, 0, 0 };
+		UserCurrency user { id, 0, 0, false, 0, 0, 0 };
 
 		guildList[guild].append(user);
 		return guildList[guild].back();
+	}
+
+	CurrencyConfig& getServerData(snowflake_t guild)
+	{
+		return serverCurrencyConfig[guild];
 	}
 };
