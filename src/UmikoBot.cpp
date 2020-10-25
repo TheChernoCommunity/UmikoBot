@@ -33,7 +33,7 @@ UmikoBot::UmikoBot(QObject* parent)
 	m_modules.push_back(new TimezoneModule);
 	m_modules.push_back(new CurrencyModule(this));
 	m_modules.push_back(new ModerationModule);
-	m_modules.push_back(new FunModule);
+	m_modules.push_back(new FunModule(this));
 	m_modules.push_back(new UserModule);
 	
 	Q_FOREACH(Module* module, m_modules)
@@ -810,7 +810,10 @@ void UmikoBot::Load()
 		Command(CURRENCY_SET_DAILY_BONUS_AMOUNT),
 		Command(CURRENCY_SET_DAILY_BONUS_PERIOD),
 		
-		Command(FUN_MEME)
+		Command(FUN_MEME),
+		Command(FUN_POLL),
+		Command(FUN_GIVE_NEW_POLL_ACCESS),
+		Command(FUN_TAKE_NEW_POLL_ACCESS)
 	};
 
 	QFile file("commands.json");

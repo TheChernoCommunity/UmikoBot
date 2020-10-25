@@ -253,5 +253,21 @@
 		"brief": "Shows memes from reddit.",
 		"usage": "meme",
 		"admin": false
+	},
+	"FUN_POLL": {
+		"brief": "Creates a new poll.",
+		"usage": "poll [options] <new-line> <reaction-1> <text-1> <new-line> <reaction-2> <text-2> <newline> ...",
+		"additional": "**Options**: Options facilitate better interaction with the polling system. All options are case-insensitive and some can be used together. The available options are as follows:\n\n`--maxvotes <number>`: The number of votes after which a poll should finish.\n`--hours <number>`: The number of hours a poll should go on for.\n`--list`: To list all the active polls.\n`--name \"<string-with-spaces>\" | <string-without-spaces>`: To provide the name of the poll (this also goes into the poll title if provided).\n`--cancel <number>`: To cancel an active poll.",
+		"admin": false
+	},
+	"FUN_GIVE_NEW_POLL_ACCESS": {
+		"brief": "Gives poll creation ability to the people with the mentioned role(s).",
+		"usage": "give-new-poll-access <role-mention(s)>",
+		"admin": true
+	},
+	"FUN_TAKE_NEW_POLL_ACCESS": {
+		"brief": "Removes poll creation ability from the provided role(s) that previously had creation abilities.",
+		"usage": "take-new-poll-access <role-mention(s)>",
+		"admin": true
 	}
 }
