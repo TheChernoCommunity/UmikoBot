@@ -168,14 +168,14 @@ CurrencyModule::CurrencyModule(UmikoBot* client) : Module("currency", true), m_c
 		
 		if (getUserData(channel.guildId(), message.author().id()).isDailyClaimed)
 		{
-			QString time = StringifyMilliseconds(m_timer.remainingTime());
+			QString time = utility::StringifyMilliseconds(m_timer.remainingTime());
 			QString desc = "**You have already claimed your daily credits.**\nCome back after `" + time + "` to get more rich!";
 
 			client.createMessage(message.channelId(), desc);
 		}
 		else if (jailRemainingTime > 0)
 		{
-			QString time = StringifyMilliseconds(jailRemainingTime);
+			QString time = utility::StringifyMilliseconds(jailRemainingTime);
 			QString desc = "**You are in jail!**\nCome back after " + time + " to collect your daily credits.";
 			client.createMessage(message.channelId(), desc);
 			return;
@@ -236,7 +236,7 @@ CurrencyModule::CurrencyModule(UmikoBot* client) : Module("currency", true), m_c
 		int jailRemainingTime = guildList[channel.guildId()][getUserIndex(channel.guildId(), message.author().id())].jailTimer->remainingTime();
 		if (jailRemainingTime > 0)
 		{
-			QString time = StringifyMilliseconds(jailRemainingTime);
+			QString time = utility::StringifyMilliseconds(jailRemainingTime);
 			QString desc = "**You are in jail!**\nCome back after " + time + " to gamble.";
 			client.createMessage(message.channelId(), desc);
 			return;
@@ -299,7 +299,7 @@ CurrencyModule::CurrencyModule(UmikoBot* client) : Module("currency", true), m_c
 			Discord::Embed embed;
 			embed.setColor(qrand() % 16777216);
 			embed.setTitle("Welcome to Gamble " + name + "!");
-			embed.setDescription("All you need to do is guess a random number between " + QString::number(config.minGuess) + " and " + QString::number(config.maxGuess) + " (inclusive) and if it is the same as the number I think of, you get **" + QString::number(config.gambleReward) + config.currencySymbol + "**!\n\n**What number do you think of?** <:wesmart:388340133864407043>");
+			embed.setDescription("All you need to do is guess a random number between " + QString::number(config.minGuess) + " and " + QString::number(config.maxGuess) + " (inclusive) and if it is the same as the number I think of, you get **" + QString::number(config.gambleReward) + config.currencySymbol + "**!\n\n**What number do you think of?** " + utility::consts::emojis::WE_SMART);
 			
 			client.createMessage(message.channelId(), embed);
 		}
@@ -339,7 +339,7 @@ CurrencyModule::CurrencyModule(UmikoBot* client) : Module("currency", true), m_c
 			}
 			if (args.at(1).toDouble() == 0) 
 			{
-				client.createMessage(message.channelId(), "<:aanger:730377398314467439> **BRUH. Don't you dare waste my time! I ain't interested in nothing.**");
+				client.createMessage(message.channelId(), QString(utility::consts::emojis::AANGER) + " **BRUH. Don't you dare waste my time! I ain't interested in nothing.**");
 				return;
 			}
 
@@ -379,7 +379,7 @@ CurrencyModule::CurrencyModule(UmikoBot* client) : Module("currency", true), m_c
 			Discord::Embed embed;
 			embed.setColor(qrand() % 16777216);
 			embed.setTitle("Welcome to Gamble (Double or Nothing) " + name + "!");
-			embed.setDescription("All you need to do is guess a random number between " + QString::number(config.minGuess) + " and " + QString::number(config.maxGuess) + " (inclusive) and if it is the same as the number I guess, you get double the amount you just bet: **" + QString::number(2* serverGamble.betAmount) + config.currencySymbol + "**!\n\n**What number do you think of?** <:wesmart:388340133864407043>");
+			embed.setDescription("All you need to do is guess a random number between " + QString::number(config.minGuess) + " and " + QString::number(config.maxGuess) + " (inclusive) and if it is the same as the number I guess, you get double the amount you just bet: **" + QString::number(2* serverGamble.betAmount) + config.currencySymbol + "**!\n\n**What number do you think of?** " + utility::consts::emojis::WE_SMART);
 
 			client.createMessage(message.channelId(), embed);
 		}
@@ -412,7 +412,7 @@ CurrencyModule::CurrencyModule(UmikoBot* client) : Module("currency", true), m_c
 					int jailRemainingTime = guildList[channel.guildId()][getUserIndex(channel.guildId(), message.author().id())].jailTimer->remainingTime();
 					if (jailRemainingTime > 0)
 					{
-						QString time = StringifyMilliseconds(jailRemainingTime);
+						QString time = utility::StringifyMilliseconds(jailRemainingTime);
 						QString desc = "**You are in jail!**\nYou can't make claims to freebies for another " + time;
 						client.createMessage(message.channelId(), desc);
 						return;
@@ -1016,7 +1016,7 @@ CurrencyModule::CurrencyModule(UmikoBot* client) : Module("currency", true), m_c
 			int jailRemainingTime = guildList[channel.guildId()][getUserIndex(channel.guildId(), authorId)].jailTimer->remainingTime();
 			if (jailRemainingTime > 0)
 			{
-				QString time = StringifyMilliseconds(jailRemainingTime);
+				QString time = utility::StringifyMilliseconds(jailRemainingTime);
 				QString desc = "**You are in jail!**\nCome back after " + time + " to steal more.";
 				client.createMessage(message.channelId(), desc);
 				return;
