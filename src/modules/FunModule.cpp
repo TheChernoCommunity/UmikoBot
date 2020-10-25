@@ -483,7 +483,7 @@ FunModule::FunModule(UmikoBot* client) : Module("funutil", true), m_memeChannel(
 							+ QString::number(poll->pollNum)
 							+ (poll->pollName == "" ? "" : " " + poll->pollName));
 						field.setValue("**Remaining Time: `"
-							+ utility::StringifyMilliseconds(poll->timer->remainingTime(), utility::StringMSFormat::MINIMAL) + "`**\n" + "**Total Votes:** `" + QString::number(total) + "`");
+							+ utility::StringifyMilliseconds(poll->timer->remainingTime(), utility::StringMSFormat::MINIMAL) + "`**\n" + "**Total Votes:** `" + QString::number(total) + "`" + "\n[Link](https://discordapp.com/channels/" + QString::number(channel.guildId()) + "/" + QString::number(poll->notifChannel) + "/" + QString::number(poll->pollMsg) + ")");
 
 						fields.push_back(field);
 					}
