@@ -135,7 +135,7 @@ CurrencyModule::CurrencyModule(UmikoBot* client) : Module("currency", true), m_c
 			embed.setColor(qrand() % 11777216);
 			embed.setAuthor(Discord::EmbedAuthor(UmikoBot::Instance().GetName(channel.guildId(), user) + "'s Wallet", "", icon));
 
-			QString credits = QString::number(getUserData(guild, user).currency);
+			QString credits = QString::number(getUserData(guild, user).currency());
 			QString dailyStreak = QString::number(getUserData(guild, user).dailyStreak);
 			QString dailyClaimed = getUserData(guild, user).isDailyClaimed ? "Yes" : "No";
 
@@ -194,7 +194,7 @@ CurrencyModule::CurrencyModule(UmikoBot* client) : Module("currency", true), m_c
 			}
 
 			guildList[channel.guildId()][index].isDailyClaimed = true;
-			guildList[channel.guildId()][index].currency += todaysReward;
+			guildList[channel.guildId()][index].setCurrency(guildList[channel.guildId()][index].currency() + todaysReward);
 			guildList[channel.guildId()][index].numberOfDailysClaimed += 1;
 			QString displayedMessage = "";
 
@@ -247,7 +247,7 @@ CurrencyModule::CurrencyModule(UmikoBot* client) : Module("currency", true), m_c
 		{
 
 			auto& serverGamble = gambleData[channel.guildId()];
-			if (guildList[channel.guildId()][getUserIndex(channel.guildId(), message.author().id())].currency - getServerData(channel.guildId()).gambleLoss < debtMax) 
+			if (guildList[channel.guildId()][getUserIndex(channel.guildId(), message.author().id())].currency() - getServerData(channel.guildId()).gambleLoss < debtMax) 
 			{
 				client.createMessage(message.channelId(), "**Nope, can't let you get to serious debt.**");
 				return;
@@ -317,7 +317,7 @@ CurrencyModule::CurrencyModule(UmikoBot* client) : Module("currency", true), m_c
 			auto& serverGamble = gambleData[channel.guildId()];
 			auto& config = getServerData(channel.guildId());
 
-			if (guildList[channel.guildId()][getUserIndex(channel.guildId(), message.author().id())].currency - args.at(1).toDouble() < debtMax)
+			if (guildList[channel.guildId()][getUserIndex(channel.guildId(), message.author().id())].currency() - args.at(1).toDouble() < debtMax)
 			{
 				client.createMessage(message.channelId(), "**Nope, can't let you get to serious debt.**");
 				return;
@@ -427,7 +427,7 @@ CurrencyModule::CurrencyModule(UmikoBot* client) : Module("currency", true), m_c
 
 					auto index = getUserIndex(channel.guildId(), message.author().id());
 
-					guildList[channel.guildId()][index].currency += config.freebieReward;
+					guildList[channel.guildId()][index].setCurrency(guildList[channel.guildId()][index].currency() + config.freebieReward);
 					guildList[channel.guildId()][index].numberOfGiveawaysClaimed += 1;
 
 					client.createMessage(message.channelId(), embed);
@@ -887,7 +887,7 @@ CurrencyModule::CurrencyModule(UmikoBot* client) : Module("currency", true), m_c
 
 				qSort(leaderboard.begin(), leaderboard.end(), [](UserCurrency u1, UserCurrency u2)
 					{
-						return u1.currency > u2.currency;
+						return u1.currency() > u2.currency();
 					});
 
 				Discord::Embed embed;
@@ -909,7 +909,7 @@ CurrencyModule::CurrencyModule(UmikoBot* client) : Module("currency", true), m_c
 
 					rank++;
 
-					QString currency = QString::number(user.currency);
+					QString currency = QString::number(user.currency());
 
 					desc += "`" + QString::number(rank).rightJustified(numberOfDigits, ' ') + "`) **" + username + "** - ";
 					desc += currency + " " + getServerData(channel.guildId()).currencySymbol + "\n";
@@ -951,7 +951,7 @@ CurrencyModule::CurrencyModule(UmikoBot* client) : Module("currency", true), m_c
 			return;
 		}
 
-		if (guildList[channel.guildId()][getUserIndex(channel.guildId(), message.author().id())].currency - args.at(1).toDouble() < 0)
+		if (guildList[channel.guildId()][getUserIndex(channel.guildId(), message.author().id())].currency() - args.at(1).toDouble() < 0)
 		{
 			client.createMessage(message.channelId(), "**I can't let you do that, otherwise you'll be in debt!**");
 			return;
@@ -972,7 +972,8 @@ CurrencyModule::CurrencyModule(UmikoBot* client) : Module("currency", true), m_c
 		}
 		}
 
-		guildList[channel.guildId()][getUserIndex(channel.guildId(), message.author().id())].currency -= args.at(1).toDouble();
+		auto& userCurrency = guildList[channel.guildId()][getUserIndex(channel.guildId(), message.author().id())];
+		userCurrency.setCurrency(userCurrency.currency() - args.at(1).toDouble());
 
 		double donation = args.at(1).toDouble() / mentions.size();
 		QString desc = "<@" + QString::number(message.author().id()) + "> donated **" + QString::number(donation) + getServerData(channel.guildId()).currencySymbol + "** to";
@@ -981,7 +982,7 @@ CurrencyModule::CurrencyModule(UmikoBot* client) : Module("currency", true), m_c
 		{
 			auto index = getUserIndex(channel.guildId(), user.id());
 			desc += " <@" + QString::number(user.id()) + ">";
-			guildList[channel.guildId()][index].currency += donation;
+			guildList[channel.guildId()][index].setCurrency(guildList[channel.guildId()][index].currency() + donation);
 		}
 
 		Discord::Embed embed;
@@ -1036,7 +1037,7 @@ CurrencyModule::CurrencyModule(UmikoBot* client) : Module("currency", true), m_c
 				return;
 			}
 
-			if (guildList[channel.guildId()][getUserIndex(channel.guildId(), authorId)].currency - (amountToSteal * config.stealFinePercent / 100) < debtMax)
+			if (guildList[channel.guildId()][getUserIndex(channel.guildId(), authorId)].currency() - (amountToSteal * config.stealFinePercent / 100) < debtMax)
 			{
 				client.createMessage(message.channelId(), "**I can't let you do that, you might go into serious debt.**");
 				return;
@@ -1061,7 +1062,7 @@ CurrencyModule::CurrencyModule(UmikoBot* client) : Module("currency", true), m_c
 				return;
 			}
 
-			if (guildList[channel.guildId()][getUserIndex(channel.guildId(), victimId)].currency - amountToSteal < debtMax)
+			if (guildList[channel.guildId()][getUserIndex(channel.guildId(), victimId)].currency() - amountToSteal < debtMax)
 			{
 				client.createMessage(message.channelId(), "**I can't let you make your victim go into serious debt.**");
 				return;
@@ -1079,10 +1080,13 @@ CurrencyModule::CurrencyModule(UmikoBot* client) : Module("currency", true), m_c
 			std::discrete_distribution<> distribution { { 1 - successChance, successChance } };
 			int roll = distribution(prng);
 			
+			auto& victimCurrency = guildList[channel.guildId()][getUserIndex(channel.guildId(), victimId)];
+			auto& authorCurrency = guildList[channel.guildId()][getUserIndex(channel.guildId(), authorId)];
+
 			if (roll)
 			{
-				guildList[channel.guildId()][getUserIndex(channel.guildId(), victimId)].currency -= amountToSteal;
-				guildList[channel.guildId()][getUserIndex(channel.guildId(), authorId)].currency += amountToSteal;
+				victimCurrency.setCurrency(victimCurrency.currency() - amountToSteal);
+				authorCurrency.setCurrency(authorCurrency.currency() + amountToSteal);
 				
 				QString stealAmount = QString::number(amountToSteal);
 				QString output = QString(
@@ -1094,9 +1098,9 @@ CurrencyModule::CurrencyModule(UmikoBot* client) : Module("currency", true), m_c
 			}
 			else
 			{
-				guildList[channel.guildId()][getUserIndex(channel.guildId(), authorId)].currency -= amountToSteal * config.stealFinePercent / 100;
-				guildList[channel.guildId()][getUserIndex(channel.guildId(), victimId)].currency += amountToSteal * config.stealVictimBonusPercent / 100;
-				guildList[channel.guildId()][getUserIndex(channel.guildId(), authorId)].jailTimer->start(config.stealFailedJailTime * 60 * 60 * 1000);
+				authorCurrency.setCurrency(authorCurrency.currency() - amountToSteal * config.stealFinePercent / 100);
+				victimCurrency.setCurrency(victimCurrency.currency() + amountToSteal * config.stealVictimBonusPercent / 100);
+				authorCurrency.jailTimer->start(config.stealFailedJailTime * 60 * 60 * 1000);
 
 				QString fineAmount = QString::number(amountToSteal * config.stealFinePercent / 100.0);
 				QString victimBonus = QString::number(amountToSteal * config.stealVictimBonusPercent / 100.0);
@@ -1368,7 +1372,7 @@ CurrencyModule::CurrencyModule(UmikoBot* client) : Module("currency", true), m_c
 				auto amt = args.at(1).toDouble();
 
 				for (auto& user : guildList[channel.guildId()]) {
-					user.currency += amt;
+					user.setCurrency(user.currency() + amt);
 				}
 
 				client.createMessage(message.channelId(), "**Everyone has been compensated with `" + QString::number(amt) + config.currencySymbol + "`**\nSorry for any inconvenience!");
@@ -1379,7 +1383,7 @@ CurrencyModule::CurrencyModule(UmikoBot* client) : Module("currency", true), m_c
 
 void CurrencyModule::StatusCommand(QString& result, snowflake_t guild, snowflake_t user) 
 {
-	QString creditScore = QString::number(getUserData(guild, user).currency);
+	QString creditScore = QString::number(getUserData(guild, user).currency());
 	auto& config = getServerData(guild);
 
 	result += "Wallet: " + creditScore + " " + getServerData(guild).currencySymbol;
@@ -1441,7 +1445,7 @@ void CurrencyModule::OnMessage(Discord::Client& client, const Discord::Message& 
 
 							auto index = getUserIndex(guildId, 
 								message.author().id());
-							guildList[guildId][index].currency += prize;
+							guildList[guildId][index].setCurrency(guildList[guildId][index].currency() + prize);
 							client.createMessage(message.channelId(),
 								"**You guessed CORRECTLY!**\n(**" +
 								QString::number(prize) +
@@ -1456,7 +1460,7 @@ void CurrencyModule::OnMessage(Discord::Client& client, const Discord::Message& 
 							auto symbol = serverConfig.currencySymbol;
 
 							auto index = getUserIndex(guildId, message.author().id());
-							guildList[guildId][index].currency -= loss;
+							guildList[guildId][index].setCurrency(guildList[guildId][index].currency() - loss);
 							client.createMessage(message.channelId(), "**Better Luck next time! The number was `" + QString::number(gambleData[guildId].randNum) +"`**\n*(psst! I took **" + QString::number(loss) + symbol + "** from your wallet for my time...)*");
 
 						}
@@ -1482,10 +1486,11 @@ void CurrencyModule::OnSave(QJsonDocument& doc) const
 	{
 		QJsonObject serverJSON;
 		
-		for (auto user = guildList[server].begin(); user != guildList[server].end(); user++) 
-		{	
+		for (auto& user = guildList[server].begin(); user != guildList[server].end(); user++) 
+		{
 			QJsonObject obj;
-			obj["currency"] = user->currency;
+			obj["currency"] = user->currency();
+			obj["maxCurrency"] = user->maxCurrency;
 			obj["isDailyClaimed"] = user->isDailyClaimed;
 			obj["dailyStreak"] = (int) user->dailyStreak;
 			obj["numberOfDailysClaimed"] = (int) user->numberOfDailysClaimed;
@@ -1558,11 +1563,13 @@ void CurrencyModule::OnLoad(const QJsonDocument& doc)
 			UserCurrency currencyData {
 				user.toULongLong(),
 				obj[user].toObject()["currency"].toDouble(),
+				obj[user].toObject()["maxCurrency"].toDouble(),
 				obj[user].toObject()["isDailyClaimed"].toBool(),
 				(unsigned int) obj[user].toObject()["dailyStreak"].toInt(),
 				(unsigned int) obj[user].toObject()["numberOfDailysClaimed"].toInt(),
 				(unsigned int) obj[user].toObject()["numberOfGiveawayssClaimed"].toInt(),
 			};
+
 			list.append(currencyData);
 		}
 		guildList.insert(guildId, list);

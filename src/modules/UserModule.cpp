@@ -183,12 +183,17 @@ UserModule::UserModule()
 				embed.setAuthor(Discord::EmbedAuthor(name + "'s Statistics", "", icon));
 				embed.setColor(qrand() % 16777216);
 
-				QString desc = "Date Joined: **" + member.joinedAt().date().toString() + "**\n";
+				QString desc = "**General:**\n";
+				desc += "Date Joined: **" + member.joinedAt().date().toString() + "**\n";
 
 				CurrencyModule* currencyModule = static_cast<CurrencyModule*>(UmikoBot::Instance().GetModuleByName("currency"));
 				if (currencyModule)
 				{
+					const CurrencyModule::CurrencyConfig& serverConfig = currencyModule->getServerData(channel.guildId());
 					const CurrencyModule::UserCurrency& userCurrency = currencyModule->getUserData(channel.guildId(), userId);
+
+					desc += "\n**Currency:**\n";
+					desc += "Max " + serverConfig.currencyName + "s: **" + QString::number(userCurrency.maxCurrency) + " " + serverConfig.currencySymbol + "**\n";
 					desc += "`daily`s claimed: **" + QString::number(userCurrency.numberOfDailysClaimed) + "**\n";
 					desc += "`claim`s claimed: **" + QString::number(userCurrency.numberOfGiveawaysClaimed) + "**\n";
 				}
