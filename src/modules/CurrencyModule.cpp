@@ -1344,7 +1344,7 @@ void CurrencyModule::OnSave(QJsonDocument& doc) const
 	{
 		QJsonObject serverJSON;
 		
-		for (auto& user = guildList[server].begin(); user != guildList[server].end(); user++)
+		for (auto user = guildList[server].begin(); user != guildList[server].end(); user++)
 		{
 			QJsonObject obj;
 			obj["currency"] = user->currency();

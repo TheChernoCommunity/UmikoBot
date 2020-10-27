@@ -2,7 +2,7 @@
 #include <QtCore/QTimer>
 #include <QtCore/QString>
 #include <QtCore/QTime>
-#include <QtCore/QRegexp>
+#include <QtCore/QRegExp>
 #include <Discord/Objects/Emoji.h>
 
 namespace utility 

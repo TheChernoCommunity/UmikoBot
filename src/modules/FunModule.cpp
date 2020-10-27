@@ -102,7 +102,7 @@ FunModule::FunModule(UmikoBot* client) : Module("funutil", true), m_memeChannel(
 
 			for (int i = 0; i < args.size(); i++) 
 			{
-				auto& text = args[i].toLower();
+				auto text = args[i].toLower();
 				QString next = "";
 				if (i + 1 < args.size()) 
 				{
@@ -361,7 +361,11 @@ FunModule::FunModule(UmikoBot* client) : Module("funutil", true), m_memeChannel(
 							}
 						}
 
-						options.push_back({ emojiData, text, isAnimated, 0 });
+						PollOption opt;
+						opt.emote = emojiData;
+						opt.desc = text;
+						opt.isAnimated = isAnimated;
+						options.push_back(opt);
 					}
 
 					if (options.length() > 10) 
@@ -585,7 +589,7 @@ void FunModule::onReact(snowflake_t user, snowflake_t channel, snowflake_t messa
 			{
 				if (poll->pollMsg == message) 
 				{
-					UmikoBot::Instance().getUser(user).then([user, channel, message, emoji, poll](const Discord::User& user) 
+					UmikoBot::Instance().getUser(user).then([channel, message, emoji, poll](const Discord::User& user) 
 					{
 						if (!user.bot()) 
 						{
@@ -609,7 +613,7 @@ void FunModule::onReact(snowflake_t user, snowflake_t channel, snowflake_t messa
 							if (poll->maxVotes != -1) 
 							{
 								std::size_t total = 0;
-								for (auto& it = poll->options.begin(); it != poll->options.end(); ++it) 
+								for (auto it = poll->options.begin(); it != poll->options.end(); ++it) 
 								{
 									total += it->count;
 								}
@@ -642,7 +646,7 @@ void FunModule::onUnReact(snowflake_t user, snowflake_t channel, snowflake_t mes
 			{
 				if (poll->pollMsg == message) 
 				{
-					UmikoBot::Instance().getUser(user).then([user, channel, message, emoji, poll](const Discord::User& user) 
+					UmikoBot::Instance().getUser(user).then([channel, message, emoji, poll](const Discord::User& user) 
 					{
 						if (!user.bot()) 
 						{
@@ -672,7 +676,7 @@ void FunModule::OnMessage(Discord::Client& client, const Discord::Message& messa
 		{
 			snowflake_t chan = message.channelId();
 			UmikoBot::Instance().createReaction(chan, message.id(), utility::consts::emojis::reacts::ANGRY_PING)
-				.then([chan]() 
+				.then([chan]
 			{
 				UmikoBot::Instance().triggerTypingIndicator(chan);
 			});
@@ -690,7 +694,7 @@ void FunModule::pollReactAndAdd(const PollOptions& options, int pos, const Poll&
 
 	UmikoBot::Instance()
 		.createReaction(chan, msg, options.at(pos).emote)
-		.then([this, pos, options, poll, msg, chan, guild]()
+		.then([this, pos, options, poll, msg, chan, guild]
 		{
 			//! Add the reaction if success
 			poll->options.push_back(options.at(pos));
@@ -751,7 +755,7 @@ void FunModule::OnLoad(const QJsonDocument& doc)
 		auto serverObj = docObj[server].toObject();
 		auto list = serverObj["poll-whitelist"].toArray();
 		
-		for (auto& role : list) 
+		for (auto role : list) 
 		{
 			snowflake_t roleId = role.toString().toULongLong();
 			m_pollWhitelist[guild].push_back(roleId);
