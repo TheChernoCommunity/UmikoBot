@@ -822,7 +822,7 @@ CurrencyModule::CurrencyModule(UmikoBot* client) : Module("currency", true), m_c
 
 				rank++;
 
-				QString currency = QString::number(user.currency);
+				QString currency = QString::number(user.currency());
 
 				desc += "`" + QString::number(rank).rightJustified(numberOfDigits, ' ') + "`) **" + username + "** - ";
 				desc += currency + " " + getServerData(channel.guildId()).currencySymbol + "\n";
@@ -940,7 +940,7 @@ CurrencyModule::CurrencyModule(UmikoBot* client) : Module("currency", true), m_c
 			return;
 		}
 
-		if (guildList[channel.guildId()][getUserIndex(channel.guildId(), authorId)].currency - (amountToSteal * config.stealFinePercent / 100) < debtMax)
+		if (guildList[channel.guildId()][getUserIndex(channel.guildId(), authorId)].currency() - (amountToSteal * config.stealFinePercent / 100) < debtMax)
 		{
 			client.createMessage(message.channelId(), "**I can't let you do that, you might go into serious debt.**");
 			return;
@@ -965,7 +965,7 @@ CurrencyModule::CurrencyModule(UmikoBot* client) : Module("currency", true), m_c
 			return;
 		}
 
-		if (guildList[channel.guildId()][getUserIndex(channel.guildId(), victimId)].currency - amountToSteal < debtMax)
+		if (guildList[channel.guildId()][getUserIndex(channel.guildId(), victimId)].currency() - amountToSteal < debtMax)
 		{
 			client.createMessage(message.channelId(), "**I can't let you make your victim go into serious debt.**");
 			return;
