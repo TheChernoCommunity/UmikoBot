@@ -518,7 +518,7 @@ FunModule::FunModule(UmikoBot* client) : Module("funutil", true), m_memeChannel(
 			if (!result) 
 			{
 				UmikoBot::Instance().createMessage(message.channelId(), "**You don't have permissions to use this command.**");
-					return;
+				return;
 			}
 			
 
