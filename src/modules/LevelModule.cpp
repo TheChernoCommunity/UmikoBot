@@ -257,7 +257,7 @@ LevelModule::LevelModule(UmikoBot* client)
 			client.createMessage(message.channelId(), embed);
 		}
 		else if (args[1] == "add" && args.size() > 3)
-			VerifyAndRunAdminCmd(client, message, channel, 4, args, false, [this, &client, channel, message, args]()
+			UmikoBot::VerifyAndRunAdminCmd(client, message, channel, 4, args, false, [this, &client, channel, message, args]()
 			{
 				GuildSetting* setting = &GuildSettings::GetGuildSetting(channel.guildId());
 				
@@ -300,7 +300,7 @@ LevelModule::LevelModule(UmikoBot* client)
 					}
 			});
 		else if (args[1] == "remove" && args.size() == 3)
-			VerifyAndRunAdminCmd(client, message, channel, 3, args, false, [this, &client, channel, message, args]()
+			UmikoBot::VerifyAndRunAdminCmd(client, message, channel, 3, args, false, [this, &client, channel, message, args]()
 			{
 				GuildSetting* setting = &GuildSettings::GetGuildSetting(channel.guildId());
 
@@ -322,7 +322,7 @@ LevelModule::LevelModule(UmikoBot* client)
 				setting->ranks.erase(setting->ranks.begin() + id);
 			});
 		else if (args[1] == "edit" && args.size() >= 4)
-			VerifyAndRunAdminCmd(client, message, channel, 5, args, false, [this, &client, channel, message, args, printHelp]()
+			UmikoBot::VerifyAndRunAdminCmd(client, message, channel, 5, args, false, [this, &client, channel, message, args, printHelp]()
 			{
 				GuildSetting* setting = &GuildSettings::GetGuildSetting(channel.guildId());
 
@@ -404,7 +404,7 @@ LevelModule::LevelModule(UmikoBot* client)
 				return;
 			}
 
-			VerifyAndRunAdminCmd(client, message, channel, 2, args, true, [this, &client, channel, message, args, setting]()
+			UmikoBot::VerifyAndRunAdminCmd(client, message, channel, 2, args, true, [this, &client, channel, message, args, setting]()
 			{
 				setting->maximumLevel = args[1].toUInt();
 				client.createMessage(message.channelId(), "Maximum level set to " + QString::number(setting->maximumLevel) + " succesfully!");
@@ -443,7 +443,7 @@ LevelModule::LevelModule(UmikoBot* client)
 				return;
 			}
 
-			VerifyAndRunAdminCmd(client, message, channel, 2, args, true, [this, &client, channel, message, args, setting]()
+			UmikoBot::VerifyAndRunAdminCmd(client, message, channel, 2, args, true, [this, &client, channel, message, args, setting]()
 			{
 				setting->expRequirement = args[1].toUInt();
 				client.createMessage(message.channelId(), "Exp requirement set to " + QString::number(setting->expRequirement) + " succesfully!");
@@ -482,7 +482,7 @@ LevelModule::LevelModule(UmikoBot* client)
 				return;
 			}
 
-			VerifyAndRunAdminCmd(client, message, channel, 2, args, true, [this, &client, channel, message, args, setting]()
+			UmikoBot::VerifyAndRunAdminCmd(client, message, channel, 2, args, true, [this, &client, channel, message, args, setting]()
 			{
 				setting->growthRate = args[1].toFloat();
 				client.createMessage(message.channelId(), "Growth rate set to " + QString::number(setting->growthRate) + " succesfully!");
@@ -515,7 +515,7 @@ LevelModule::LevelModule(UmikoBot* client)
 
 		if (args.size() >= 3)
 		{
-			VerifyAndRunAdminCmd(client, message, channel, 3, args, false, [this, &client, channel, message, args, s]()
+			UmikoBot::VerifyAndRunAdminCmd(client, message, channel, 3, args, false, [this, &client, channel, message, args, s]()
 			{
 				auto& exp = m_exp[channel.guildId()];
 
@@ -603,7 +603,7 @@ LevelModule::LevelModule(UmikoBot* client)
 
 		if (args.size() >= 3)
 		{
-			VerifyAndRunAdminCmd(client, message, channel, 3, args, false, [this, &client, channel, message, args, s]()
+			UmikoBot::VerifyAndRunAdminCmd(client, message, channel, 3, args, false, [this, &client, channel, message, args, s]()
 			{
 				auto& exp = m_exp[channel.guildId()];
 
@@ -694,7 +694,7 @@ LevelModule::LevelModule(UmikoBot* client)
 
 		if (args.size() > 1 && args[1] == "whitelist")
 		{
-			VerifyAndRunAdminCmd(client, message, channel, 2, args, false, [this, &client, channel, message, args]()
+			UmikoBot::VerifyAndRunAdminCmd(client, message, channel, 2, args, false, [this, &client, channel, message, args]()
 			{
 				GuildSetting& s = GuildSettings::GetGuildSetting(channel.guildId());
 				for (int i = 0; i < s.levelBlacklistedChannels.size(); i++) {
@@ -720,7 +720,7 @@ LevelModule::LevelModule(UmikoBot* client)
 		}
 		else if (args.size() > 1 && args[1] == "blacklist")
 		{
-			VerifyAndRunAdminCmd(client, message, channel, 2, args, false, [this, &client, channel, message, args]()
+			UmikoBot::VerifyAndRunAdminCmd(client, message, channel, 2, args, false, [this, &client, channel, message, args]()
 			{
 				GuildSetting& s = GuildSettings::GetGuildSetting(channel.guildId());
 				for (int i = 0; i < s.levelWhitelistedChannels.size(); i++) {

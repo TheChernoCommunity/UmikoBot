@@ -35,7 +35,6 @@ protected:
 	Module(const QString& name, bool enabledByDefault);
 
 	void RegisterCommand(unsigned int id, const QString& name, Command::Callback callback);
-	void VerifyAndRunAdminCmd(Discord::Client& client, const Discord::Message& message, const Discord::Channel& channel, unsigned int requiredNumberOfArgs, const QStringList& args, bool argumentShouldBeANumber, std::function<void()> callback);
 	
 	virtual void OnSave(QJsonDocument& doc) const { Q_UNUSED(doc) };
 	virtual void OnLoad(const QJsonDocument& doc) { Q_UNUSED(doc) };
