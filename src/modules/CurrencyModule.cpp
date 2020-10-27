@@ -88,11 +88,7 @@ CurrencyModule::CurrencyModule(UmikoBot* client) : Module("currency", true), m_c
 	RegisterCommand(Commands::CURRENCY_WALLET, "wallet", [this](Discord::Client& client, const Discord::Message& message, const Discord::Channel& channel) 
 	{
 		QStringList args = message.content().split(' ');
-		GuildSetting* setting = &GuildSettings::GetGuildSetting(channel.guildId());
-		QString prefix = setting->prefix;
 
-		if (args.first() != prefix + "wallet")
-			return;
 		if (args.size() > 2) 
 		{
 			client.createMessage(message.channelId(), "**Wrong Usage of Command!** ");
@@ -152,12 +148,8 @@ CurrencyModule::CurrencyModule(UmikoBot* client) : Module("currency", true), m_c
 		{
 
 		QStringList args = message.content().split(' ');
-		GuildSetting* setting = &GuildSettings::GetGuildSetting(channel.guildId());
-		QString prefix = setting->prefix;
 		auto& config = getServerData(channel.guildId());
 
-		if (args.first() != prefix + "daily")
-			return;
 		if (args.size() > 1) 
 		{
 			client.createMessage(message.channelId(), "**Wrong Usage of Command!** ");
@@ -221,12 +213,7 @@ CurrencyModule::CurrencyModule(UmikoBot* client) : Module("currency", true), m_c
 		{
 		
 		QStringList args = message.content().split(' ');
-		GuildSetting* setting = &GuildSettings::GetGuildSetting(channel.guildId());
-		QString prefix = setting->prefix;
 		
-		if (args.first() != prefix + "gamble")
-			return;
-
 		if (args.size() > 2) 
 		{
 			client.createMessage(message.channelId(), "**Wrong Usage of Command!** ");
@@ -390,11 +377,6 @@ CurrencyModule::CurrencyModule(UmikoBot* client) : Module("currency", true), m_c
 		{
 
 		QStringList args = message.content().split(' ');
-		GuildSetting* setting = &GuildSettings::GetGuildSetting(channel.guildId());
-		QString prefix = setting->prefix;
-
-		if (args.first() != prefix + "claim")
-			return;
 
 		if (args.size() > 1) 
 		{
@@ -456,12 +438,6 @@ CurrencyModule::CurrencyModule(UmikoBot* client) : Module("currency", true), m_c
 		{
 
 		QStringList args = message.content().split(' ');
-		GuildSetting* setting = &GuildSettings::GetGuildSetting(channel.guildId());
-		QString prefix = setting->prefix;
-
-
-		if (args.first() != prefix + "setannouncechan")
-			return;
 
 		Permissions::ContainsPermission(client, channel.guildId(), message.author().id(), CommandPermission::ADMIN,
 			[this, args, &client, message, channel](bool result) 
@@ -492,11 +468,6 @@ CurrencyModule::CurrencyModule(UmikoBot* client) : Module("currency", true), m_c
 		{
 		
 		QStringList args = message.content().split(' ');
-		GuildSetting* setting = &GuildSettings::GetGuildSetting(channel.guildId());
-		QString prefix = setting->prefix;
-		
-		if (args.first() != prefix + "setcurrenname")
-			return;
 
 		Permissions::ContainsPermission(client, channel.guildId(), message.author().id(), CommandPermission::ADMIN,
 			[this, args, &client, message, channel](bool result) 
@@ -532,11 +503,6 @@ CurrencyModule::CurrencyModule(UmikoBot* client) : Module("currency", true), m_c
 		{
 
 		QStringList args = message.content().split(' ');
-		GuildSetting* setting = &GuildSettings::GetGuildSetting(channel.guildId());
-		QString prefix = setting->prefix;
-
-		if (args.first() != prefix + "setcurrensymb")
-			return;
 
 		Permissions::ContainsPermission(client, channel.guildId(), message.author().id(), CommandPermission::ADMIN,
 			[this, args, &client, message, channel](bool result) 
@@ -573,12 +539,6 @@ CurrencyModule::CurrencyModule(UmikoBot* client) : Module("currency", true), m_c
 		{
 
 		QStringList args = message.content().split(' ');
-		GuildSetting* setting = &GuildSettings::GetGuildSetting(channel.guildId());
-		QString prefix = setting->prefix;
-
-
-		if (args.first() != prefix + "setdaily")
-			return;
 
 		Permissions::ContainsPermission(client, channel.guildId(), message.author().id(), CommandPermission::ADMIN,
 			[this, args, &client, message, channel](bool result) 
@@ -609,12 +569,6 @@ CurrencyModule::CurrencyModule(UmikoBot* client) : Module("currency", true), m_c
 		{
 
 		QStringList args = message.content().split(' ');
-		GuildSetting* setting = &GuildSettings::GetGuildSetting(channel.guildId());
-		QString prefix = setting->prefix;
-
-
-		if (args.first() != prefix + "setprize")
-			return;
 
 		Permissions::ContainsPermission(client, channel.guildId(), message.author().id(), CommandPermission::ADMIN,
 			[this, args, &client, message, channel](bool result) 
@@ -645,12 +599,6 @@ CurrencyModule::CurrencyModule(UmikoBot* client) : Module("currency", true), m_c
 		{
 
 		QStringList args = message.content().split(' ');
-		GuildSetting* setting = &GuildSettings::GetGuildSetting(channel.guildId());
-		QString prefix = setting->prefix;
-
-
-		if (args.first() != prefix + "setprizeprob")
-			return;
 
 		Permissions::ContainsPermission(client, channel.guildId(), message.author().id(), CommandPermission::ADMIN,
 			[this, args, &client, message, channel](bool result) 
@@ -681,12 +629,6 @@ CurrencyModule::CurrencyModule(UmikoBot* client) : Module("currency", true), m_c
 		{
 
 		QStringList args = message.content().split(' ');
-		GuildSetting* setting = &GuildSettings::GetGuildSetting(channel.guildId());
-		QString prefix = setting->prefix;
-
-
-		if (args.first() != prefix + "setprizeexpiry")
-			return;
 
 		Permissions::ContainsPermission(client, channel.guildId(), message.author().id(), CommandPermission::ADMIN,
 			[this, args, &client, message, channel](bool result) 
@@ -717,12 +659,6 @@ CurrencyModule::CurrencyModule(UmikoBot* client) : Module("currency", true), m_c
 	RegisterCommand(Commands::CURRENCY_SET_GAMBLE_LOSS, "setgambleloss", [this](Discord::Client& client, const Discord::Message& message, const Discord::Channel& channel) 
 		{
 		QStringList args = message.content().split(' ');
-		GuildSetting* setting = &GuildSettings::GetGuildSetting(channel.guildId());
-		QString prefix = setting->prefix;
-
-
-		if (args.first() != prefix + "setgambleloss")
-			return;
 
 		Permissions::ContainsPermission(client, channel.guildId(), message.author().id(), CommandPermission::ADMIN,
 			[this, args, &client, message, channel](bool result) 
@@ -752,11 +688,6 @@ CurrencyModule::CurrencyModule(UmikoBot* client) : Module("currency", true), m_c
 	RegisterCommand(Commands::CURRENCY_SET_GAMBLE_MAX_GUESS, "setgamblemaxguess", [this](Discord::Client& client, const Discord::Message& message, const Discord::Channel& channel) 
 		{
 		QStringList args = message.content().split(' ');
-		GuildSetting* setting = &GuildSettings::GetGuildSetting(channel.guildId());
-		QString prefix = setting->prefix;
-
-		if (args.first() != prefix + "setgamblemaxguess")
-			return;
 
 		Permissions::ContainsPermission(client, channel.guildId(), message.author().id(), CommandPermission::ADMIN,
 			[this, args, &client, message, channel](bool result) 
@@ -787,12 +718,6 @@ CurrencyModule::CurrencyModule(UmikoBot* client) : Module("currency", true), m_c
 		{
 		
 		QStringList args = message.content().split(' ');
-		GuildSetting* setting = &GuildSettings::GetGuildSetting(channel.guildId());
-		QString prefix = setting->prefix;
-
-
-		if (args.first() != prefix + "setgambleminguess")
-			return;
 
 		Permissions::ContainsPermission(client, channel.guildId(), message.author().id(), CommandPermission::ADMIN,
 			[this, args, &client, message, channel](bool result) 
@@ -823,12 +748,6 @@ CurrencyModule::CurrencyModule(UmikoBot* client) : Module("currency", true), m_c
 		{
 
 		QStringList args = message.content().split(' ');
-		GuildSetting* setting = &GuildSettings::GetGuildSetting(channel.guildId());
-		QString prefix = setting->prefix;
-
-
-		if (args.first() != prefix + "setgamblereward")
-			return;
 
 		Permissions::ContainsPermission(client, channel.guildId(), message.author().id(), CommandPermission::ADMIN,
 			[this, args, &client, message, channel](bool result) 
@@ -860,12 +779,6 @@ CurrencyModule::CurrencyModule(UmikoBot* client) : Module("currency", true), m_c
 		{
 		
 			QStringList args = message.content().split(' ');
-			GuildSetting* setting = &GuildSettings::GetGuildSetting(channel.guildId());
-			QString prefix = setting->prefix;
-
-
-			if (args.first() != prefix + "richlist")
-				return;
 
 			if (args.size() > 1) 
 			{
@@ -927,12 +840,6 @@ CurrencyModule::CurrencyModule(UmikoBot* client) : Module("currency", true), m_c
 	RegisterCommand(Commands::CURRENCY_DONATE, "donate", [this](Discord::Client& client, const Discord::Message& message, const Discord::Channel& channel) {
 
 		QStringList args = message.content().split(' ');
-		GuildSetting* setting = &GuildSettings::GetGuildSetting(channel.guildId());
-		QString prefix = setting->prefix;
-
-
-		if (args.first() != prefix + "donate")
-			return;
 
 		if (args.size() == 1 || args.size() == 2) {
 			client.createMessage(message.channelId(), "**Wrong Usage of Command!** ");
@@ -999,13 +906,8 @@ CurrencyModule::CurrencyModule(UmikoBot* client) : Module("currency", true), m_c
 		{
 
 			QStringList args = message.content().split(' ');
-			GuildSetting* setting = &GuildSettings::GetGuildSetting(channel.guildId());
-			QString prefix = setting->prefix;
 			auto& config = getServerData(channel.guildId());
 			snowflake_t authorId = message.author().id();
-			
-			if (args.first() != prefix + "steal")
-				return;
 
 			if (args.size() != 3)
 			{
@@ -1120,12 +1022,6 @@ CurrencyModule::CurrencyModule(UmikoBot* client) : Module("currency", true), m_c
 	{
 
 		QStringList args = message.content().split(' ');
-		GuildSetting* setting = &GuildSettings::GetGuildSetting(channel.guildId());
-		QString prefix = setting->prefix;
-
-
-		if (args.first() != prefix + "setstealsuccesschance")
-			return;
 
 		Permissions::ContainsPermission(client, channel.guildId(), message.author().id(), CommandPermission::ADMIN,
 			[this, args, &client, message, channel](bool result) 
@@ -1158,12 +1054,6 @@ CurrencyModule::CurrencyModule(UmikoBot* client) : Module("currency", true), m_c
 	{
 
 		QStringList args = message.content().split(' ');
-		GuildSetting* setting = &GuildSettings::GetGuildSetting(channel.guildId());
-		QString prefix = setting->prefix;
-
-
-		if (args.first() != prefix + "setstealfine")
-			return;
 
 		Permissions::ContainsPermission(client, channel.guildId(), message.author().id(), CommandPermission::ADMIN,
 			[this, args, &client, message, channel](bool result) 
@@ -1196,12 +1086,6 @@ CurrencyModule::CurrencyModule(UmikoBot* client) : Module("currency", true), m_c
 	{
 
 		QStringList args = message.content().split(' ');
-		GuildSetting* setting = &GuildSettings::GetGuildSetting(channel.guildId());
-		QString prefix = setting->prefix;
-
-
-		if (args.first() != prefix + "setstealvictimbonus")
-			return;
 
 		Permissions::ContainsPermission(client, channel.guildId(), message.author().id(), CommandPermission::ADMIN,
 			[this, args, &client, message, channel](bool result) 
@@ -1234,12 +1118,6 @@ CurrencyModule::CurrencyModule(UmikoBot* client) : Module("currency", true), m_c
 	{
 
 		QStringList args = message.content().split(' ');
-		GuildSetting* setting = &GuildSettings::GetGuildSetting(channel.guildId());
-		QString prefix = setting->prefix;
-
-
-		if (args.first() != prefix + "setstealjailhours")
-			return;
 
 		Permissions::ContainsPermission(client, channel.guildId(), message.author().id(), CommandPermission::ADMIN,
 			[this, args, &client, message, channel](bool result) 
@@ -1272,12 +1150,6 @@ CurrencyModule::CurrencyModule(UmikoBot* client) : Module("currency", true), m_c
 	{
 
 		QStringList args = message.content().split(' ');
-		GuildSetting* setting = &GuildSettings::GetGuildSetting(channel.guildId());
-		QString prefix = setting->prefix;
-
-
-		if (args.first() != prefix + "setdailybonus")
-			return;
 
 		Permissions::ContainsPermission(client, channel.guildId(), message.author().id(), CommandPermission::ADMIN,
 			[this, args, &client, message, channel](bool result) 
@@ -1310,12 +1182,6 @@ CurrencyModule::CurrencyModule(UmikoBot* client) : Module("currency", true), m_c
 	{
 
 		QStringList args = message.content().split(' ');
-		GuildSetting* setting = &GuildSettings::GetGuildSetting(channel.guildId());
-		QString prefix = setting->prefix;
-
-
-		if (args.first() != prefix + "setdailybonusperiod")
-			return;
 
 		Permissions::ContainsPermission(client, channel.guildId(), message.author().id(), CommandPermission::ADMIN,
 			[this, args, &client, message, channel](bool result) 
@@ -1348,11 +1214,6 @@ CurrencyModule::CurrencyModule(UmikoBot* client) : Module("currency", true), m_c
 	{
 
 		QStringList args = message.content().split(' ');
-		GuildSetting* setting = &GuildSettings::GetGuildSetting(channel.guildId());
-		QString prefix = setting->prefix;
-
-		if (args.first() != prefix + "compensate")
-			return;
 
 		Permissions::ContainsPermission(client, channel.guildId(), message.author().id(), CommandPermission::ADMIN,
 			[this, args, &client, message, channel](bool result) 

@@ -55,12 +55,6 @@ FunModule::FunModule(UmikoBot* client) : Module("funutil", true), m_memeChannel(
 		{
 
 		QStringList args = message.content().split(' ');
-		GuildSetting* setting = &GuildSettings::GetGuildSetting(channel.guildId());
-		QString prefix = setting->prefix;
-
-
-		if (args.first() != prefix + "meme")
-			return;
 
 		if (args.size() >= 2) {
 			client.createMessage(message.channelId(), "**Wrong Usage of Command!** ");
@@ -83,13 +77,6 @@ FunModule::FunModule(UmikoBot* client) : Module("funutil", true), m_memeChannel(
 		}
 
 		QStringList args = lines.at(0).simplified().split(' ');
-		GuildSetting* setting = &GuildSettings::GetGuildSetting(channel.guildId());
-		QString prefix = setting->prefix;
-
-		
-
-		if (args.first() != prefix + "poll")
-			return;
 
 		args.pop_front();	//pop the command to just get the args
 		lines.pop_front();	//the first line is only used for args
@@ -506,11 +493,6 @@ FunModule::FunModule(UmikoBot* client) : Module("funutil", true), m_memeChannel(
 	RegisterCommand(Commands::FUN_GIVE_NEW_POLL_ACCESS, "give-new-poll-access", [this](Discord::Client& client, const Discord::Message& message, const Discord::Channel& channel) 
 	{
 		QStringList args = message.content().split(' ');
-		GuildSetting* setting = &GuildSettings::GetGuildSetting(channel.guildId());
-		QString prefix = setting->prefix;
-
-
-		if (args.first() != prefix + "give-new-poll-access") return;
 
 		Permissions::ContainsPermission(client, channel.guildId(), message.author().id(), CommandPermission::ADMIN, [this, args, message, channel](bool result) 
 		{
@@ -552,11 +534,6 @@ FunModule::FunModule(UmikoBot* client) : Module("funutil", true), m_memeChannel(
 	RegisterCommand(Commands::FUN_TAKE_NEW_POLL_ACCESS, "take-new-poll-access", [this](Discord::Client& client, const Discord::Message& message, const Discord::Channel& channel) 
 	{
 		QStringList args = message.content().split(' ');
-		GuildSetting* setting = &GuildSettings::GetGuildSetting(channel.guildId());
-		QString prefix = setting->prefix;
-
-
-		if (args.first() != prefix + "take-new-poll-access") return;
 
 		Permissions::ContainsPermission(client, channel.guildId(), message.author().id(), CommandPermission::ADMIN, [this, args, message, channel](bool result) 
 		{
