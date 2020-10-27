@@ -11,12 +11,7 @@ UserModule::UserModule()
 					[this](Discord::Client& client, const Discord::Message& message, const Discord::Channel& channel)
 	{
 		QStringList args = message.content().split(' ');
-		GuildSetting* setting = &GuildSettings::GetGuildSetting(channel.guildId());
-		QString prefix = setting->prefix;
 		snowflake_t authorId = message.author().id();
-
-		if (args.first() != prefix + "whois")
-			return;
 
 		if (args.size() != 2)
 		{
@@ -82,13 +77,8 @@ UserModule::UserModule()
 		[this](Discord::Client& client, const Discord::Message& message, const Discord::Channel& channel)
 	{
 		QStringList args = message.content().split(' ');
-		GuildSetting* setting = &GuildSettings::GetGuildSetting(channel.guildId());
-		QString prefix = setting->prefix;
 		snowflake_t authorId = message.author().id();
 		snowflake_t guildId = channel.guildId();
-
-		if (args.first() != prefix + "iam")
-			return;
 		
 		DescriptionData& data = guildDescriptionData[guildId];
 
