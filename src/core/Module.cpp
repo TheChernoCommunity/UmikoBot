@@ -63,7 +63,7 @@ void Module::Load()
 	}
 }
 
-void Module::AddAdminCommand(Discord::Client& client, const Discord::Message& message, const Discord::Channel& channel, unsigned int requiredNumberOfArgs, const QStringList& args, bool argumentShouldBeANumber, std::function<void()> callback)
+void Module::VerifyAndRunAdminCmd(Discord::Client& client, const Discord::Message& message, const Discord::Channel& channel, unsigned int requiredNumberOfArgs, const QStringList& args, bool argumentShouldBeANumber, std::function<void()> callback)
 {
 	Permissions::ContainsPermission(client, channel.guildId(), message.author().id(), CommandPermission::ADMIN, [this, args, &client, message, channel, requiredNumberOfArgs, argumentShouldBeANumber, callback](bool result) 
 	{
