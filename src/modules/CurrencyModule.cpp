@@ -443,7 +443,7 @@ CurrencyModule::CurrencyModule(UmikoBot* client) : Module("currency", true), m_c
 		if (args.first() != prefix + "setannouncechan")
 			return;
 
-		AddAdminCommand(client, message, channel, 1, args, [this, &client, channel, message]()
+		AddAdminCommand(client, message, channel, 1, args, false, [this, &client, channel, message]()
 		{
 			auto& config = getServerData(channel.guildId());
 			config.giveawayChannelId = message.channelId();
@@ -456,7 +456,7 @@ CurrencyModule::CurrencyModule(UmikoBot* client) : Module("currency", true), m_c
 		
 		QStringList args = message.content().split(' ');
 
-		AddAdminCommand(client, message, channel, 2, args, [this, &client, channel, message, args]()
+		AddAdminCommand(client, message, channel, 2, args, false, [this, &client, channel, message, args]()
 		{
 			auto& config = getServerData(channel.guildId());
 			config.currencyName = args.at(1);
@@ -469,7 +469,7 @@ CurrencyModule::CurrencyModule(UmikoBot* client) : Module("currency", true), m_c
 
 		QStringList args = message.content().split(' ');
 
-		AddAdminCommand(client, message, channel, 2, args, [this, &client, channel, message, args]()
+		AddAdminCommand(client, message, channel, 2, args, false, [this, &client, channel, message, args]()
 		{
 			auto& config = getServerData(channel.guildId());
 			config.currencySymbol = args.at(1);
@@ -482,7 +482,7 @@ CurrencyModule::CurrencyModule(UmikoBot* client) : Module("currency", true), m_c
 
 		QStringList args = message.content().split(' ');
 
-		AddAdminCommand(client, message, channel, 2, args, [this, &client, channel, message, args]()
+		AddAdminCommand(client, message, channel, 2, args, true, [this, &client, channel, message, args]()
 		{
 			auto& config = getServerData(channel.guildId());
 			config.dailyReward = args.at(1).toInt();
@@ -495,7 +495,7 @@ CurrencyModule::CurrencyModule(UmikoBot* client) : Module("currency", true), m_c
 
 		QStringList args = message.content().split(' ');
 
-		AddAdminCommand(client, message, channel, 2, args, [this, &client, channel, message, args]()
+		AddAdminCommand(client, message, channel, 2, args, true, [this, &client, channel, message, args]()
 		{
 			auto& config = getServerData(channel.guildId());
 			config.freebieReward = args.at(1).toInt();
@@ -508,7 +508,7 @@ CurrencyModule::CurrencyModule(UmikoBot* client) : Module("currency", true), m_c
 
 		QStringList args = message.content().split(' ');
 
-		AddAdminCommand(client, message, channel, 2, args, [this, &client, channel, message, args]()
+		AddAdminCommand(client, message, channel, 2, args, true, [this, &client, channel, message, args]()
 		{
 			auto& config = getServerData(channel.guildId());
 			config.randGiveawayProb = args.at(1).toDouble();
@@ -521,7 +521,7 @@ CurrencyModule::CurrencyModule(UmikoBot* client) : Module("currency", true), m_c
 
 		QStringList args = message.content().split(' ');
 
-		AddAdminCommand(client, message, channel, 2, args, [this, &client, channel, message, args]()
+		AddAdminCommand(client, message, channel, 2, args, true, [this, &client, channel, message, args]()
 		{
 			auto& config = getServerData(channel.guildId());
 			config.freebieExpireTime = args.at(1).toUInt();
@@ -533,7 +533,7 @@ CurrencyModule::CurrencyModule(UmikoBot* client) : Module("currency", true), m_c
 	{
 		QStringList args = message.content().split(' ');
 
-		AddAdminCommand(client, message, channel, 2, args, [this, &client, channel, message, args]()
+		AddAdminCommand(client, message, channel, 2, args, true, [this, &client, channel, message, args]()
 		{
 			auto& config = getServerData(channel.guildId());
 			config.gambleLoss = args.at(1).toInt();
@@ -545,7 +545,7 @@ CurrencyModule::CurrencyModule(UmikoBot* client) : Module("currency", true), m_c
 	{
 		QStringList args = message.content().split(' ');
 
-		AddAdminCommand(client, message, channel, 2, args, [this, &client, channel, message, args]()
+		AddAdminCommand(client, message, channel, 2, args, true, [this, &client, channel, message, args]()
 		{
 			auto& config = getServerData(channel.guildId());
 			config.maxGuess = args.at(1).toInt();
@@ -558,7 +558,7 @@ CurrencyModule::CurrencyModule(UmikoBot* client) : Module("currency", true), m_c
 		
 		QStringList args = message.content().split(' ');
 
-		AddAdminCommand(client, message, channel, 2, args, [this, &client, channel, message, args]()
+		AddAdminCommand(client, message, channel, 2, args, true, [this, &client, channel, message, args]()
 		{
 			auto& config = getServerData(channel.guildId());
 			config.minGuess = args.at(1).toInt();
@@ -571,7 +571,7 @@ CurrencyModule::CurrencyModule(UmikoBot* client) : Module("currency", true), m_c
 
 		QStringList args = message.content().split(' ');
 
-		AddAdminCommand(client, message, channel, 2, args, [this, &client, channel, message, args]()
+		AddAdminCommand(client, message, channel, 2, args, true, [this, &client, channel, message, args]()
 		{
 			auto& config = getServerData(channel.guildId());
 			config.gambleReward = args.at(1).toInt();
@@ -1040,7 +1040,7 @@ CurrencyModule::CurrencyModule(UmikoBot* client) : Module("currency", true), m_c
 
 		QStringList args = message.content().split(' ');
 
-		AddAdminCommand(client, message, channel, 2, args, [this, &client, channel, message, args]()
+		AddAdminCommand(client, message, channel, 2, args, true, [this, &client, channel, message, args]()
 		{
 			auto& config = getServerData(channel.guildId());
 			config.stealSuccessChance = args.at(1).toInt();
@@ -1058,7 +1058,7 @@ CurrencyModule::CurrencyModule(UmikoBot* client) : Module("currency", true), m_c
 		if (args.first() != prefix + "setstealfine")
 			return;
 
-		AddAdminCommand(client, message, channel, 2, args, [this, &client, channel, message, args]()
+		AddAdminCommand(client, message, channel, 2, args, true, [this, &client, channel, message, args]()
 		{
 			auto& config = getServerData(channel.guildId());
 			config.stealFinePercent = args.at(1).toInt();
@@ -1071,7 +1071,7 @@ CurrencyModule::CurrencyModule(UmikoBot* client) : Module("currency", true), m_c
 
 		QStringList args = message.content().split(' ');
 
-		AddAdminCommand(client, message, channel, 2, args, [this, &client, channel, message, args]()
+		AddAdminCommand(client, message, channel, 2, args, true, [this, &client, channel, message, args]()
 		{
 			auto& config = getServerData(channel.guildId());
 			config.stealVictimBonusPercent = args.at(1).toInt();
@@ -1089,7 +1089,7 @@ CurrencyModule::CurrencyModule(UmikoBot* client) : Module("currency", true), m_c
 		if (args.first() != prefix + "setstealjailhours")
 			return;
 
-		AddAdminCommand(client, message, channel, 2, args, [this, &client, channel, message, args]()
+		AddAdminCommand(client, message, channel, 2, args, true, [this, &client, channel, message, args]()
 		{
 			auto& config = getServerData(channel.guildId());
 			config.stealFailedJailTime = args.at(1).toInt();
@@ -1107,7 +1107,7 @@ CurrencyModule::CurrencyModule(UmikoBot* client) : Module("currency", true), m_c
 		if (args.first() != prefix + "setdailybonus")
 			return;
 
-		AddAdminCommand(client, message, channel, 2, args, [this, &client, channel, message, args]()
+		AddAdminCommand(client, message, channel, 2, args, true, [this, &client, channel, message, args]()
 		{
 			auto& config = getServerData(channel.guildId());
 			config.dailyBonusAmount = args.at(1).toInt();
@@ -1125,7 +1125,7 @@ CurrencyModule::CurrencyModule(UmikoBot* client) : Module("currency", true), m_c
 		if (args.first() != prefix + "setdailybonusperiod")
 			return;
 
-		AddAdminCommand(client, message, channel, 2, args, [this, &client, channel, message, args]()
+		AddAdminCommand(client, message, channel, 2, args, true, [this, &client, channel, message, args]()
 		{
 			auto& config = getServerData(channel.guildId());
 			config.dailyBonusPeriod = args.at(1).toInt();
@@ -1138,7 +1138,7 @@ CurrencyModule::CurrencyModule(UmikoBot* client) : Module("currency", true), m_c
 
 		QStringList args = message.content().split(' ');
 
-		AddAdminCommand(client, message, channel, 2, args, [this, &client, channel, message, args]()
+		AddAdminCommand(client, message, channel, 2, args, true, [this, &client, channel, message, args]()
 		{
 			auto& config = getServerData(channel.guildId());
 			auto amt = args.at(1).toDouble();
