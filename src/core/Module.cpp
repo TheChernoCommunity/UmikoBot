@@ -63,9 +63,9 @@ void Module::Load()
 	}
 }
 
-void Module::AddAdminCommand(Discord::Client& client, const Discord::Message& message, const Discord::Channel& channel, unsigned int requiredNumberOfArgs, const QStringList& args, std::function<void()> callback)
+void Module::AddAdminCommand(Discord::Client& client, const Discord::Message& message, const Discord::Channel& channel, unsigned int requiredNumberOfArgs, const QStringList& args, bool argumentShouldBeANumber, std::function<void()> callback)
 {
-	Permissions::ContainsPermission(client, channel.guildId(), message.author().id(), CommandPermission::ADMIN, [this, args, &client, message, channel, requiredNumberOfArgs, callback](bool result) 
+	Permissions::ContainsPermission(client, channel.guildId(), message.author().id(), CommandPermission::ADMIN, [this, args, &client, message, channel, requiredNumberOfArgs, argumentShouldBeANumber, callback](bool result) 
 	{
 		if (!result) 
 		{
@@ -77,6 +77,19 @@ void Module::AddAdminCommand(Discord::Client& client, const Discord::Message& me
 		{
 			client.createMessage(message.channelId(), "**Wrong Usage of Command!** ");
 			return;
+		}
+
+		if (args.size() > 1 && argumentShouldBeANumber)
+		{
+			bool ok;
+			// Should be fine to check all numbers agains double, right?
+			args.at(1).toDouble(&ok);
+
+			if (!ok)
+			{
+				client.createMessage(message.channelId(), "**Argument is not a number!**");
+				return;
+			}
 		}
 
 		callback();
