@@ -1,4 +1,5 @@
 #include "Module.h"
+#include "core/Permissions.h"
 
 #include <QtCore/QFile>
 #include <QtCore/QJsonDocument>
@@ -60,4 +61,24 @@ void Module::Load()
 		OnLoad(QJsonDocument::fromJson(file.readAll()));
 		file.close();
 	}
+}
+
+void Module::AddAdminCommand(Discord::Client& client, const Discord::Message& message, const Discord::Channel& channel, unsigned int requiredNumberOfArgs, const QStringList& args, std::function<void()> callback)
+{
+	Permissions::ContainsPermission(client, channel.guildId(), message.author().id(), CommandPermission::ADMIN, [this, args, &client, message, channel, requiredNumberOfArgs, callback](bool result) 
+	{
+		if (!result) 
+		{
+			client.createMessage(message.channelId(), "**You don't have permissions to use this command.**");
+			return;
+		}
+			
+		if (args.size() != requiredNumberOfArgs) 
+		{
+			client.createMessage(message.channelId(), "**Wrong Usage of Command!** ");
+			return;
+		}
+
+		callback();
+	});
 }
