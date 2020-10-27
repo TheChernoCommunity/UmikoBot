@@ -247,7 +247,7 @@ CurrencyModule::CurrencyModule(UmikoBot* client) : Module("currency", true), m_c
 		{
 
 			auto& serverGamble = gambleData[channel.guildId()];
-			if (guildList[channel.guildId()][getUserIndex(channel.guildId(), message.author().id())].currency() - getServerData(channel.guildId()).gambleLoss < debtMax) 
+			if (guildList[channel.guildId()][getUserIndex(channel.guildId(), message.author().id())].currency() - getServerData(channel.guildId()).gambleLoss < debtMax)
 			{
 				client.createMessage(message.channelId(), "**Nope, can't let you get to serious debt.**");
 				return;
@@ -1486,7 +1486,7 @@ void CurrencyModule::OnSave(QJsonDocument& doc) const
 	{
 		QJsonObject serverJSON;
 		
-		for (auto& user = guildList[server].begin(); user != guildList[server].end(); user++) 
+		for (auto& user = guildList[server].begin(); user != guildList[server].end(); user++)
 		{
 			QJsonObject obj;
 			obj["currency"] = user->currency();
@@ -1567,7 +1567,7 @@ void CurrencyModule::OnLoad(const QJsonDocument& doc)
 				obj[user].toObject()["isDailyClaimed"].toBool(),
 				(unsigned int) obj[user].toObject()["dailyStreak"].toInt(),
 				(unsigned int) obj[user].toObject()["numberOfDailysClaimed"].toInt(),
-				(unsigned int) obj[user].toObject()["numberOfGiveawayssClaimed"].toInt(),
+				(unsigned int) obj[user].toObject()["numberOfGiveawaysClaimed"].toInt(),
 			};
 
 			list.append(currencyData);
