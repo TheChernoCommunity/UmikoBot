@@ -967,8 +967,8 @@ CurrencyModule::CurrencyModule(UmikoBot* client) : Module("currency", true), m_c
 			{
 				QString leastBribeAmount = QString::number(config.bribeLeastAmount);
 				QString output = QString(
-					":police_officer: **I don't take such a small amount!** :police_officer:\n"
-					"*(You can always give me `%1 %2` or more)*\n"
+					":police_officer: **Pfft! Such measly amounts... Do you want to be in jail for longer?** :police_officer:\n"
+					"*(Give me some more and maybe then I could do something?...You can always give me `%1 %2` or more)*\n"
 				).arg(leastBribeAmount, config.currencySymbol);
 
 				client.createMessage(message.channelId(), output);
@@ -1001,7 +1001,10 @@ CurrencyModule::CurrencyModule(UmikoBot* client) : Module("currency", true), m_c
 					"*%1* you are free from jail now.\n"
 				).arg(authorName);
 
+				snowflake_t chan = message.channelId();
 				client.createMessage(message.channelId(), output);
+
+				UmikoBot::Instance().createReaction(chan, message.id(), utility::consts::emojis::reacts::PARTY_CAT);
 			}
 			else
 			{
