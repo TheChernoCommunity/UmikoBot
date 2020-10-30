@@ -1584,7 +1584,7 @@ void CurrencyModule::OnSave(QJsonDocument& doc) const
 			auto config = serverCurrencyConfig[server];
 			obj["name"] = config.currencyName;
 			obj["symbol"] = config.currencySymbol;
-			obj["freebieChannelId"]   = QString::number(config.giveawayChannelId);
+			obj["freebieChannelId"]        = QString::number(config.giveawayChannelId);
 			obj["dailyReward"]             = QString::number(config.dailyReward);
 			obj["freebieReward"]           = QString::number(config.freebieReward);
 			obj["gambleLoss"]              = QString::number(config.gambleLoss);
@@ -1655,27 +1655,26 @@ void CurrencyModule::OnLoad(const QJsonDocument& doc)
 		for (const auto& server : servers) {
 			CurrencyConfig config;
 			auto serverObj = rootObj[server].toObject();
-			config.currencyName = serverObj["name"].toString();
-			config.currencySymbol = serverObj["symbol"].toString();
-			config.giveawayChannelId = serverObj["freebieChannelId"].toString().toULongLong();
-			config.dailyReward = serverObj["dailyReward"].toString().toInt();
-			config.freebieReward = serverObj["freebieReward"].toString().toInt();
-			config.gambleLoss = serverObj["gambleLoss"].toString().toInt();
-			config.gambleReward = serverObj["gambleReward"].toString().toInt();
-			config.minGuess = serverObj["gambleMinGuess"].toString().toInt();
-			config.maxGuess = serverObj["gambleMaxGuess"].toString().toInt();
-			config.randGiveawayProb = serverObj["freebieProb"].toString().toDouble();
-			config.freebieExpireTime = serverObj["freebieExpireTime"].toString().toUInt();
-			config.dailyBonusAmount = serverObj["dailyBonusAmount"].toString("50").toUInt();
-			config.dailyBonusPeriod = serverObj["dailyBonusPeriod"].toString("3").toUInt();
-			config.stealSuccessChance = serverObj["stealSuccessChance"].toString("30").toUInt();
-			config.stealFinePercent = serverObj["stealFinePercent"].toString("50").toUInt();
+			config.currencyName            = serverObj["name"].toString();
+			config.currencySymbol          = serverObj["symbol"].toString();
+			config.giveawayChannelId       = serverObj["freebieChannelId"].toString().toULongLong();
+			config.dailyReward             = serverObj["dailyReward"].toString().toInt();
+			config.freebieReward           = serverObj["freebieReward"].toString().toInt();
+			config.gambleLoss              = serverObj["gambleLoss"].toString().toInt();
+			config.gambleReward            = serverObj["gambleReward"].toString().toInt();
+			config.minGuess                = serverObj["gambleMinGuess"].toString().toInt();
+			config.maxGuess                = serverObj["gambleMaxGuess"].toString().toInt();
+			config.randGiveawayProb        = serverObj["freebieProb"].toString().toDouble();
+			config.freebieExpireTime       = serverObj["freebieExpireTime"].toString().toUInt();
+			config.dailyBonusAmount        = serverObj["dailyBonusAmount"].toString("50").toUInt();
+			config.dailyBonusPeriod        = serverObj["dailyBonusPeriod"].toString("3").toUInt();
+			config.stealSuccessChance      = serverObj["stealSuccessChance"].toString("30").toUInt();
+			config.stealFinePercent        = serverObj["stealFinePercent"].toString("50").toUInt();
 			config.stealVictimBonusPercent = serverObj["stealVictimBonusPercent"].toString("25").toUInt();
-			config.stealFailedJailTime = serverObj["stealFailedJailTime"].toString("3").toUInt();
-
-			//config.bribeSuccessChance = serverObj["bribeSuccessChance"].toString("30").toUInt();
-			//config.bribeMaxAmount = serverObj["bribeMaxAmount"].toString().toInt();
-			//config.bribeLeastAmount = serverObj["bribeLeastAmount"].toString().toInt();
+			config.stealFailedJailTime     = serverObj["stealFailedJailTime"].toString("3").toUInt();
+			config.bribeSuccessChance      = serverObj["bribeSuccessChance"].toString("30").toUInt();
+			config.bribeMaxAmount          = serverObj["bribeMaxAmount"].toString().toInt();
+			config.bribeLeastAmount        = serverObj["bribeLeastAmount"].toString().toInt();
 
 			auto guildId = server.toULongLong();
 			serverCurrencyConfig.insert(guildId, config);
