@@ -6,10 +6,10 @@
 
 class UmikoBot;
 
-class CurrencyModule : public Module 
+class CurrencyModule : public Module
 {
 public:
-	struct UserCurrency 
+	struct UserCurrency
 	{
 	private:
 		double m_Currency;
@@ -17,6 +17,7 @@ public:
 	public:
 		snowflake_t userId;
 		bool isDailyClaimed;
+		bool isBribeUsed;
 		double maxCurrency;
 		unsigned int dailyStreak;
 		QTimer* jailTimer;
@@ -24,7 +25,7 @@ public:
 		unsigned int numberOfGiveawaysClaimed;
 
 		UserCurrency(snowflake_t userId, double currency, double maxCurrency, bool isDailyClaimed, unsigned int dailyStreak, unsigned int numberOfDailysClaimed, unsigned int numberOfGiveawaysClaimed)
-			: userId(userId), maxCurrency(maxCurrency), isDailyClaimed(isDailyClaimed), dailyStreak(dailyStreak), jailTimer(new QTimer()), numberOfDailysClaimed(numberOfDailysClaimed), numberOfGiveawaysClaimed(numberOfGiveawaysClaimed)
+			: userId(userId), maxCurrency(maxCurrency), isDailyClaimed(isDailyClaimed), isBribeUsed(false), dailyStreak(dailyStreak), jailTimer(new QTimer()), numberOfDailysClaimed(numberOfDailysClaimed), numberOfGiveawaysClaimed(numberOfGiveawaysClaimed)
 		{
 			setCurrency(currency);
 			jailTimer->setSingleShot(true);
@@ -36,7 +37,7 @@ public:
 		}
 
 		UserCurrency(const UserCurrency& other)
-			: userId(other.userId), maxCurrency(other.maxCurrency), isDailyClaimed(other.isDailyClaimed), dailyStreak(other.dailyStreak), jailTimer(new QTimer()), numberOfDailysClaimed(other.numberOfDailysClaimed), numberOfGiveawaysClaimed(other.numberOfGiveawaysClaimed)
+			: userId(other.userId), maxCurrency(other.maxCurrency), isDailyClaimed(other.isDailyClaimed), isBribeUsed(other.isBribeUsed), dailyStreak(other.dailyStreak), jailTimer(new QTimer()), numberOfDailysClaimed(other.numberOfDailysClaimed), numberOfGiveawaysClaimed(other.numberOfGiveawaysClaimed)
 		{
 			setCurrency(other.currency());
 			jailTimer->setSingleShot(true);
@@ -53,6 +54,7 @@ public:
 			maxCurrency = other.maxCurrency;
 			setCurrency(other.currency());
 			isDailyClaimed = other.isDailyClaimed;
+			isBribeUsed = other.isBribeUsed;
 			dailyStreak = other.dailyStreak;
 			numberOfDailysClaimed = other.numberOfDailysClaimed;
 			numberOfGiveawaysClaimed = other.numberOfGiveawaysClaimed;
@@ -84,27 +86,31 @@ public:
 
 	struct CurrencyConfig
 	{
-		double randGiveawayProb { 0.001 };
-		unsigned int freebieExpireTime { 60 };	//in seconds
-		int dailyReward { 100 };
-		int freebieReward { 300 };
-		int gambleReward { 50 };
-		int minGuess { 0 };
-		int maxGuess { 5 };
-		int gambleLoss { 10 };
-		snowflake_t giveawayChannelId { 0 };
+		double randGiveawayProb{ 0.001 };
+		unsigned int freebieExpireTime{ 60 };	//in seconds
+		int dailyReward{ 100 };
+		int freebieReward{ 300 };
+		int gambleReward{ 50 };
+		int minGuess{ 0 };
+		int maxGuess{ 5 };
+		int gambleLoss{ 10 };
+		snowflake_t giveawayChannelId{ 0 };
 		QString currencyName;
 		QString currencySymbol;
 		bool isRandomGiveawayDone{ false };
 		bool allowGiveaway{ false };
-		snowflake_t giveawayClaimer { 0 };
+		snowflake_t giveawayClaimer{ 0 };
 		QTimer* freebieTimer{ nullptr };
-		int dailyBonusAmount { 50 };
-		int dailyBonusPeriod { 3 };
-		int stealSuccessChance { 30 };
-		int stealFinePercent { 50 };
-		int stealVictimBonusPercent { 25 };
-		int stealFailedJailTime { 3 };
+		int dailyBonusAmount{ 50 };
+		int dailyBonusPeriod{ 3 };
+		int stealSuccessChance{ 30 };
+		int stealFinePercent{ 50 };
+		int stealVictimBonusPercent{ 25 };
+		int stealFailedJailTime{ 3 };
+
+		int bribeMaxAmount{ 150 };
+		int bribeLeastAmount{ 20 };
+		int bribeSuccessChance{ 69 };
 	};
 
 private:
@@ -118,7 +124,7 @@ private:
 	QTimer m_timer; //! For dailies, and the giveaway
 
 	QMap<snowflake_t, CurrencyConfig>serverCurrencyConfig;
-	
+
 	struct GambleData {
 		bool gamble{ false };
 		bool doubleOrNothing{ false };
@@ -128,7 +134,7 @@ private:
 		double betAmount{ 0 }; //!Use if doubleOrNothing
 		QTimer* timer;
 	};
-	
+
 	//! Map each !gamble (on a server) with its own gamble
 	QMap<snowflake_t, GambleData> gambleData;
 
@@ -137,7 +143,7 @@ private:
 private:
 	void OnSave(QJsonDocument& doc) const override;
 	void OnLoad(const QJsonDocument& doc) override;
-	
+
 	snowflake_t getUserIndex(snowflake_t guild, snowflake_t id) {
 
 		for (auto it = guildList[guild].begin(); it != guildList[guild].end(); ++it) {
@@ -146,7 +152,7 @@ private:
 			}
 		}
 		//! If user is not added to the system, make a new one
-		guildList[guild].append(UserCurrency { id, 0, 0, false, 0, 0, 0 });
+		guildList[guild].append(UserCurrency{ id, 0, 0, false, 0, 0, 0 });
 		return std::distance(guildList[guild].begin(), std::prev(guildList[guild].end()));
 	}
 
@@ -166,7 +172,7 @@ public:
 		}
 
 		//! If user is not added to the system, make a new one
-		UserCurrency user { id, 0, 0, false, 0, 0, 0 };
+		UserCurrency user{ id, 0, 0, false, 0, 0, 0 };
 
 		guildList[guild].append(user);
 		return guildList[guild].back();
