@@ -208,6 +208,27 @@
 		"usage": "donate <amount-to-distribute> <list-of-people>",
 		"additional": "**Example: ** `!donate 20 @Person1 @Person2` gives both Person1 and Person2 10 credits each."
 	},
+	"CURRENCY_BRIBE": {
+		"brief": "Chance to get out of the jail by paying a fixed amount, otherwise it will add more time to your sentence",
+		"usage": "bribe <amount-to-bribe>",
+		"additional": "**Example: ** `!bribe 60` will give you a chance to get out of the jail and take 60 or add more time to your sentence without taking the money",
+		"admin": false
+	},
+	"CURRENCY_SET_BRIBE_SUCCESS_CHANCE": {
+		"brief": "Sets the chance (as a percentage) that a !bribe will succeed.",
+		"usage": "setbribesuccesschance <chance>",
+		"admin": true
+	},
+	"CURRENCY_SET_MAX_BRIBE_AMOUNT": {
+		"brief": "Sets the max amount that a user can !bribe.",
+		"usage": "setmaxbribeamount <amount>",
+		"admin": true
+	},
+	"CURRENCY_SET_LEAST_BRIBE_AMOUNT": {
+		"brief": "Sets the least amount that a user can !bribe.",
+		"usage": "setleastbribeamount <amount>",
+		"admin": true
+	},
 	"CURRENCY_STEAL": {
 		"brief": "Chance to steal an amount from a user, otherwise it will fine you.",
 		"usage": "steal <amount-to-steal> <person-to-steal-from>",

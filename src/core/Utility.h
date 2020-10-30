@@ -15,7 +15,8 @@ namespace utility
 		{
 			namespace reacts 
 			{
-				constexpr auto ANGRY_PING = "anrgyping:769293579251613736";
+				constexpr auto ANGRY_PING        = "anrgyping:769293579251613736";
+				constexpr auto PARTY_CAT = "partyCat:748191651830169691";
 			}
 
 			constexpr auto GREEN_BLOCK = "<:green_block:769176236101861407>";

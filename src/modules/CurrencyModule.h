@@ -17,6 +17,7 @@ public:
 	public:
 		snowflake_t userId;
 		bool isDailyClaimed;
+		bool isBribeUsed;
 		double maxCurrency;
 		unsigned int dailyStreak;
 		QTimer* jailTimer;
@@ -24,7 +25,7 @@ public:
 		unsigned int numberOfGiveawaysClaimed;
 
 		UserCurrency(snowflake_t userId, double currency, double maxCurrency, bool isDailyClaimed, unsigned int dailyStreak, unsigned int numberOfDailysClaimed, unsigned int numberOfGiveawaysClaimed)
-			: userId(userId), maxCurrency(maxCurrency), isDailyClaimed(isDailyClaimed), dailyStreak(dailyStreak), jailTimer(new QTimer()), numberOfDailysClaimed(numberOfDailysClaimed), numberOfGiveawaysClaimed(numberOfGiveawaysClaimed)
+			: userId(userId), maxCurrency(maxCurrency), isDailyClaimed(isDailyClaimed), isBribeUsed(false), dailyStreak(dailyStreak), jailTimer(new QTimer()), numberOfDailysClaimed(numberOfDailysClaimed), numberOfGiveawaysClaimed(numberOfGiveawaysClaimed)
 		{
 			setCurrency(currency);
 			jailTimer->setSingleShot(true);
@@ -36,7 +37,7 @@ public:
 		}
 
 		UserCurrency(const UserCurrency& other)
-			: userId(other.userId), maxCurrency(other.maxCurrency), isDailyClaimed(other.isDailyClaimed), dailyStreak(other.dailyStreak), jailTimer(new QTimer()), numberOfDailysClaimed(other.numberOfDailysClaimed), numberOfGiveawaysClaimed(other.numberOfGiveawaysClaimed)
+			: userId(other.userId), maxCurrency(other.maxCurrency), isDailyClaimed(other.isDailyClaimed), isBribeUsed(other.isBribeUsed), dailyStreak(other.dailyStreak), jailTimer(new QTimer()), numberOfDailysClaimed(other.numberOfDailysClaimed), numberOfGiveawaysClaimed(other.numberOfGiveawaysClaimed)
 		{
 			setCurrency(other.currency());
 			jailTimer->setSingleShot(true);
@@ -53,6 +54,7 @@ public:
 			maxCurrency = other.maxCurrency;
 			setCurrency(other.currency());
 			isDailyClaimed = other.isDailyClaimed;
+			isBribeUsed = other.isBribeUsed;
 			dailyStreak = other.dailyStreak;
 			numberOfDailysClaimed = other.numberOfDailysClaimed;
 			numberOfGiveawaysClaimed = other.numberOfGiveawaysClaimed;
@@ -105,6 +107,10 @@ public:
 		int stealFinePercent { 50 };
 		int stealVictimBonusPercent { 25 };
 		int stealFailedJailTime { 3 };
+
+		int bribeMaxAmount{ 150 };
+		int bribeLeastAmount{ 20 };
+		int bribeSuccessChance{ 69 };
 	};
 
 private:
