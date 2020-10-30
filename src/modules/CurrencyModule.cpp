@@ -902,7 +902,6 @@ CurrencyModule::CurrencyModule(UmikoBot* client) : Module("currency", true), m_c
 		client.createMessage(message.channelId(), embed);
 
 	});
-	//Start********************************************************************************************************************************************
 	RegisterCommand(Commands::CURRENCY_BRIBE, "bribe", [this](Discord::Client& client, const Discord::Message& message, const Discord::Channel& channel)
 		{
 
@@ -918,25 +917,31 @@ CurrencyModule::CurrencyModule(UmikoBot* client) : Module("currency", true), m_c
 
 			int remainingJailTime = guildList[channel.guildId()][getUserIndex(channel.guildId(), authorId)].jailTimer->remainingTime();
 			bool inJail = guildList[channel.guildId()][getUserIndex(channel.guildId(), authorId)].jailTimer->isActive();
-			bool bribeUsed = guildList[channel.guildId()][getUserIndex(channel.guildId(), authorId)].isBribeUsed;
 			auto& authorCurrency = guildList[channel.guildId()][getUserIndex(channel.guildId(), authorId)];
 
 			QRegExp re("[+]?\\d*\\.?\\d+");
 			if (!re.exactMatch(args.at(1)))
 			{
-				client.createMessage(message.channelId(), "**You can't bribe invalid amounts**");
+				client.createMessage(message.channelId(), "**Your bribe amount must be valid!**");
 				return;
 			}
 
 			double amountToBribe = args.at(1).toDouble();
 
 			auto guildID = channel.guildId();
-			QObject::connect(guildList[channel.guildId()][getUserIndex(channel.guildId(), authorId)].jailTimer, &QTimer::timeout, [this, &client, guildID, authorId]()
+			QObject::connect(authorCurrency.jailTimer, &QTimer::timeout, [this, &client, guildID, authorId]()
 				{
 					guildList[guildID][getUserIndex(guildID, authorId)].isBribeUsed = false;
 				});
-
-			if (inJail && guildList[channel.guildId()][getUserIndex(channel.guildId(), authorId)].isBribeUsed)
+			if (inJail == false)
+			{
+				QString output = QString(
+					":police_officer: **Hey you're not in JAIL!** :police_officer:\n"
+				);
+				client.createMessage(message.channelId(), output);
+				return;
+			}
+			if (inJail && authorCurrency.isBribeUsed)
 			{
 				QString time = utility::StringifyMilliseconds(remainingJailTime);
 				QString output = QString(
@@ -963,24 +968,16 @@ CurrencyModule::CurrencyModule(UmikoBot* client) : Module("currency", true), m_c
 				QString leastBribeAmount = QString::number(config.bribeLeastAmount);
 				QString output = QString(
 					":police_officer: **I don't take such a small amount!** :police_officer:\n"
-					"*(You can always give me `%1` or more %2 )*\n"
+					"*(You can always give me `%1 %2` or more)*\n"
 				).arg(leastBribeAmount, config.currencySymbol);
 
 				client.createMessage(message.channelId(), output);
 				return;
 			}
-			if (inJail == false)
-			{
-				QString output = QString(
-					":police_officer: **Hey you're not in JAIL!** :police_officer:\n"
-				);
-				client.createMessage(message.channelId(), output);
-				return;
-			}
 
-			if (inJail && guildList[channel.guildId()][getUserIndex(channel.guildId(), authorId)].currency() - (amountToBribe) < debtMax)
+			if (inJail && authorCurrency.currency() - (amountToBribe) < debtMax)
 			{
-				client.createMessage(message.channelId(), ":police_officer: **I will be loved to be bribed with that amount but are you sure that you can give me that amount?** :police_officer:");
+				client.createMessage(message.channelId(), ":police_officer: **I would love to be bribed with that much money but unfortunately you can't afford it.** :police_officer:");
 				return;
 			}
 
@@ -994,7 +991,7 @@ CurrencyModule::CurrencyModule(UmikoBot* client) : Module("currency", true), m_c
 			std::discrete_distribution<> distribution{ { 1 - successChance, successChance } };
 			int roll = distribution(prng);
 
-			if (inJail && roll && bribeUsed == false)
+			if (roll)
 			{
 				authorCurrency.setCurrency(authorCurrency.currency() - amountToBribe);
 				authorCurrency.jailTimer->stop();
@@ -1006,16 +1003,16 @@ CurrencyModule::CurrencyModule(UmikoBot* client) : Module("currency", true), m_c
 
 				client.createMessage(message.channelId(), output);
 			}
-			else if(inJail && !roll && bribeUsed == false)
+			else
 			{
-				guildList[channel.guildId()][getUserIndex(channel.guildId(), authorId)].isBribeUsed = true;
+				authorCurrency.isBribeUsed = true;
 				int totalTime = remainingJailTime + 3600000;
 				authorCurrency.jailTimer->start(totalTime);
 
 				QString time = utility::StringifyMilliseconds(totalTime);
 
 				QString output = QString(
-					":police_officer: **Your bribes don't affect my loyality!** :police_officer:\n"
+					":police_officer: **Your bribes don't affect my loyalty!** :police_officer:\n"
 					"You have been reported and your sentence has been extended by `1` hour!.\n"
 					"*(You need to wait %1 to get out of jail)*"
 				).arg(time);
@@ -1114,7 +1111,6 @@ CurrencyModule::CurrencyModule(UmikoBot* client) : Module("currency", true), m_c
 
 					});
 			});
-	//End*****************************************************************************************************************************************
 	RegisterCommand(Commands::CURRENCY_STEAL, "steal", [this](Discord::Client& client, const Discord::Message& message, const Discord::Channel& channel)
 	{
 
