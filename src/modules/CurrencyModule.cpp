@@ -1584,21 +1584,24 @@ void CurrencyModule::OnSave(QJsonDocument& doc) const
 			auto config = serverCurrencyConfig[server];
 			obj["name"] = config.currencyName;
 			obj["symbol"] = config.currencySymbol;
-			obj["freebieChannelId"] = QString::number(config.giveawayChannelId);
-			obj["dailyReward"] = QString::number(config.dailyReward);
-			obj["freebieReward"] = QString::number(config.freebieReward);
-			obj["gambleLoss"] = QString::number(config.gambleLoss);
-			obj["gambleReward"] = QString::number(config.gambleReward);
-			obj["gambleMinGuess"] = QString::number(config.minGuess);
-			obj["gambleMaxGuess"] = QString::number(config.maxGuess);
-			obj["freebieProb"] = QString::number(config.randGiveawayProb);
-			obj["freebieExpireTime"] = QString::number(config.freebieExpireTime);
-			obj["dailyBonusAmount"] = QString::number(config.dailyBonusAmount);
-			obj["dailyBonusPeriod"] = QString::number(config.dailyBonusPeriod);
-			obj["stealSuccessChance"] = QString::number(config.stealSuccessChance);
-			obj["stealFinePercent"] = QString::number(config.stealFinePercent);
+			obj["freebieChannelId"]   = QString::number(config.giveawayChannelId);
+			obj["dailyReward"]             = QString::number(config.dailyReward);
+			obj["freebieReward"]           = QString::number(config.freebieReward);
+			obj["gambleLoss"]              = QString::number(config.gambleLoss);
+			obj["gambleReward"]            = QString::number(config.gambleReward);
+			obj["gambleMinGuess"]          = QString::number(config.minGuess);
+			obj["gambleMaxGuess"]          = QString::number(config.maxGuess);
+			obj["freebieProb"]             = QString::number(config.randGiveawayProb);
+			obj["freebieExpireTime"]       = QString::number(config.freebieExpireTime);
+			obj["dailyBonusAmount"]        = QString::number(config.dailyBonusAmount);
+			obj["dailyBonusPeriod"]        = QString::number(config.dailyBonusPeriod);
+			obj["stealSuccessChance"]      = QString::number(config.stealSuccessChance);
+			obj["stealFinePercent"]        = QString::number(config.stealFinePercent);
 			obj["stealVictimBonusPercent"] = QString::number(config.stealVictimBonusPercent);
-			obj["stealFailedJailTime"] = QString::number(config.stealFailedJailTime);
+			obj["stealFailedJailTime"]     = QString::number(config.stealFailedJailTime);
+			obj["bribeMaxAmount"]          = QString::number(config.bribeMaxAmount);
+			obj["bribeLeastAmount"]        = QString::number(config.bribeLeastAmount);
+			obj["bribeSuccessChance"]      = QString::number(config.bribeSuccessChance);
 
 			serverList[QString::number(server)] = obj;
 			
@@ -1669,6 +1672,10 @@ void CurrencyModule::OnLoad(const QJsonDocument& doc)
 			config.stealFinePercent = serverObj["stealFinePercent"].toString("50").toUInt();
 			config.stealVictimBonusPercent = serverObj["stealVictimBonusPercent"].toString("25").toUInt();
 			config.stealFailedJailTime = serverObj["stealFailedJailTime"].toString("3").toUInt();
+
+			//config.bribeSuccessChance = serverObj["bribeSuccessChance"].toString("30").toUInt();
+			//config.bribeMaxAmount = serverObj["bribeMaxAmount"].toString().toInt();
+			//config.bribeLeastAmount = serverObj["bribeLeastAmount"].toString().toInt();
 
 			auto guildId = server.toULongLong();
 			serverCurrencyConfig.insert(guildId, config);
