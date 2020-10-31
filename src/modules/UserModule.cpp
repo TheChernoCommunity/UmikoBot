@@ -195,6 +195,84 @@ UserModule::UserModule()
 		});
 
 	});
+
+	
+	RegisterCommand(Commands::USER_MODULE_SAFE_MODE, "safemode", [this](Discord::Client& client, const Discord::Message& message, const Discord::Channel& channel)
+	{
+		QStringList args = message.content().split(' ');
+		snowflake_t authorId = message.author().id();
+
+		if (args.size() < 1)
+		{
+			client.createMessage(message.channelId(), "**Wrong Usage of Command!**");
+			return;
+		}
+
+		for (int i = 0; i < args.size(); i++)
+		{
+			auto text = args[i].toLower();
+			QString next = "";
+			if (i + 1 < args.size())
+			{
+				next = args[i + 1];
+			}
+
+			if (text == "--on")
+			{
+				CurrencyModule* currencyModule = static_cast<CurrencyModule*>(UmikoBot::Instance().GetModuleByName("currency"));
+				if (currencyModule)
+				{
+					const CurrencyModule::CurrencyConfig& serverConfig = currencyModule->getServerData(channel.guildId());
+					const CurrencyModule::UserCurrency& userCurrency = currencyModule->getUserData(channel.guildId(), authorId);
+
+					if (!userCurrency.canSteal && !userCurrency.canClaimFreebies)
+					{
+						client.createMessage(message.channelId(), "**You are already in safemode!**");
+						return;
+					}
+					else if(userCurrency.canSteal && userCurrency.canClaimFreebies)
+					{
+						currencyModule->setSafeMode(channel, message, true);
+
+						if (userCurrency.jailTimer->isActive())
+						{
+							client.createMessage(message.channelId(), "**You can't go into safemode while in jail!**");
+							return;
+						}
+
+						client.createMessage(message.channelId(), "**Safe Mode on!**");
+					}
+				}
+			}
+			else if (text == "--off")
+			{
+				CurrencyModule* currencyModule = static_cast<CurrencyModule*>(UmikoBot::Instance().GetModuleByName("currency"));
+				if (currencyModule)
+				{
+					const CurrencyModule::CurrencyConfig& serverConfig = currencyModule->getServerData(channel.guildId());
+					const CurrencyModule::UserCurrency& userCurrency = currencyModule->getUserData(channel.guildId(), authorId);
+
+					if (userCurrency.canSteal && userCurrency.canClaimFreebies)
+					{
+						client.createMessage(message.channelId(), "**You are not in safemode!**");
+						return;
+					}
+					else if (!userCurrency.canSteal && !userCurrency.canClaimFreebies)
+					{
+						currencyModule->setSafeMode(channel, message, false);
+						client.createMessage(message.channelId(), "**Safe Mode off!**");
+					}
+				}
+			}
+			else if(text.isEmpty())
+			{
+				client.createMessage(message.channelId(), "**Wrong Usage of Command!**");
+				return;
+			}
+		}
+
+	});
+	
 }
 
 void UserModule::OnSave(QJsonDocument& doc) const

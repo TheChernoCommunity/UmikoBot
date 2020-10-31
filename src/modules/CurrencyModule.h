@@ -17,15 +17,17 @@ public:
 	public:
 		snowflake_t userId;
 		bool isDailyClaimed;
+		bool canClaimFreebies;
 		bool isBribeUsed;
 		double maxCurrency;
+		bool canSteal;
 		unsigned int dailyStreak;
 		QTimer* jailTimer;
 		unsigned int numberOfDailysClaimed;
 		unsigned int numberOfGiveawaysClaimed;
 
 		UserCurrency(snowflake_t userId, double currency, double maxCurrency, bool isDailyClaimed, unsigned int dailyStreak, unsigned int numberOfDailysClaimed, unsigned int numberOfGiveawaysClaimed)
-			: userId(userId), maxCurrency(maxCurrency), isDailyClaimed(isDailyClaimed), isBribeUsed(false), dailyStreak(dailyStreak), jailTimer(new QTimer()), numberOfDailysClaimed(numberOfDailysClaimed), numberOfGiveawaysClaimed(numberOfGiveawaysClaimed)
+			: userId(userId), maxCurrency(maxCurrency), isDailyClaimed(isDailyClaimed), isBribeUsed(false), dailyStreak(dailyStreak), jailTimer(new QTimer()), numberOfDailysClaimed(numberOfDailysClaimed), numberOfGiveawaysClaimed(numberOfGiveawaysClaimed), canSteal(true), canClaimFreebies(true)
 		{
 			setCurrency(currency);
 			jailTimer->setSingleShot(true);
@@ -37,7 +39,7 @@ public:
 		}
 
 		UserCurrency(const UserCurrency& other)
-			: userId(other.userId), maxCurrency(other.maxCurrency), isDailyClaimed(other.isDailyClaimed), isBribeUsed(other.isBribeUsed), dailyStreak(other.dailyStreak), jailTimer(new QTimer()), numberOfDailysClaimed(other.numberOfDailysClaimed), numberOfGiveawaysClaimed(other.numberOfGiveawaysClaimed)
+			: userId(other.userId), maxCurrency(other.maxCurrency), isDailyClaimed(other.isDailyClaimed), isBribeUsed(other.isBribeUsed), dailyStreak(other.dailyStreak), jailTimer(new QTimer()), numberOfDailysClaimed(other.numberOfDailysClaimed), numberOfGiveawaysClaimed(other.numberOfGiveawaysClaimed), canSteal(other.canSteal), canClaimFreebies(other.canClaimFreebies)
 		{
 			setCurrency(other.currency());
 			jailTimer->setSingleShot(true);
@@ -82,13 +84,31 @@ public:
 			if (maxCurrency < currency())
 				maxCurrency = currency();
 		}
+
+		void setCanSteal(bool val) 
+		{
+			canSteal = val;
+		}
+
+		bool isInSafemode() 
+		{
+			if (!canSteal && !canClaimFreebies)
+			{
+				return true;
+			}
+			else if(canSteal && canClaimFreebies)
+			{
+				return false;
+			}
+		}
+
 	};
 
 	struct CurrencyConfig
 	{
 		double randGiveawayProb { 0.001 };
 		unsigned int freebieExpireTime { 60 };	//in seconds
-		int dailyReward { 100 };
+		int dailyReward { 69696969 };
 		int freebieReward { 300 };
 		int gambleReward { 50 };
 		int minGuess { 0 };
@@ -98,7 +118,7 @@ public:
 		QString currencyName;
 		QString currencySymbol;
 		bool isRandomGiveawayDone{ false };
-		bool allowGiveaway{ false };
+		bool allowGiveaway{ true };
 		snowflake_t giveawayClaimer { 0 };
 		QTimer* freebieTimer{ nullptr };
 		int dailyBonusAmount { 50 };
@@ -159,6 +179,7 @@ public:
 	CurrencyModule(UmikoBot* client);
 	void StatusCommand(QString& result, snowflake_t guild, snowflake_t user) override;
 	void OnMessage(Discord::Client& client, const Discord::Message& message) override;
+	void setSafeMode(Discord::Channel channel, Discord::Message msg, bool on);
 
 	UserCurrency getUserData(snowflake_t guild, snowflake_t id)
 	{

@@ -384,7 +384,12 @@ CurrencyModule::CurrencyModule(UmikoBot* client) : Module("currency", true), m_c
 			return;
 		}
 
-		
+		if (!guildList[channel.guildId()][getUserIndex(channel.guildId(), message.author().id())].canClaimFreebies)
+		{
+			client.createMessage(message.channelId(), "**You can't claim freebies while in safemode!**");
+			return;
+		}
+
 		if (args.size() == 1) 
 		{
 			if (!getServerData(channel.guildId()).isRandomGiveawayDone) 
@@ -908,6 +913,7 @@ CurrencyModule::CurrencyModule(UmikoBot* client) : Module("currency", true), m_c
 			QStringList args = message.content().split(' ');
 			auto& config = getServerData(channel.guildId());
 			snowflake_t authorId = message.author().id();
+			auto guildID = channel.guildId();
 
 			auto& authorCurrency = guildList[channel.guildId()][getUserIndex(channel.guildId(), authorId)];
 			int remainingJailTime = authorCurrency.jailTimer->remainingTime();
@@ -920,6 +926,12 @@ CurrencyModule::CurrencyModule(UmikoBot* client) : Module("currency", true), m_c
 					":police_officer: **Hey you're not in JAIL!** :police_officer:\n"
 				);
 				client.createMessage(message.channelId(), output);
+				return;
+			}
+
+			if (guildList[guildID][getUserIndex(guildID, authorId)].isInSafemode())
+			{
+				client.createMessage(message.channelId(), "**You can't bribe while in safemode! ||How did you get in jail while in safemode :makes_you_wonder: || **");
 				return;
 			}
 
@@ -938,7 +950,7 @@ CurrencyModule::CurrencyModule(UmikoBot* client) : Module("currency", true), m_c
 
 			double amountToBribe = args.at(1).toDouble();
 
-			auto guildID = channel.guildId();
+			
 			QObject::connect(authorCurrency.jailTimer, &QTimer::timeout, [this, &client, guildID, authorId]()
 				{
 					guildList[guildID][getUserIndex(guildID, authorId)].isBribeUsed = false;
@@ -1128,6 +1140,17 @@ CurrencyModule::CurrencyModule(UmikoBot* client) : Module("currency", true), m_c
 			return;
 		}
 
+		CurrencyModule* currencyModule = static_cast<CurrencyModule*>(UmikoBot::Instance().GetModuleByName("currency"));
+		if (currencyModule)
+		{
+			const CurrencyModule::UserCurrency& userCurrency = currencyModule->getUserData(channel.guildId(), authorId);
+			if (userCurrency.canSteal == false)
+			{
+				client.createMessage(message.channelId(), "**You can't steal while in safemode!**");
+				return;
+			}
+		}
+
 		int jailRemainingTime = guildList[channel.guildId()][getUserIndex(channel.guildId(), authorId)].jailTimer->remainingTime();
 		if (jailRemainingTime > 0)
 		{
@@ -1171,6 +1194,13 @@ CurrencyModule::CurrencyModule(UmikoBot* client) : Module("currency", true), m_c
 		}
 
 		snowflake_t victimId = mentions[0].id();
+		
+		if (guildList[channel.guildId()][getUserIndex(channel.guildId(), victimId)].isInSafemode())
+		{
+			client.createMessage(message.channelId(), "**The victim is in safemode! **");
+			return;
+		}
+
 		if (victimId == authorId)
 		{
 			client.createMessage(message.channelId(), "**You cannot steal from yourself.**");
@@ -1545,6 +1575,23 @@ void CurrencyModule::OnMessage(Discord::Client& client, const Discord::Message& 
 		});
 
 	Module::OnMessage(client, message);
+}
+
+void CurrencyModule::setSafeMode(Discord::Channel channel, Discord::Message msg, bool on)
+{
+	auto guildID = channel.guildId();
+	auto authorId = msg.author().id();
+
+	if (on)
+	{
+		guildList[guildID][getUserIndex(guildID, authorId)].canSteal = false;
+		guildList[guildID][getUserIndex(guildID, authorId)].canClaimFreebies = false;
+	}
+	else 
+	{
+		guildList[guildID][getUserIndex(guildID, authorId)].canSteal = true;
+		guildList[guildID][getUserIndex(guildID, authorId)].canClaimFreebies = true;
+	}
 }
 
 void CurrencyModule::OnSave(QJsonDocument& doc) const 
