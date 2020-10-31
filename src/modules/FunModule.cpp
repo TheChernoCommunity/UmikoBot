@@ -70,26 +70,29 @@ FunModule::FunModule(UmikoBot* client) : Module("funutil", true), m_memeChannel(
 		{
 
 		QStringList args = message.content().split(' ');
-		GuildSetting* setting = &GuildSettings::GetGuildSetting(channel.guildId());
-		QString prefix = setting->prefix;
+		
+		double max;
+		double min;
 
-		int max;
-		int min;
-
-		if (args.size() == 1) 
+		if (args.size() != 3)
 		{
 			client.createMessage(message.channelId(), "**Wrong Usage of Command!** ");
 			return;
 		}
 
-		if (args.size() == 2)
+		QRegExp re("[+-]?\\d*\\.?\\d+");
+		if (!re.exactMatch(args.at(1)) || !re.exactMatch(args.at(2)))
 		{
-			min = 1;
+			client.createMessage(message.channelId(), "**You can't roll invlid amounts!**");
+			return;
 		}
-		else
+
+		if (args.at(1) == args.at(2))
 		{
-			min = args.at(1).toDouble();
+			client.createMessage(message.channelId(), "**The numbers are same, please roll different numbers.**");
+			return;
 		}
+		min = args.at(1).toDouble();
 		max = args.at(2).toDouble();
 		
 		std::random_device rand_device;
@@ -100,7 +103,7 @@ FunModule::FunModule(UmikoBot* client) : Module("funutil", true), m_memeChannel(
 
 		std::uniform_int_distribution<> dist(min, max);
 
-		QString text = QString("My Value was : " + QString::number(dist(gen)));
+		QString text = QString("My Value was : **" + QString::number(dist(gen)) + "**");
 		client.createMessage(message.channelId(), text);
 
 	});
