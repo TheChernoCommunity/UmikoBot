@@ -291,20 +291,14 @@ UmikoBot::UmikoBot(QObject* parent)
 	m_commands.push_back({ Commands::GLOBAL_SET_PREFIX, "setprefix",
 		[this](Discord::Client& client, const Discord::Message& message, const Discord::Channel& channel)
 	{
-		Permissions::ContainsPermission(client, channel.guildId(), message.author().id(), CommandPermission::ADMIN,
-			[this, channel, message](bool result)
+		GuildSetting& s = GuildSettings::GetGuildSetting(channel.guildId());
+		QStringList args = message.content().split(' ');
+
+		if (args.first() != s.prefix + "setprefix")
+			return;
+
+		UmikoBot::VerifyAndRunAdminCmd(client, message, channel, 2, args, false, [this, &client, channel, message, args, &s]()
 		{
-			GuildSetting& s = GuildSettings::GetGuildSetting(channel.guildId());
-			if (!result)
-			{
-				createMessage(channel.id(), "You don't have permissions to use this command.");
-				return;
-			}
-
-			QStringList args = message.content().split(' ');
-			if (args.first() != s.prefix + "setprefix")
-				return;
-
 			QString prefix = "";
 			for (int i = 1; i < args.size(); i++)
 			{
@@ -315,7 +309,7 @@ UmikoBot::UmikoBot(QObject* parent)
 
 			s.prefix = prefix;
 
-			createMessage(channel.id(), "Prefix is now set to " + prefix);
+			createMessage(channel.id(), "Prefix is now set to " + s.prefix);
 		});
 	}});
 
@@ -390,15 +384,8 @@ UmikoBot::UmikoBot(QObject* parent)
 		} 
 		else if (args.size() == 3 && args[1] == "enable")
 		{
-			Permissions::ContainsPermission(client, channel.guildId(), message.author().id(), CommandPermission::ADMIN,
-				[this, printHelp, message, args, channel](bool result)
+			UmikoBot::VerifyAndRunAdminCmd(client, message, channel, 3, args, false, [this, &client, channel, message, args]()
 			{
-				if (!result)
-				{
-					createMessage(message.channelId(), "You don't have permissions to use this command.");
-					return;
-				}
-
 				bool found = false;
 
 				Q_FOREACH(const Module* module, m_modules)
@@ -424,15 +411,8 @@ UmikoBot::UmikoBot(QObject* parent)
 		}
 		else if (args.size() == 3 && args[1] == "disable")
 		{
-			Permissions::ContainsPermission(client, channel.guildId(), message.author().id(), CommandPermission::ADMIN,
-				[this, printHelp, message, args, channel](bool result)
+			UmikoBot::VerifyAndRunAdminCmd(client, message, channel, 3, args, false, [this, &client, channel, message, args]()
 			{
-				if (!result)
-				{
-					createMessage(message.channelId(), "You don't have permissions to use this command.");
-					return;
-				}
-
 				bool found = false;
 
 				Q_FOREACH(const Module* module, m_modules)
@@ -482,15 +462,8 @@ UmikoBot::UmikoBot(QObject* parent)
 		};
 		if (args.size() > 1 && args[1] == "whitelist")
 		{
-			Permissions::ContainsPermission(client, channel.guildId(), message.author().id(), CommandPermission::ADMIN,
-				[this, printHelp, message, args, channel](bool result)
+			UmikoBot::VerifyAndRunAdminCmd(client, message, channel, 2, args, false, [this, &client, channel, message]()
 			{
-				if (!result)
-				{
-					createMessage(message.channelId(), "You don't have permissions to use this command.");
-					return;
-				}
-
 				GuildSetting& s = GuildSettings::GetGuildSetting(channel.guildId());
 				for (int i = 0; i < s.outputBlacklistedChannels.size(); i++) {
 					if (s.outputBlacklistedChannels[i] == channel.id())
@@ -517,15 +490,8 @@ UmikoBot::UmikoBot(QObject* parent)
 		}
 		else if (args.size() > 1 && args[1] == "blacklist")
 		{
-			Permissions::ContainsPermission(client, channel.guildId(), message.author().id(), CommandPermission::ADMIN,
-				[this, printHelp, message, args, channel](bool result)
+			UmikoBot::VerifyAndRunAdminCmd(client, message, channel, 2, args, false, [this, &client, channel, message]()
 			{
-				if (!result)
-				{
-					createMessage(message.channelId(), "You don't have permissions to use this command.");
-					return;
-				}
-
 				GuildSetting& s = GuildSettings::GetGuildSetting(channel.guildId());
 				for (int i = 0; i < s.outputWhitelistedChannels.size(); i++) {
 					if (s.outputWhitelistedChannels[i] == channel.id())
@@ -751,7 +717,9 @@ void UmikoBot::VerifyAndRunAdminCmd(Discord::Client& client, const Discord::Mess
 			return;
 		}
 
-		if (args.size() != requiredNumberOfArgs)
+		// TODO(fkp): Maybe we should have a parameter specifying if we want exact/at least $x args.
+		// I just don't want to have too many parameters, it's already quite long
+		if (args.size() < requiredNumberOfArgs)
 		{
 			client.createMessage(message.channelId(), "**Wrong Usage of Command!** ");
 			return;
