@@ -4,11 +4,13 @@
 
 #define descriptionTimeout 60
 
+using namespace Discord;
+
 UserModule::UserModule()
 	: Module("users", true)
 {
 	RegisterCommand(Commands::USER_MODULE_WHO_IS, "whois",
-					[this](Discord::Client& client, const Discord::Message& message, const Discord::Channel& channel)
+					[this](Client& client, const Message& message, const Channel& channel)
 	{
 		QStringList args = message.content().split(' ');
 		snowflake_t authorId = message.author().id();
@@ -19,7 +21,7 @@ UserModule::UserModule()
 			return;
 		}
 
-		QList<Discord::User> mentions = message.mentions();
+		QList<User> mentions = message.mentions();
 		snowflake_t userId;
 
 		if (mentions.size() > 0)
@@ -60,9 +62,9 @@ UserModule::UserModule()
 			UmikoBot::Instance().GetAvatar(channel.guildId(), userId).then(
 				[this, msg, userId, channel, &client, message](const QString& icon)
 				{
-					Discord::Embed embed;
+					Embed embed;
 					QString name = UmikoBot::Instance().GetName(channel.guildId(), userId);
-					embed.setAuthor(Discord::EmbedAuthor(name, "", icon));
+					embed.setAuthor(EmbedAuthor(name, "", icon));
 					embed.setColor(qrand() % 16777216);
 					embed.setTitle("Description");
 					embed.setDescription(msg);
@@ -74,7 +76,7 @@ UserModule::UserModule()
 	});
 
 	RegisterCommand(Commands::USER_MODULE_I_AM, "iam",
-		[this](Discord::Client& client, const Discord::Message& message, const Discord::Channel& channel)
+		[this](Client& client, const Message& message, const Channel& channel)
 	{
 		QStringList args = message.content().split(' ');
 		snowflake_t authorId = message.author().id();
@@ -127,7 +129,7 @@ UserModule::UserModule()
 	});
 
 	RegisterCommand(Commands::USER_MODULE_STATS, "stats",
-		[this](Discord::Client& client, const Discord::Message& message, const Discord::Channel& channel)
+		[this](Client& client, const Message& message, const Channel& channel)
 	{
 		QStringList args = message.content().split(' ');
 		GuildSetting* setting = &GuildSettings::GetGuildSetting(channel.guildId());
@@ -163,14 +165,14 @@ UserModule::UserModule()
 		}
 
 		UmikoBot::Instance().getGuildMember(channel.guildId(), userId).then(
-			[this, &client, userId, channel, message](const Discord::GuildMember& member)
+			[this, &client, userId, channel, message](const GuildMember& member)
 		{
 			UmikoBot::Instance().GetAvatar(channel.guildId(), userId).then(
 				[this, userId, channel, &client, message, member](const QString& icon)
 			{
-				Discord::Embed embed;
+				Embed embed;
 				QString name = UmikoBot::Instance().GetName(channel.guildId(), userId);
-				embed.setAuthor(Discord::EmbedAuthor(name + "'s Statistics", "", icon));
+				embed.setAuthor(EmbedAuthor(name + "'s Statistics", "", icon));
 				embed.setColor(qrand() % 16777216);
 
 				QString desc = "**General:**\n";
@@ -264,10 +266,10 @@ void UserModule::OnLoad(const QJsonDocument& doc)
 	}
 }
 
-void UserModule::OnMessage(Discord::Client& client, const Discord::Message& message)
+void UserModule::OnMessage(Client& client, const Message& message)
 {
 	client.getChannel(message.channelId()).then(
-		[this, message, &client](const Discord::Channel& channel)
+		[this, message, &client](const Channel& channel)
 		{
 			snowflake_t guildId = channel.guildId();
 			

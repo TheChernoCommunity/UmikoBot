@@ -1,19 +1,20 @@
 #include "ModerationModule.h"
 #include "UmikoBot.h"
 
+using namespace Discord;
 
 ModerationModule::ModerationModule()
     : Module("moderation", true)
 {
     RegisterCommand(Commands::MODERATION_INVITATION_TOGGLE, "invitations",
-		[this](Discord::Client& client, const Discord::Message& message, const Discord::Channel& channel)
+		[this](Client& client, const Message& message, const Channel& channel)
     {
 		m_invitationModeration ^= true;
 		client.createMessage(message.channelId(), m_invitationModeration ? "Invitations will be deleted!" : "Invitations won't be deleted!");
     });
 }
 
-void ModerationModule::OnMessage(Discord::Client& client, const Discord::Message& message)
+void ModerationModule::OnMessage(Client& client, const Message& message)
 {
 	Module::OnMessage(client, message);
 	if (m_invitationModeration)
