@@ -89,7 +89,7 @@ FunModule::FunModule(UmikoBot* client) : Module("funutil", true), m_memeChannel(
 
 		if (args.at(1) == args.at(2))
 		{
-			client.createMessage(message.channelId(), "**The numbers are same, please put diffrent numbers.**");
+			client.createMessage(message.channelId(), "**The numbers are same, please roll different numbers.**");
 			return;
 		}
 		min = args.at(1).toDouble();
