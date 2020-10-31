@@ -94,13 +94,13 @@ FunModule::FunModule(UmikoBot* client) : Module("funutil", true), m_memeChannel(
 		
 		std::random_device rand_device;
 		std::mt19937 gen(rand_device());
-		std::uniform_int_distribution<> dist(min, max);
 
 		if (max < min)
 			std::swap(min, max);
 
-		QString text = QString("My Value was : " + QString::number(dist(gen)));
+		std::uniform_int_distribution<> dist(min, max);
 
+		QString text = QString("My Value was : " + QString::number(dist(gen)));
 		client.createMessage(message.channelId(), text);
 
 	});
