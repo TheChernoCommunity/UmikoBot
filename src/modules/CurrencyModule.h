@@ -109,7 +109,7 @@ public:
 		int stealFailedJailTime { 3 };
 		int bribeMaxAmount { 150 };
 		int bribeLeastAmount { 20 };
-		int bribeSuccessChance { 69 };
+		int bribeSuccessChance { 70 };
 	};
 
 private:
