@@ -902,7 +902,219 @@ CurrencyModule::CurrencyModule(UmikoBot* client) : Module("currency", true), m_c
 		client.createMessage(message.channelId(), embed);
 
 	});
+		RegisterCommand(Commands::CURRENCY_BRIBE, "bribe", [this](Discord::Client& client, const Discord::Message& message, const Discord::Channel& channel)
+		{
 
+			QStringList args = message.content().split(' ');
+			auto& config = getServerData(channel.guildId());
+			snowflake_t authorId = message.author().id();
+
+			auto& authorCurrency = guildList[channel.guildId()][getUserIndex(channel.guildId(), authorId)];
+			int remainingJailTime = authorCurrency.jailTimer->remainingTime();
+			bool inJail = authorCurrency.jailTimer->isActive();
+
+
+			if (inJail == false)
+			{
+				QString output = QString(
+					":police_officer: **Hey you're not in JAIL!** :police_officer:\n"
+				);
+				client.createMessage(message.channelId(), output);
+				return;
+			}
+
+			if (args.size() != 2)
+			{
+				client.createMessage(message.channelId(), "**Wrong Usage of Command!**");
+				return;
+			}
+
+			QRegExp re("[+]?\\d*\\.?\\d+");
+			if (!re.exactMatch(args.at(1)))
+			{
+				client.createMessage(message.channelId(), "**Your bribe amount must be valid!**");
+				return;
+			}
+
+			double amountToBribe = args.at(1).toDouble();
+
+			auto guildID = channel.guildId();
+			QObject::connect(authorCurrency.jailTimer, &QTimer::timeout, [this, &client, guildID, authorId]()
+				{
+					guildList[guildID][getUserIndex(guildID, authorId)].isBribeUsed = false;
+				});
+
+			if (authorCurrency.isBribeUsed)
+			{
+				QString output = QString(
+					":police_officer: **You already tried to bribe me and failed... Do you want me to extend your sentence again?** :police_officer:\n"
+				);
+
+				client.createMessage(message.channelId(), output);
+				return;
+			}
+
+			else if (amountToBribe > config.bribeMaxAmount)
+			{
+				QString maxBribeAmount = QString::number(config.bribeMaxAmount);
+				QString output = QString(
+					":police_officer: **If I take more than `%1` %2 then I might get caught... ** :police_officer:\n"
+				).arg(maxBribeAmount, config.currencySymbol);
+
+				client.createMessage(message.channelId(), output);
+				return;
+			}
+
+			else if (amountToBribe < config.bribeLeastAmount)
+			{
+				QString leastBribeAmount = QString::number(config.bribeLeastAmount);
+				QString output = QString(
+					":police_officer: **Pfft! Such measly amounts... Do you want to be in jail for longer?** :police_officer:\n"
+					"*(You can always give me `%1 %2` or more... maybe then I could do something?)*\n"
+				).arg(leastBribeAmount, config.currencySymbol);
+
+				client.createMessage(message.channelId(), output);
+				return;
+			}
+
+			if (authorCurrency.currency() - (amountToBribe) < debtMax)
+			{
+				client.createMessage(message.channelId(), ":police_officer: **I would love to be bribed with that much money but unfortunately you can't afford it.** :police_officer:");
+				return;
+			}
+
+			// This success chance is in the range of 0 to 1
+			double successChance = (static_cast<double>(config.bribeSuccessChance) / (static_cast<double>(config.bribeMaxAmount) * 100)) * amountToBribe;
+
+			QString authorName = UmikoBot::Instance().GetName(channel.guildId(), authorId);
+
+			std::random_device device;
+			std::mt19937 prng{ device() };
+			std::discrete_distribution<> distribution{ { 1 - successChance, successChance } };
+			int roll = distribution(prng);
+
+			if (roll)
+			{
+				authorCurrency.setCurrency(authorCurrency.currency() - amountToBribe);
+				authorCurrency.jailTimer->stop();
+
+				QString output = QString(
+					":unlock: **Thanks for the BRIBE!** :unlock:\n"
+					"*%1* you are free from jail now!.\n"
+				).arg(authorName);
+
+				client.createMessage(message.channelId(), output);
+
+				snowflake_t chan = message.channelId();
+				UmikoBot::Instance().createReaction(chan, message.id(), utility::consts::emojis::reacts::PARTY_CAT);
+			}
+			else
+			{
+				authorCurrency.isBribeUsed = true;
+				int totalTime = remainingJailTime + 3600000;
+				authorCurrency.jailTimer->start(totalTime);
+
+				QString time = utility::StringifyMilliseconds(totalTime);
+
+				QString output = QString(
+					":police_officer: **Your bribes don't affect my loyalty!** :police_officer:\n"
+					"You have been reported and your sentence has been extended by `1` hour!.\n"
+					"*(You need to wait %1 to get out of jail)*"
+				).arg(time);
+				client.createMessage(message.channelId(), output);
+			}
+
+		});
+	RegisterCommand(Commands::CURRENCY_SET_BRIBE_SUCCESS_CHANCE, "setbribesuccesschance", [this](Discord::Client& client, const Discord::Message& message, const Discord::Channel& channel)
+		{
+
+			QStringList args = message.content().split(' ');
+
+			Permissions::ContainsPermission(client, channel.guildId(), message.author().id(), CommandPermission::ADMIN,
+				[this, args, &client, message, channel](bool result)
+				{
+					GuildSetting* setting = &GuildSettings::GetGuildSetting(channel.guildId());
+					if (!result)
+					{
+						client.createMessage(message.channelId(), "**You don't have permissions to use this command.**");
+						return;
+					}
+
+					if (args.size() == 1 || args.size() > 2)
+					{
+						client.createMessage(message.channelId(), "**Wrong Usage of Command!** ");
+						return;
+					}
+
+					if (args.size() == 2)
+					{
+						auto& config = getServerData(channel.guildId());
+						config.bribeSuccessChance = args.at(1).toInt();
+						client.createMessage(message.channelId(), "Bribe Success Chance set to **" + QString::number(config.bribeSuccessChance) + "%**");
+					}
+
+				});
+		});
+	RegisterCommand(Commands::CURRENCY_SET_MAX_BRIBE_AMOUNT, "setmaxbribeamount", [this](Discord::Client& client, const Discord::Message& message, const Discord::Channel& channel)
+		{
+
+			QStringList args = message.content().split(' ');
+
+			Permissions::ContainsPermission(client, channel.guildId(), message.author().id(), CommandPermission::ADMIN,
+				[this, args, &client, message, channel](bool result)
+				{
+					GuildSetting* setting = &GuildSettings::GetGuildSetting(channel.guildId());
+					if (!result)
+					{
+						client.createMessage(message.channelId(), "**You don't have permissions to use this command.**");
+						return;
+					}
+
+					if (args.size() == 1 || args.size() > 2)
+					{
+						client.createMessage(message.channelId(), "**Wrong Usage of Command!** ");
+						return;
+					}
+
+					if (args.size() == 2)
+					{
+						auto& config = getServerData(channel.guildId());
+						config.bribeMaxAmount = args.at(1).toInt();
+						client.createMessage(message.channelId(), "Bribe Max Amount set to **" + QString::number(config.bribeMaxAmount) + "**");
+					}
+
+				});
+		});
+	RegisterCommand(Commands::CURRENCY_SET_LEAST_BRIBE_AMOUNT, "setleastbribeamount", [this](Discord::Client& client, const Discord::Message& message, const Discord::Channel& channel)
+		{
+
+			QStringList args = message.content().split(' ');
+
+			Permissions::ContainsPermission(client, channel.guildId(), message.author().id(), CommandPermission::ADMIN,
+				[this, args, &client, message, channel](bool result)
+				{
+					GuildSetting* setting = &GuildSettings::GetGuildSetting(channel.guildId());
+					if (!result)
+					{
+						client.createMessage(message.channelId(), "**You don't have permissions to use this command.**");
+						return;
+					}
+
+					if (args.size() == 1 || args.size() > 2)
+					{
+						client.createMessage(message.channelId(), "**Wrong Usage of Command!** ");
+						return;
+					}
+
+					if (args.size() == 2)
+					{
+						auto& config = getServerData(channel.guildId());
+						config.bribeLeastAmount = args.at(1).toInt();
+						client.createMessage(message.channelId(), "Bribe Least Amount set to **" + QString::number(config.bribeLeastAmount) + "**");
+					}
+
+				});
+		});
 	RegisterCommand(Commands::CURRENCY_STEAL, "steal", [this](Discord::Client& client, const Discord::Message& message, const Discord::Channel& channel)
 	{
 
@@ -1391,6 +1603,9 @@ void CurrencyModule::OnSave(QJsonDocument& doc) const
 			obj["stealFinePercent"] = QString::number(config.stealFinePercent);
 			obj["stealVictimBonusPercent"] = QString::number(config.stealVictimBonusPercent);
 			obj["stealFailedJailTime"] = QString::number(config.stealFailedJailTime);
+			obj["bribeMaxAmount"] = QString::number(config.bribeMaxAmount);
+			obj["bribeLeastAmount"] = QString::number(config.bribeLeastAmount);
+			obj["bribeSuccessChance"] = QString::number(config.bribeSuccessChance);
 
 			serverList[QString::number(server)] = obj;
 			
@@ -1461,6 +1676,9 @@ void CurrencyModule::OnLoad(const QJsonDocument& doc)
 			config.stealFinePercent = serverObj["stealFinePercent"].toString("50").toUInt();
 			config.stealVictimBonusPercent = serverObj["stealVictimBonusPercent"].toString("25").toUInt();
 			config.stealFailedJailTime = serverObj["stealFailedJailTime"].toString("3").toUInt();
+			config.bribeSuccessChance = serverObj["bribeSuccessChance"].toString("30").toUInt();
+			config.bribeMaxAmount = serverObj["bribeMaxAmount"].toString().toInt();
+			config.bribeLeastAmount = serverObj["bribeLeastAmount"].toString().toInt();
 
 			auto guildId = server.toULongLong();
 			serverCurrencyConfig.insert(guildId, config);
