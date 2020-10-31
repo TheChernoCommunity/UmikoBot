@@ -1,11 +1,13 @@
 #include "TimezoneModule.h"
 #include "UmikoBot.h"
 
+using namespace Discord;
+
 TimezoneModule::TimezoneModule()
 	: Module("timezone", true)
 {
 	RegisterCommand(Commands::TIMEZONE_MODULE_TIMEOFFSET, "timeoffset",
-		[this](Discord::Client& client, const Discord::Message& message, const Discord::Channel& channel)
+		[this](Client& client, const Message& message, const Channel& channel)
 	{
 		QStringList arguments = message.content().split(' ');
 		if (arguments.count() == 2)

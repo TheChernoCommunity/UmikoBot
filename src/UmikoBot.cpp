@@ -10,6 +10,8 @@
 
 #include "Logger.h"
 
+using namespace Discord;
+
 UmikoBot& UmikoBot::Instance()
 {
 	static UmikoBot bot;
@@ -48,10 +50,10 @@ UmikoBot::UmikoBot(QObject* parent)
 		Save();
 	});
 	
-	connect(&getGatewaySocket(), &Discord::GatewaySocket::disconnected, this, &UmikoBot::OnDisconnected);
+	connect(&getGatewaySocket(), &GatewaySocket::disconnected, this, &UmikoBot::OnDisconnected);
 
 	connect(this, &Client::onMessageCreate,
-		[this](const Discord::Message& message)
+		[this](const Message& message)
 	{
 		Q_FOREACH(Module* module, m_modules)
 		{
@@ -59,7 +61,7 @@ UmikoBot::UmikoBot(QObject* parent)
 		}
 
 		getChannel(message.channelId()).then(
-			[this, message](const Discord::Channel& channel)
+			[this, message](const Channel& channel)
 		{
 			GuildSetting setting = GuildSettings::GetGuildSetting(channel.guildId());
 			if (channel.guildId() != 0 && !message.author().bot()) // DM
@@ -77,7 +79,7 @@ UmikoBot::UmikoBot(QObject* parent)
 	});
 
 	connect(this, &Client::onGuildCreate,
-		[](const Discord::Guild& guild)
+		[](const Guild& guild)
 	{
 		GuildSettings::GetGuildSetting(guild.id()); // only creates if it doesn't exist
 	});
@@ -90,14 +92,14 @@ UmikoBot::UmikoBot(QObject* parent)
 	});
 
 	connect(this, &Client::onGuildMemberUpdate,
-		[this](snowflake_t guild, const QList<snowflake_t>& roles, const Discord::User& user, const QString& nick)
+		[this](snowflake_t guild, const QList<snowflake_t>& roles, const User& user, const QString& nick)
 	{
 		m_guildDatas[guild].userdata[user.id()].username = user.username();
 		m_guildDatas[guild].userdata[user.id()].nickname = nick;
 	});
 
 	connect(this, &Client::onGuildRoleUpdate,
-		[this](snowflake_t guild_id, const Discord::Role& role)
+		[this](snowflake_t guild_id, const Role& role)
 	{
 		for (int i = 0; i < m_guildDatas[guild_id].roles.size(); i++)
 			if (role.id() == m_guildDatas[guild_id].roles[i].id()) 
@@ -120,13 +122,13 @@ UmikoBot::UmikoBot(QObject* parent)
 	});
 
 	connect(this, &Client::onGuildUpdate,
-		[this](const Discord::Guild& guild)
+		[this](const Guild& guild)
 	{
 		m_guildDatas[guild.id()].ownerId = guild.ownerId();
 	});
 
 	connect(this, &Client::onGuildMemberRemove,
-		[this](snowflake_t guild_id, const Discord::User& user)
+		[this](snowflake_t guild_id, const User& user)
 	{
 		for(auto it = m_guildDatas[guild_id].userdata.begin(); it != m_guildDatas[guild_id].userdata.end(); it++)
 			if (it.key() == user.id()) {
@@ -136,17 +138,17 @@ UmikoBot::UmikoBot(QObject* parent)
 	});
 
 	connect(this, &Client::onGuildMemberAdd,
-		[this](const Discord::GuildMember& member, snowflake_t guild_id)
+		[this](const GuildMember& member, snowflake_t guild_id)
 	{
 		m_guildDatas[guild_id].userdata[member.user().id()].username = member.user().username();
 	});
 
 	m_commands.push_back({Commands::GLOBAL_STATUS, "status",
-		[this](Discord::Client& client,const Discord::Message& message, const Discord::Channel& channel)
+		[this](Client& client,const Message& message, const Channel& channel)
 	{
 		QStringList args = message.content().split(" ");
 
-		auto printStatus = [this](const Discord::Channel& channel, const Discord::Message& message, snowflake_t user, QString nickname) {
+		auto printStatus = [this](const Channel& channel, const Message& message, snowflake_t user, QString nickname) {
 			GetAvatar(channel.guildId(), user).then(
 				[this, message, channel, user, nickname](const QString& icon)
 			{
@@ -157,8 +159,8 @@ UmikoBot::UmikoBot(QObject* parent)
 						module->StatusCommand(status, channel.guildId(), user);
 				}
 
-				Discord::Embed embed;
-				embed.setAuthor(Discord::EmbedAuthor(nickname, "", icon));
+				Embed embed;
+				embed.setAuthor(EmbedAuthor(nickname, "", icon));
 				embed.setColor(qrand() % 16777216);
 				embed.setTitle("Status");
 				embed.setDescription(status);
@@ -173,7 +175,7 @@ UmikoBot::UmikoBot(QObject* parent)
 				return;
 			
 
-			QList<Discord::User> mentions = message.mentions();
+			QList<User> mentions = message.mentions();
 			if (mentions.size() > 0)
 			{
 				printStatus(channel, message, mentions.first().id(), GetName(channel.guildId(), mentions.first().id()));
@@ -198,8 +200,8 @@ UmikoBot::UmikoBot(QObject* parent)
 						module->StatusCommand(status, channel.guildId(), message.author().id());
 				}
 
-				Discord::Embed embed;
-				embed.setAuthor(Discord::EmbedAuthor(GetName(channel.guildId(), message.author().id()), "", icon));
+				Embed embed;
+				embed.setAuthor(EmbedAuthor(GetName(channel.guildId(), message.author().id()), "", icon));
 				embed.setColor(qrand() % 16777216);
 				embed.setTitle("Status");
 				embed.setDescription(status);
@@ -209,7 +211,7 @@ UmikoBot::UmikoBot(QObject* parent)
 	}});
 
 	m_commands.push_back({Commands::GLOBAL_HELP, "help",
-		[this](Discord::Client& client, const Discord::Message& message, const Discord::Channel& channel)
+		[this](Client& client, const Message& message, const Channel& channel)
 	{
 		QStringList args = message.content().split(" ");
 		QString prefix = GuildSettings::GetGuildSetting(channel.guildId()).prefix;
@@ -222,7 +224,7 @@ UmikoBot::UmikoBot(QObject* parent)
 			if (commandName.startsWith(prefix))
 				commandName = QStringRef(&commandName, prefix.size(), commandName.size() - prefix.size()).toString();
 
-			Discord::Embed embed;
+			Embed embed;
 			embed.setColor(qrand() % 16777216);
 			embed.setTitle("Help " + commandName);
 
@@ -236,7 +238,7 @@ UmikoBot::UmikoBot(QObject* parent)
 		}
 		else
 		{
-			Permissions::ContainsPermission(*this, channel.guildId(), message.author().id(), CommandPermission::ADMIN,
+			::Permissions::ContainsPermission(*this, channel.guildId(), message.author().id(), CommandPermission::ADMIN,
 				[this, prefix, message, channel](bool result)
 			{
 				QString description = "";
@@ -278,7 +280,7 @@ UmikoBot::UmikoBot(QObject* parent)
 				}();
 				description += "\n**Note:** Use `" + prefix + "help <command>` to get the help for a specific command";
 
-				Discord::Embed embed;
+				Embed embed;
 				embed.setColor(qrand() % 16777216);
 				embed.setTitle("Help");
 				embed.setDescription(description);
@@ -289,7 +291,7 @@ UmikoBot::UmikoBot(QObject* parent)
 	}});
 
 	m_commands.push_back({ Commands::GLOBAL_SET_PREFIX, "setprefix",
-		[this](Discord::Client& client, const Discord::Message& message, const Discord::Channel& channel)
+		[this](Client& client, const Message& message, const Channel& channel)
 	{
 		GuildSetting& s = GuildSettings::GetGuildSetting(channel.guildId());
 		QStringList args = message.content().split(' ');
@@ -314,7 +316,7 @@ UmikoBot::UmikoBot(QObject* parent)
 	}});
 
 	m_commands.push_back({ Commands::GLOBAL_MODULE, "module",
-		[this](Discord::Client& client, const Discord::Message& message, const Discord::Channel& channel)
+		[this](Client& client, const Message& message, const Channel& channel)
 	{
 		QStringList args = message.content().split(" ");
 		QString prefix = GuildSettings::GetGuildSetting(channel.guildId()).prefix;
@@ -323,7 +325,7 @@ UmikoBot::UmikoBot(QObject* parent)
 
 		auto printHelp = [this, prefix, message]() 
 		{
-			Discord::Embed embed;
+			Embed embed;
 			embed.setColor(qrand() % 16777216);
 			embed.setTitle("Help module");
 			QString description = GetCommandHelp("module", prefix);
@@ -335,7 +337,7 @@ UmikoBot::UmikoBot(QObject* parent)
 		{
 			if (args.size() == 2)
 			{
-				Discord::Embed embed;
+				Embed embed;
 				embed.setColor(qrand() % 16777216);
 				embed.setTitle("Module list");
 
@@ -351,7 +353,7 @@ UmikoBot::UmikoBot(QObject* parent)
 			}
 			else if(args.size() == 3)
 			{
-				Discord::Embed embed;
+				Embed embed;
 				embed.setColor(qrand() % 16777216);
 				embed.setTitle("Module command list");
 
@@ -444,7 +446,7 @@ UmikoBot::UmikoBot(QObject* parent)
 	}});
 
 	m_commands.push_back({Commands::GLOBAL_OUTPUT, "output",
-		[this](Discord::Client& client, const Discord::Message& message, const Discord::Channel& channel)
+		[this](Client& client, const Message& message, const Channel& channel)
 	{
 		QStringList args = message.content().split(" ");
 		QString prefix = GuildSettings::GetGuildSetting(channel.guildId()).prefix;
@@ -453,7 +455,7 @@ UmikoBot::UmikoBot(QObject* parent)
 
 		auto printHelp = [this, prefix, message]()
 		{
-			Discord::Embed embed;
+			Embed embed;
 			embed.setColor(qrand() % 16777216);
 			embed.setTitle("Help output");
 			QString description = GetCommandHelp("output", prefix);
@@ -547,11 +549,11 @@ QString UmikoBot::GetName(snowflake_t guild, snowflake_t user)
 	return m_guildDatas[guild].userdata[user].username;
 }
 
-Discord::Promise<QString>& UmikoBot::GetAvatar(snowflake_t guild, snowflake_t user)
+Promise<QString>& UmikoBot::GetAvatar(snowflake_t guild, snowflake_t user)
 {
-	Discord::Promise<QString>* promise = new Discord::Promise<QString>();
+	Promise<QString>* promise = new Promise<QString>();
 
-	getGuildMember(guild, user).then([promise, user](const Discord::GuildMember& member)
+	getGuildMember(guild, user).then([promise, user](const GuildMember& member)
 	{
 		QString icon = member.user().avatar();
 
@@ -648,7 +650,7 @@ Module* UmikoBot::GetModuleByName(const QString& name)
 	return nullptr;
 }
 
-const QList<Discord::Role>& UmikoBot::GetRoles(snowflake_t guild)
+const QList<Role>& UmikoBot::GetRoles(snowflake_t guild)
 {
 	return m_guildDatas[guild].roles;
 }
@@ -707,9 +709,9 @@ QList<Command> UmikoBot::GetAllCommands()
 	return result;
 }
 
-void UmikoBot::VerifyAndRunAdminCmd(Discord::Client& client, const Discord::Message& message, const Discord::Channel& channel, unsigned int requiredNumberOfArgs, const QStringList& args, bool argumentShouldBeANumber, std::function<void()> callback)
+void UmikoBot::VerifyAndRunAdminCmd(Client& client, const Message& message, const Channel& channel, unsigned int requiredNumberOfArgs, const QStringList& args, bool argumentShouldBeANumber, std::function<void()> callback)
 {
-	Permissions::ContainsPermission(client, channel.guildId(), message.author().id(), CommandPermission::ADMIN, [args, &client, message, channel, requiredNumberOfArgs, argumentShouldBeANumber, callback](bool result)
+	::Permissions::ContainsPermission(client, channel.guildId(), message.author().id(), CommandPermission::ADMIN, [args, &client, message, channel, requiredNumberOfArgs, argumentShouldBeANumber, callback](bool result)
 	{
 		if (!result)
 		{
@@ -852,19 +854,19 @@ void UmikoBot::Load()
 
 void UmikoBot::GetGuilds(snowflake_t after)
 {
-	auto processGuilds = [this](const QList<Discord::Guild>& guilds)
+	auto processGuilds = [this](const QList<Guild>& guilds)
 	{
 		for (int i = 0; i < guilds.size(); i++)
 		{
 			getGuildRoles(guilds[i].id()).then(
-				[this, guilds, i](const QList<Discord::Role>& roles)
+				[this, guilds, i](const QList<Role>& roles)
 			{
 				m_guildDatas[guilds[i].id()].roles = roles;
 				GetGuildMemberInformation(guilds[i].id());
 			});
 
 			getGuild(guilds[i].id()).then(
-				[this](const Discord::Guild& guild)
+				[this](const Guild& guild)
 			{
 				m_guildDatas[guild.id()].ownerId = guild.ownerId();
 			});
@@ -885,7 +887,7 @@ void UmikoBot::GetGuilds(snowflake_t after)
 
 void UmikoBot::GetGuildMemberInformation(snowflake_t guild, snowflake_t after)
 {
-	auto processMembers = [this, guild](const QList<Discord::GuildMember>& members)
+	auto processMembers = [this, guild](const QList<GuildMember>& members)
 	{
 		for (int i = 0; i < members.size(); i++)
 		{

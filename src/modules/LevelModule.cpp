@@ -4,6 +4,8 @@
 
 #include <QtMath>
 
+using namespace Discord;
+
 LevelModule::LevelModule(UmikoBot* client)
 	: Module("levels", true), m_client(client)
 {
@@ -29,7 +31,7 @@ LevelModule::LevelModule(UmikoBot* client)
 	qsrand(now.msec());
 
 	RegisterCommand(Commands::LEVEL_MODULE_TOP, "top",
-		[this](Discord::Client& client, const Discord::Message& message, const Discord::Channel& channel)
+		[this](Client& client, const Message& message, const Channel& channel)
 	{
 		auto& exp = m_exp[channel.guildId()];
 		QStringList args = message.content().split(' ');
@@ -46,7 +48,7 @@ LevelModule::LevelModule(UmikoBot* client)
 			{
 				return v1.exp > v2.exp;
 			});
-			Discord::Embed embed;
+			Embed embed;
 			embed.setColor(qrand() % 16777216);
 			embed.setTitle("Top " + args.back());
 
@@ -144,7 +146,7 @@ LevelModule::LevelModule(UmikoBot* client)
 				return;
 			}
 
-			Discord::Embed embed;
+			Embed embed;
 			embed.setColor(qrand() % 16777216);
 			if (count2 == count1) 
 			{
@@ -202,7 +204,7 @@ LevelModule::LevelModule(UmikoBot* client)
 		else
 		{
 			UmikoBot* bot = reinterpret_cast<UmikoBot*>(&client);
-			Discord::Embed embed;
+			Embed embed;
 			embed.setColor(qrand() % 16777216);
 			embed.setTitle("Help top");
 			QString description = bot->GetCommandHelp("top", prefix);
@@ -212,7 +214,7 @@ LevelModule::LevelModule(UmikoBot* client)
 	});
 
 	RegisterCommand(Commands::LEVEL_MODULE_RANK, "rank",
-		[this](Discord::Client& client, const Discord::Message& message, const Discord::Channel& channel)
+		[this](Client& client, const Message& message, const Channel& channel)
 	{
 		QStringList args = message.content().split(' ');
 		GuildSetting* setting = &GuildSettings::GetGuildSetting(channel.guildId());
@@ -221,7 +223,7 @@ LevelModule::LevelModule(UmikoBot* client)
 		auto printHelp = [&client, prefix, message]()
 		{
 			UmikoBot* bot = reinterpret_cast<UmikoBot*>(&client);
-			Discord::Embed embed;
+			Embed embed;
 			embed.setColor(qrand() % 16777216);
 			embed.setTitle("Help rank");
 			QString description = bot->GetCommandHelp("rank", prefix);
@@ -241,7 +243,7 @@ LevelModule::LevelModule(UmikoBot* client)
 		if (args.last() == "list" && args.size() == 2)
 		{
 			QList<LevelRank> ranks = setting->ranks;
-			Discord::Embed embed;
+			Embed embed;
 			embed.setColor(qrand() % 16777216);
 			embed.setTitle("Rank list");
 
@@ -376,7 +378,7 @@ LevelModule::LevelModule(UmikoBot* client)
 	});
 
 	RegisterCommand(Commands::LEVEL_MODULE_MAX_LEVEL, "setmaxlevel",
-		[this](Discord::Client& client, const Discord::Message& message, const Discord::Channel& channel)
+		[this](Client& client, const Message& message, const Channel& channel)
 	{
 		GuildSetting* setting = &GuildSettings::GetGuildSetting(channel.guildId());
 		QStringList args = message.content().split(' ');
@@ -388,7 +390,7 @@ LevelModule::LevelModule(UmikoBot* client)
 		auto printHelp = [&client, prefix, message]()
 		{
 			UmikoBot* bot = reinterpret_cast<UmikoBot*>(&client);
-			Discord::Embed embed;
+			Embed embed;
 			embed.setColor(qrand() % 16777216);
 			embed.setTitle("Help setmaxlevel");
 			QString description = bot->GetCommandHelp("setmaxlevel", prefix);
@@ -415,7 +417,7 @@ LevelModule::LevelModule(UmikoBot* client)
 	});
 
 	RegisterCommand(Commands::LEVEL_MODULE_EXP_REQUIREMENT, "setexpreq",
-		[this](Discord::Client& client, const Discord::Message& message, const Discord::Channel& channel)
+		[this](Client& client, const Message& message, const Channel& channel)
 	{
 		GuildSetting* setting = &GuildSettings::GetGuildSetting(channel.guildId());
 		QStringList args = message.content().split(' ');
@@ -427,7 +429,7 @@ LevelModule::LevelModule(UmikoBot* client)
 		auto printHelp = [&client, prefix, message]()
 		{
 			UmikoBot* bot = reinterpret_cast<UmikoBot*>(&client);
-			Discord::Embed embed;
+			Embed embed;
 			embed.setColor(qrand() % 16777216);
 			embed.setTitle("Help setexpreq");
 			QString description = bot->GetCommandHelp("setexpreq", prefix);
@@ -454,7 +456,7 @@ LevelModule::LevelModule(UmikoBot* client)
 	});
 
 	RegisterCommand(Commands::LEVEL_MODULE_EXP_GROWTH_RATE, "setgrowthrate",
-		[this](Discord::Client& client, const Discord::Message& message, const Discord::Channel& channel)
+		[this](Client& client, const Message& message, const Channel& channel)
 	{
 		GuildSetting* setting = &GuildSettings::GetGuildSetting(channel.guildId());
 		QStringList args = message.content().split(' ');
@@ -466,7 +468,7 @@ LevelModule::LevelModule(UmikoBot* client)
 		auto printHelp = [&client, prefix, message]()
 		{
 			UmikoBot* bot = reinterpret_cast<UmikoBot*>(&client);
-			Discord::Embed embed;
+			Embed embed;
 			embed.setColor(qrand() % 16777216);
 			embed.setTitle("Help setgrowthrate");
 			QString description = bot->GetCommandHelp("setgrowthrate", prefix);
@@ -493,7 +495,7 @@ LevelModule::LevelModule(UmikoBot* client)
 	});
 
 	RegisterCommand(Commands::LEVEL_MODULE_EXP_GIVE, "givexp",
-		[this](Discord::Client& client, const Discord::Message& message, const Discord::Channel& channel)
+		[this](Client& client, const Message& message, const Channel& channel)
 	{
 		GuildSetting s = GuildSettings::GetGuildSetting(channel.guildId());
 		QString prefix = s.prefix;
@@ -505,7 +507,7 @@ LevelModule::LevelModule(UmikoBot* client)
 		auto printHelp = [&client, prefix, message]()
 		{
 			UmikoBot* bot = reinterpret_cast<UmikoBot*>(&client);
-			Discord::Embed embed;
+			Embed embed;
 			embed.setColor(qrand() % 16777216);
 			embed.setTitle("Help givexp");
 			QString description = bot->GetCommandHelp("givexp", prefix);
@@ -581,7 +583,7 @@ LevelModule::LevelModule(UmikoBot* client)
 	});
 
 	RegisterCommand(Commands::LEVEL_MODULE_EXP_TAKE, "takexp",
-		[this](Discord::Client& client, const Discord::Message& message, const Discord::Channel& channel)
+		[this](Client& client, const Message& message, const Channel& channel)
 	{
 		GuildSetting s = GuildSettings::GetGuildSetting(channel.guildId());
 		QString prefix = s.prefix;
@@ -593,7 +595,7 @@ LevelModule::LevelModule(UmikoBot* client)
 		auto printHelp = [&client, prefix, message]()
 		{
 			UmikoBot* bot = reinterpret_cast<UmikoBot*>(&client);
-			Discord::Embed embed;
+			Embed embed;
 			embed.setColor(qrand() % 16777216);
 			embed.setTitle("Help takexp");
 			QString description = bot->GetCommandHelp("takexp", prefix);
@@ -672,7 +674,7 @@ LevelModule::LevelModule(UmikoBot* client)
 	});
 
 	RegisterCommand(Commands::LEVEL_MODULE_BLOCK_EXP, "blockxp",
-		[this](Discord::Client& client, const Discord::Message& message, const Discord::Channel& channel)
+		[this](Client& client, const Message& message, const Channel& channel)
 	{
 		GuildSetting s = GuildSettings::GetGuildSetting(channel.guildId());
 		QString prefix = s.prefix;
@@ -684,7 +686,7 @@ LevelModule::LevelModule(UmikoBot* client)
 		auto printHelp = [&client, prefix, message]()
 		{
 			UmikoBot* bot = reinterpret_cast<UmikoBot*>(&client);
-			Discord::Embed embed;
+			Embed embed;
 			embed.setColor(qrand() % 16777216);
 			embed.setTitle("Help blockxp");
 			QString description = bot->GetCommandHelp("blockxp", prefix);
@@ -924,12 +926,12 @@ void LevelModule::StatusCommand(QString& result, snowflake_t guild, snowflake_t 
 	result += "\n";
 }
 
-void LevelModule::OnMessage(Discord::Client& client, const Discord::Message& message) 
+void LevelModule::OnMessage(Client& client, const Message& message) 
 {
 	Module::OnMessage(client, message);
 
 	client.getChannel(message.channelId()).then(
-		[this, message](const Discord::Channel& channel) 
+		[this, message](const Channel& channel) 
 	{
 		auto& exp = m_exp[channel.guildId()];
 
