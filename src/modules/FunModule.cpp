@@ -75,8 +75,8 @@ FunModule::FunModule(UmikoBot* client) : Module("funutil", true), m_memeChannel(
 		QString prefix = setting->prefix;
 		QRegExp reg("[+-]?\\d*\\.?\\d+");
 
-		float max;
-		float min;
+		double max;
+		double min;
 
 		if (args.size() == 1)
 		{
@@ -132,7 +132,7 @@ FunModule::FunModule(UmikoBot* client) : Module("funutil", true), m_memeChannel(
 
 		std::uniform_int_distribution<> dist(min, max);
 
-		QString text = QString("My Value was: " + QString::number(dist(gen)));
+		QString text = QString("My Value was: **" + QString::number(dist(gen)) + "**");
 		client.createMessage(message.channelId(), text);
 
 	});
