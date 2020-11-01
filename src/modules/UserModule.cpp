@@ -8,7 +8,7 @@ UserModule::UserModule()
 	: Module("users", true)
 {
 	RegisterCommand(Commands::USER_MODULE_WHO_IS, "whois",
-					[this](Discord::Client& client, const Discord::Message& message, const Discord::Channel& channel)
+		[this](Discord::Client& client, const Discord::Message& message, const Discord::Channel& channel)
 	{
 		QStringList args = message.content().split(' ');
 		snowflake_t authorId = message.author().id();
@@ -59,16 +59,16 @@ UserModule::UserModule()
 		{
 			UmikoBot::Instance().GetAvatar(channel.guildId(), userId).then(
 				[this, msg, userId, channel, &client, message](const QString& icon)
-				{
-					Discord::Embed embed;
-					QString name = UmikoBot::Instance().GetName(channel.guildId(), userId);
-					embed.setAuthor(Discord::EmbedAuthor(name, "", icon));
-					embed.setColor(qrand() % 16777216);
-					embed.setTitle("Description");
-					embed.setDescription(msg);
+			{
+				Discord::Embed embed;
+				QString name = UmikoBot::Instance().GetName(channel.guildId(), userId);
+				embed.setAuthor(Discord::EmbedAuthor(name, "", icon));
+				embed.setColor(qrand() % 16777216);
+				embed.setTitle("Description");
+				embed.setDescription(msg);
 
-					client.createMessage(message.channelId(), embed);
-				}
+				client.createMessage(message.channelId(), embed);
+			}
 			);
 		}
 	});
@@ -79,7 +79,7 @@ UserModule::UserModule()
 		QStringList args = message.content().split(' ');
 		snowflake_t authorId = message.author().id();
 		snowflake_t guildId = channel.guildId();
-		
+
 		DescriptionData& data = guildDescriptionData[guildId];
 
 		if (data.isBeingUsed)
@@ -90,7 +90,7 @@ UserModule::UserModule()
 			client.createMessage(message.channelId(), msg);
 			return;
 		}
-		
+
 		if (args.size() > 1)
 		{
 			client.createMessage(message.channelId(), "**Wrong Usage of Command!**");
@@ -116,7 +116,7 @@ UserModule::UserModule()
 			}
 		});
 		data.timer->start();
-		
+
 		QString msg =
 			"**Tell me about yourself!** At any time, you can type:\n"
 			"\t\tskip - to skip the current question (and clear the answer)\n"
@@ -201,7 +201,7 @@ void UserModule::OnSave(QJsonDocument& doc) const
 {
 	// User data
 	QJsonObject docObj;
-	
+
 	for (auto server : userDescriptions.keys())
 	{
 		QJsonObject serverJson;
@@ -210,7 +210,7 @@ void UserModule::OnSave(QJsonDocument& doc) const
 		{
 			if (formDescriptionMessage(user) == "")
 				continue;
-			
+
 			QJsonObject obj;
 			obj["name"] = user.name;
 			obj["location"] = user.location;
@@ -246,8 +246,8 @@ void UserModule::OnLoad(const QJsonDocument& doc)
 		for (const QString& user : users)
 		{
 			auto userObj = obj[user].toObject();
-			
-			UserDescription description {
+
+			UserDescription description{
 				user.toULongLong(),
 				userObj["name"].toString(),
 				userObj["location"].toString(),
@@ -268,71 +268,71 @@ void UserModule::OnMessage(Discord::Client& client, const Discord::Message& mess
 {
 	client.getChannel(message.channelId()).then(
 		[this, message, &client](const Discord::Channel& channel)
+	{
+		snowflake_t guildId = channel.guildId();
+
+		if (guildId == 0 || message.author().bot())
 		{
-			snowflake_t guildId = channel.guildId();
-			
-			if (guildId == 0 || message.author().bot())
-			{
-				// It's a bot / we're in a DM
-				return;
-			}
-
-			DescriptionData& descriptionData = guildDescriptionData[guildId];
-			snowflake_t authorId = message.author().id();
-			QString messageContent = message.content();
-			
-			if (descriptionData.messageId == message.id())
-			{
-				// This is the !iam command, ignore it
-				return;
-			}
-
-			if (descriptionData.isBeingUsed && descriptionData.userId == authorId)
-			{
-				QString contentToWrite = messageContent;
-				bool shouldWrite = true;
-				
-				if (messageContent == "skip")
-				{
-					contentToWrite = "";
-				}
-				else if (messageContent == "continue")
-				{
-					shouldWrite = false;
-				}
-				else if (messageContent == "cancel")
-				{
-					*descriptionData.currentUserDescription = descriptionData.oldUserDescription;
-					descriptionData.isBeingUsed = false;
-					delete descriptionData.timer;
-					descriptionData.timer = nullptr;
-
-					client.createMessage(message.channelId(), "**Cancelled setting description\n**Reverting to old values.");
-					return;
-				}
-
-				if (shouldWrite)
-				{
-					descriptionQuestions[descriptionData.questionUpTo].second(*descriptionData.currentUserDescription, contentToWrite);
-				}
-
-				descriptionData.questionUpTo += 1;
-				descriptionData.timer->start();
-
-				if (descriptionData.questionUpTo == descriptionQuestions.size())
-				{
-					client.createMessage(message.channelId(), "**All done!** Thanks for your time.");
-					descriptionData.isBeingUsed = false;
-					delete descriptionData.timer;
-					descriptionData.timer = nullptr;
-					
-					return;
-				}
-
-				QString msg = descriptionQuestions[descriptionData.questionUpTo].first;
-				client.createMessage(message.channelId(), msg);
-			}
+			// It's a bot / we're in a DM
+			return;
 		}
+
+		DescriptionData& descriptionData = guildDescriptionData[guildId];
+		snowflake_t authorId = message.author().id();
+		QString messageContent = message.content();
+
+		if (descriptionData.messageId == message.id())
+		{
+			// This is the !iam command, ignore it
+			return;
+		}
+
+		if (descriptionData.isBeingUsed && descriptionData.userId == authorId)
+		{
+			QString contentToWrite = messageContent;
+			bool shouldWrite = true;
+
+			if (messageContent == "skip")
+			{
+				contentToWrite = "";
+			}
+			else if (messageContent == "continue")
+			{
+				shouldWrite = false;
+			}
+			else if (messageContent == "cancel")
+			{
+				*descriptionData.currentUserDescription = descriptionData.oldUserDescription;
+				descriptionData.isBeingUsed = false;
+				delete descriptionData.timer;
+				descriptionData.timer = nullptr;
+
+				client.createMessage(message.channelId(), "**Cancelled setting description\n**Reverting to old values.");
+				return;
+			}
+
+			if (shouldWrite)
+			{
+				descriptionQuestions[descriptionData.questionUpTo].second(*descriptionData.currentUserDescription, contentToWrite);
+			}
+
+			descriptionData.questionUpTo += 1;
+			descriptionData.timer->start();
+
+			if (descriptionData.questionUpTo == descriptionQuestions.size())
+			{
+				client.createMessage(message.channelId(), "**All done!** Thanks for your time.");
+				descriptionData.isBeingUsed = false;
+				delete descriptionData.timer;
+				descriptionData.timer = nullptr;
+
+				return;
+			}
+
+			QString msg = descriptionQuestions[descriptionData.questionUpTo].first;
+			client.createMessage(message.channelId(), msg);
+		}
+	}
 	);
 
 	Module::OnMessage(client, message);
@@ -351,7 +351,7 @@ snowflake_t UserModule::getUserIndex(snowflake_t guild, snowflake_t id)
 	}
 
 	// If user is not added to the system, make a new one
-	guildDescriptions.append(UserDescription { id, "" });
+	guildDescriptions.append(UserDescription{ id, "" });
 	return std::distance(guildDescriptions.begin(), std::prev(guildDescriptions.end()));
 }
 
@@ -361,19 +361,19 @@ QString UserModule::formDescriptionMessage(const UserDescription& desc) const
 
 	if (desc.name != "")
 		msg += "**Name: **" + desc.name + "\n";
-		
+
 	if (desc.location != "")
 		msg += "**Location: **" + desc.location + "\n";
-		
+
 	if (desc.industry != "")
 		msg += "**Industry: **" + desc.industry + "\n";
-		
+
 	if (desc.programmingInterests != "")
 		msg += "**Programming Interests: **" + desc.programmingInterests + "\n";
-		
+
 	if (desc.currentlyWorkingOn != "")
 		msg += "**Currently working on: **" + desc.currentlyWorkingOn + "\n";
-		
+
 	if (desc.githubLink != "")
 		msg += "**GitHub: **" + desc.githubLink + "\n";
 

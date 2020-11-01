@@ -16,12 +16,12 @@ public:
 	void OnSave(QJsonDocument& doc) const override;
 	void OnLoad(const QJsonDocument& doc) override;
 	void OnMessage(Discord::Client& client, const Discord::Message& message) override;
-	
+
 private:
 	struct UserDescription
 	{
 		snowflake_t userId;
-		
+
 		QString name;
 		QString location;
 		QString industry;
@@ -39,7 +39,7 @@ private:
 		snowflake_t userId = 0;
 		QTimer* timer;
 		unsigned int questionUpTo = 0;
-		
+
 		UserDescription* currentUserDescription;
 		UserDescription oldUserDescription;
 	};
@@ -59,7 +59,7 @@ private:
 	};
 
 #undef QUESTION
-	
+
 	snowflake_t getUserIndex(snowflake_t guild, snowflake_t id);
 	QString formDescriptionMessage(const UserDescription& desc) const;
 };

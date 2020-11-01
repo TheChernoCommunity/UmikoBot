@@ -86,30 +86,30 @@ public:
 
 	struct CurrencyConfig
 	{
-		double randGiveawayProb { 0.001 };
-		unsigned int freebieExpireTime { 60 };	//in seconds
-		int dailyReward { 100 };
-		int freebieReward { 300 };
-		int gambleReward { 50 };
-		int minGuess { 0 };
-		int maxGuess { 5 };
-		int gambleLoss { 10 };
-		snowflake_t giveawayChannelId { 0 };
+		double randGiveawayProb{ 0.001 };
+		unsigned int freebieExpireTime{ 60 };	//in seconds
+		int dailyReward{ 100 };
+		int freebieReward{ 300 };
+		int gambleReward{ 50 };
+		int minGuess{ 0 };
+		int maxGuess{ 5 };
+		int gambleLoss{ 10 };
+		snowflake_t giveawayChannelId{ 0 };
 		QString currencyName;
 		QString currencySymbol;
 		bool isRandomGiveawayDone{ false };
 		bool allowGiveaway{ false };
-		snowflake_t giveawayClaimer { 0 };
+		snowflake_t giveawayClaimer{ 0 };
 		QTimer* freebieTimer{ nullptr };
-		int dailyBonusAmount { 50 };
-		int dailyBonusPeriod { 3 };
-		int stealSuccessChance { 30 };
-		int stealFinePercent { 50 };
-		int stealVictimBonusPercent { 25 };
-		int stealFailedJailTime { 3 };
-		int bribeMaxAmount { 150 };
-		int bribeLeastAmount { 20 };
-		int bribeSuccessChance { 69 };
+		int dailyBonusAmount{ 50 };
+		int dailyBonusPeriod{ 3 };
+		int stealSuccessChance{ 30 };
+		int stealFinePercent{ 50 };
+		int stealVictimBonusPercent{ 25 };
+		int stealFailedJailTime{ 3 };
+		int bribeMaxAmount{ 150 };
+		int bribeLeastAmount{ 20 };
+		int bribeSuccessChance{ 68 };
 	};
 
 private:

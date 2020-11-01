@@ -84,7 +84,7 @@ struct CommandInfo {
 	bool adminPermission;
 };
 
-class UmikoBot : public Discord::Client 
+class UmikoBot : public Discord::Client
 {
 public:
 	static UmikoBot& Instance();
