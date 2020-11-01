@@ -67,16 +67,16 @@ FunModule::FunModule(UmikoBot* client) : Module("funutil", true), m_memeChannel(
 		});
 
 	RegisterCommand(Commands::FUN_ROLL, "roll", [this](Discord::Client& client, const Discord::Message& message, const Discord::Channel& channel)
-		{
+	{
 
 		QStringList args = message.content().split(' ');
 		GuildSetting* setting = &GuildSettings::GetGuildSetting(channel.guildId());
 		QString prefix = setting->prefix;
 
-		int max;
-		int min;
+		float max;
+		float min;
 
-		if (args.size() == 1) 
+		if (args.size() == 1)
 		{
 			client.createMessage(message.channelId(), "**Wrong Usage of Command!** ");
 			return;
@@ -84,23 +84,29 @@ FunModule::FunModule(UmikoBot* client) : Module("funutil", true), m_memeChannel(
 
 		if (args.size() == 2)
 		{
-			min = 1;
+			min = args.at(1).toDouble();
+			max = min;
+			min = 0;
+		}
+		else if (args.size() == 3)
+		{
+			min = args.at(1).toDouble();
+			max = args.at(2).toDouble();
 		}
 		else
 		{
-			min = args.at(1).toDouble();
+			min = 1;
 		}
-		max = args.at(2).toDouble();
-		
+
 		std::random_device rand_device;
 		std::mt19937 gen(rand_device());
-		std::uniform_int_distribution<> dist(min, max);
 
 		if (max < min)
 			std::swap(min, max);
 
-		QString text = QString("My Value was : " + QString::number(dist(gen)));
+		std::uniform_int_distribution<> dist(min, max);
 
+		QString text = QString("My Value was : " + QString::number(dist(gen)));
 		client.createMessage(message.channelId(), text);
 
 	});
