@@ -1,4 +1,4 @@
-﻿#include "FunModule.h"
+#include "FunModule.h"
 #include <QtNetwork>
 #include <QtCore/QFile>
 #include <QtCore/QJsonDocument>
@@ -85,6 +85,11 @@ FunModule::FunModule(UmikoBot* client) : Module("funutil", true), m_memeChannel(
 		}
 
 		if (args.size() == 4)
+      
+		double max;
+		double min;
+
+		if (args.size() != 3)
 		{
 			client.createMessage(message.channelId(), "**Wrong Usage of Command!** ");
 			return;
@@ -124,6 +129,9 @@ FunModule::FunModule(UmikoBot* client) : Module("funutil", true), m_memeChannel(
 			return;
 		}
 
+    min = args.at(1).toDouble();
+		max = args.at(2).toDouble();
+    
 		std::random_device rand_device;
 		std::mt19937 gen(rand_device());
 
