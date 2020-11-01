@@ -1,4 +1,4 @@
-﻿#include "FunModule.h"
+#include "FunModule.h"
 #include <QtNetwork>
 #include <QtCore/QFile>
 #include <QtCore/QJsonDocument>
@@ -80,8 +80,18 @@ FunModule::FunModule(UmikoBot* client) : Module("funutil", true), m_memeChannel(
 			return;
 		}
 
-		QRegExp re("[+-]?\\d*\\.?\\d+");
-		if (!re.exactMatch(args.at(1)) || !re.exactMatch(args.at(2)))
+		if (args.size() == 4)
+      
+		double max;
+		double min;
+
+		if (args.size() != 3)
+		{
+			client.createMessage(message.channelId(), "**Wrong Usage of Command!** ");
+			return;
+		}
+
+		if (!reg.exactMatch(args.at(1)) || !reg.exactMatch(args.at(2)))
 		{
 			client.createMessage(message.channelId(), "**You must roll with numbers!**");
 			return;
@@ -95,6 +105,9 @@ FunModule::FunModule(UmikoBot* client) : Module("funutil", true), m_memeChannel(
 		min = args.at(1).toDouble();
 		max = args.at(2).toDouble();
 
+    min = args.at(1).toDouble();
+		max = args.at(2).toDouble();
+    
 		std::random_device rand_device;
 		std::mt19937 gen(rand_device());
 

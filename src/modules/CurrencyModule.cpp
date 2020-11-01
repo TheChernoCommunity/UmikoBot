@@ -913,6 +913,9 @@ CurrencyModule::CurrencyModule(UmikoBot* client) : Module("currency", true), m_c
 		int remainingJailTime = authorCurrency.jailTimer->remainingTime();
 		bool inJail = authorCurrency.jailTimer->isActive();
 
+		auto& authorCurrency = guildList[channel.guildId()][getUserIndex(channel.guildId(), authorId)];
+		int remainingJailTime = authorCurrency.jailTimer->remainingTime();
+		bool inJail = authorCurrency.jailTimer->isActive();
 
 		if (inJail == false)
 		{
