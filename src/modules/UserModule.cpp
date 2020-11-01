@@ -217,7 +217,7 @@ UserModule::UserModule()
 				next = args[i + 1];
 			}
 
-			if (text == "--on")
+			if (text == "--buy")
 			{
 				CurrencyModule* currencyModule = static_cast<CurrencyModule*>(UmikoBot::Instance().GetModuleByName("currency"));
 				if (currencyModule)
@@ -225,22 +225,47 @@ UserModule::UserModule()
 					const CurrencyModule::CurrencyConfig& serverConfig = currencyModule->getServerData(channel.guildId());
 					const CurrencyModule::UserCurrency& userCurrency = currencyModule->getUserData(channel.guildId(), authorId);
 
-					if (!userCurrency.canSteal && !userCurrency.canClaimFreebies)
-					{
-						client.createMessage(message.channelId(), "**You are already in safemode!**");
-						return;
-					}
-					else if(userCurrency.canSteal && userCurrency.canClaimFreebies)
-					{
-						currencyModule->setSafeMode(channel, message, true);
 
-						if (userCurrency.jailTimer->isActive())
+					currencyModule->getUserData(channel.guildId(), authorId).setCurrency(-+150);
+
+					userSafeModes.HasSafeMode = true;
+					userSafeModes.SafeModeAmts.push_back(0);
+					userSafeModes.pricePayed = 150;
+					userSafeModes.userId = message.author().id();
+				}
+			}
+			else if (text == "--on")
+			{
+				CurrencyModule* currencyModule = static_cast<CurrencyModule*>(UmikoBot::Instance().GetModuleByName("currency"));
+				if (currencyModule)
+				{
+					const CurrencyModule::CurrencyConfig& serverConfig = currencyModule->getServerData(channel.guildId());
+					const CurrencyModule::UserCurrency& userCurrency = currencyModule->getUserData(channel.guildId(), authorId);
+
+					if (userSafeModes.HasSafeMode)
+					{
+						if (!userCurrency.canSteal && !userCurrency.canClaimFreebies)
 						{
-							client.createMessage(message.channelId(), "**You can't go into safemode while in jail!**");
+							client.createMessage(message.channelId(), "**You are already in safemode!**");
 							return;
 						}
+						else if (userCurrency.canSteal && userCurrency.canClaimFreebies)
+						{
+							currencyModule->setSafeMode(channel, message, true);
 
-						client.createMessage(message.channelId(), "**Safe Mode on!**");
+							if (userCurrency.jailTimer->isActive())
+							{
+								client.createMessage(message.channelId(), "**You can't go into safemode while in jail!**");
+								return;
+							}
+
+							client.createMessage(message.channelId(), "**Safe Mode on!**");
+						}
+					}
+					else 
+					{
+						client.createMessage(message.channelId(), "**You don't have a safe mode!**");
+						return;
 					}
 				}
 			}

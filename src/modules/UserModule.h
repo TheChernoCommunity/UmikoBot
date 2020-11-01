@@ -32,6 +32,18 @@ private:
 
 	QMap<snowflake_t, QList<UserDescription>> userDescriptions;
 
+	struct UserSafeMode
+	{
+		snowflake_t userId = 0;
+
+		bool isIn = false;
+		bool HasSafeMode = false;
+		QList<int> SafeModeAmts;
+		int pricePayed = 0;
+	};
+
+	UserSafeMode userSafeModes;
+
 	struct DescriptionData
 	{
 		bool isBeingUsed = false;
