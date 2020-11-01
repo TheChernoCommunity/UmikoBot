@@ -7,47 +7,48 @@
 #include <QtCore/QPair>
 #include <QtCore/QList>
 
-#define POLL_DEFAULT_TIME 1.0*60.0*60.0		//seconds ~~ 1 hr
-#define POLL_MAX_TIME 168.0					//hours   ~~ 1 week
-#define POLL_MIN_TIME 1.0/60.0				//hours   ~~ 1 mins
+#define POLL_DEFAULT_TIME	1.0*60.0*60.0		//seconds ~~ 1 hr
+#define POLL_MAX_TIME		168.0					//hours   ~~ 1 week
+#define POLL_MIN_TIME		1.0/60.0				//hours   ~~ 1 mins
+#define ROLL_LIMIT			2147483647
 
 FunModule::FunModule(UmikoBot* client) : Module("funutil", true), m_memeChannel(0), m_client(client)
 {
 
 	QObject::connect(&m_MemeManager, &QNetworkAccessManager::finished,
 		this, [this](QNetworkReply* reply) {
-			auto& client = UmikoBot::Instance();
-			if (reply->error()) {
-				qDebug() << reply->errorString();
-				client.createMessage(m_memeChannel, reply->errorString());
-			}
+		auto& client = UmikoBot::Instance();
+		if (reply->error()) {
+			qDebug() << reply->errorString();
+			client.createMessage(m_memeChannel, reply->errorString());
+		}
 
-			QString in = reply->readAll();
+		QString in = reply->readAll();
 
-			QJsonDocument doc = QJsonDocument::fromJson(in.toUtf8());
-			auto obj = doc.object();
-			bool isNsfw = obj["nsfw"].toBool();
-			if (isNsfw) {
-				m_MemeManager.get(QNetworkRequest(QUrl("https://meme-api.herokuapp.com/gimme")));
-				return;
-			}
-			QString title = obj["title"].toString();
-			QString url = obj["url"].toString();
-			QString author = obj["author"].toString();
-			QString postLink = obj["postLink"].toString();
-			QString subreddit = obj["subreddit"].toString();
+		QJsonDocument doc = QJsonDocument::fromJson(in.toUtf8());
+		auto obj = doc.object();
+		bool isNsfw = obj["nsfw"].toBool();
+		if (isNsfw) {
+			m_MemeManager.get(QNetworkRequest(QUrl("https://meme-api.herokuapp.com/gimme")));
+			return;
+		}
+		QString title = obj["title"].toString();
+		QString url = obj["url"].toString();
+		QString author = obj["author"].toString();
+		QString postLink = obj["postLink"].toString();
+		QString subreddit = obj["subreddit"].toString();
 
-			Discord::Embed embed;
-			Discord::EmbedImage img;
-			img.setUrl(url);
-			embed.setImage(img);
-			embed.setTitle(title);
-			Discord::EmbedFooter footer;
-			footer.setText("Post was made by u/" + author + " on r/" + subreddit + ".\nSee the actual post here: " + postLink);
-			embed.setFooter(footer);
+		Discord::Embed embed;
+		Discord::EmbedImage img;
+		img.setUrl(url);
+		embed.setImage(img);
+		embed.setTitle(title);
+		Discord::EmbedFooter footer;
+		footer.setText("Post was made by u/" + author + " on r/" + subreddit + ".\nSee the actual post here: " + postLink);
+		embed.setFooter(footer);
 
-			client.createMessage(m_memeChannel, embed);
-		});
+		client.createMessage(m_memeChannel, embed);
+	});
 	QObject::connect(m_client, &UmikoBot::onMessageReactionAdd, this, &FunModule::onReact);
 	QObject::connect(m_client, &UmikoBot::onMessageReactionRemove, this, &FunModule::onUnReact);
 
@@ -72,6 +73,7 @@ FunModule::FunModule(UmikoBot* client) : Module("funutil", true), m_memeChannel(
 		QStringList args = message.content().split(' ');
 		GuildSetting* setting = &GuildSettings::GetGuildSetting(channel.guildId());
 		QString prefix = setting->prefix;
+		QRegExp reg("[+-]?\\d*\\.?\\d+");
 
 		float max;
 		float min;
@@ -82,11 +84,23 @@ FunModule::FunModule(UmikoBot* client) : Module("funutil", true), m_memeChannel(
 			return;
 		}
 
+		if (args.size() == 4)
+		{
+			client.createMessage(message.channelId(), "**Wrong Usage of Command!** ");
+			return;
+		}
+
+		if (!reg.exactMatch(args.at(1)) || !reg.exactMatch(args.at(2)))
+		{
+			client.createMessage(message.channelId(), "**You must roll with numbers!**");
+			return;
+		}
+
 		if (args.size() == 2)
 		{
 			min = args.at(1).toDouble();
 			max = min;
-			min = 0;
+			min = 0.0;
 		}
 		else if (args.size() == 3)
 		{
@@ -95,7 +109,19 @@ FunModule::FunModule(UmikoBot* client) : Module("funutil", true), m_memeChannel(
 		}
 		else
 		{
-			min = 1;
+			min = 1.0;
+		}
+
+		if (min > ROLL_LIMIT)
+		{
+			client.createMessage(message.channelId(), "**You can't roll that number!** ");
+			return;
+		}
+
+		if (max > ROLL_LIMIT)
+		{
+			client.createMessage(message.channelId(), "**You can't roll that number!**");
+			return;
 		}
 
 		std::random_device rand_device;
@@ -106,18 +132,19 @@ FunModule::FunModule(UmikoBot* client) : Module("funutil", true), m_memeChannel(
 
 		std::uniform_int_distribution<> dist(min, max);
 
-		QString text = QString("My Value was : " + QString::number(dist(gen)));
+		QString text = QString("My Value was: " + QString::number(dist(gen)));
 		client.createMessage(message.channelId(), text);
 
 	});
 
 
-	RegisterCommand(Commands::FUN_POLL, "poll", [this](Discord::Client& client, const Discord::Message& message, const Discord::Channel& channel) 
+
+	RegisterCommand(Commands::FUN_POLL, "poll", [this](Discord::Client& client, const Discord::Message& message, const Discord::Channel& channel)
 	{
 
 		QStringList lines = message.content().split('\n');
 
-		for (auto& line : lines) 
+		for (auto& line : lines)
 		{
 			line = line.trimmed();
 		}
@@ -132,54 +159,54 @@ FunModule::FunModule(UmikoBot* client) : Module("funutil", true), m_memeChannel(
 		QString pollName = "";
 
 		bool listPolls = false;
-		
+
 		bool cancelPoll = false;
 		int cancelPollIndex = -1;
 
-		int pollNum =  m_polls[channel.guildId()] == nullptr ? 0 : m_polls[channel.guildId()]->size();
+		int pollNum = m_polls[channel.guildId()] == nullptr ? 0 : m_polls[channel.guildId()]->size();
 
-		auto parseArgs = [&pollTime, &maxReacts, &pollName, &listPolls, &cancelPoll, &cancelPollIndex](const QStringList& args, snowflake_t chan) -> bool 
+		auto parseArgs = [&pollTime, &maxReacts, &pollName, &listPolls, &cancelPoll, &cancelPollIndex](const QStringList& args, snowflake_t chan) -> bool
 		{ //bool for success
 			QRegExp numReg{ "[+]?\\d*\\.?\\d+" };
 			QRegExp countReg{ "[+]?\\d*" };
-			
+
 			bool newPoll = false;
 			bool listPoll = false;
 
-			for (int i = 0; i < args.size(); i++) 
+			for (int i = 0; i < args.size(); i++)
 			{
 				auto text = args[i].toLower();
 				QString next = "";
-				if (i + 1 < args.size()) 
+				if (i + 1 < args.size())
 				{
 					next = args[i + 1];
 				}
 
-				if (text == "--maxvotes") 
+				if (text == "--maxvotes")
 				{
-					if (listPoll) 
+					if (listPoll)
 					{
 						UmikoBot::Instance().createMessage(chan, "**I am confused... Do you want to me to make a new poll or list the active polls?**");
 						return false;
 					}
-					if (cancelPoll) 
+					if (cancelPoll)
 					{
 						UmikoBot::Instance().createMessage(chan, "**I am confused... Do you want to me to make a new poll or cancel an existing one?**");
 						return false;
 					}
 					newPoll = true;
-					if (next == "" || next.startsWith("--")) 
+					if (next == "" || next.startsWith("--"))
 					{
 						UmikoBot::Instance().createMessage(chan, "**No value for maxVotes provided. Go ahead and give me a value don't be lazy.**");
 						return false;
 					}
-					if (!countReg.exactMatch(next)) 
+					if (!countReg.exactMatch(next))
 					{
 						UmikoBot::Instance().createMessage(chan, "**What's that value for maxVotes? The value should be a positive number!**\n");
 						return false;
 					}
 					long long value = next.toLongLong();
-					if (value == 0) 
+					if (value == 0)
 					{
 						UmikoBot::Instance().createMessage(chan, "Do you even want your poll to last?");
 						return false;
@@ -187,36 +214,36 @@ FunModule::FunModule(UmikoBot* client) : Module("funutil", true), m_memeChannel(
 					maxReacts = value;
 					++i;
 				}
-				else if (text == "--hours") 
+				else if (text == "--hours")
 				{
-					if (listPoll) 
+					if (listPoll)
 					{
 						UmikoBot::Instance().createMessage(chan, "**I am confused... Do you want to me to make a new poll or list the active polls?**");
 						return false;
 					}
-					if (cancelPoll) 
+					if (cancelPoll)
 					{
 						UmikoBot::Instance().createMessage(chan, "**I am confused... Do you want to me to make a new poll or cancel an existing one?**");
 						return false;
 					}
 					newPoll = true;
-					if (next == "" || next.startsWith("--")) 
+					if (next == "" || next.startsWith("--"))
 					{
 						UmikoBot::Instance().createMessage(chan, "**If you want to use the default value for hours, just go ahead and don't type --hours in.\nOh you don't want the default value? Well you gotta type what you want!**");
 						return false;
 					}
-					if (!numReg.exactMatch(next)) 
+					if (!numReg.exactMatch(next))
 					{
 						UmikoBot::Instance().createMessage(chan, "**How long should the poll last? Please provide a beatiful number...**");
 						return false;
 					}
-					double value = next.toDouble()*60.0*60.0;
-					if (value > POLL_MAX_TIME * 60.0 * 60.0) 
+					double value = next.toDouble() * 60.0 * 60.0;
+					if (value > POLL_MAX_TIME * 60.0 * 60.0)
 					{
 						UmikoBot::Instance().createMessage(chan, "**I mean I want your poll to have a *lasting effect*, but don't you think that's a looong time?**");
 						return false;
 					}
-					if (value < POLL_MIN_TIME * 60.0 * 60.0) 
+					if (value < POLL_MIN_TIME * 60.0 * 60.0)
 					{
 						UmikoBot::Instance().createMessage(chan, "**Oh c'mon what is this tiny hour value!?**");
 						return false;
@@ -224,65 +251,64 @@ FunModule::FunModule(UmikoBot* client) : Module("funutil", true), m_memeChannel(
 					pollTime = value;
 					++i;
 				}
-				else if (text == "--name") 
+				else if (text == "--name")
 				{
-					if (listPoll) 
+					if (listPoll)
 					{
 						UmikoBot::Instance().createMessage(chan, "**I am confused... Do you want to me to make a new poll or list the active polls?**");
 						return false;
 					}
-					if (cancelPoll) 
+					if (cancelPoll)
 					{
 						UmikoBot::Instance().createMessage(chan, "**I am confused... Do you want to me to make a new poll or cancel an existing one?**");
 						return false;
 					}
 					newPoll = true;
-					if (next == "") 
+					if (next == "")
 					{
 						UmikoBot::Instance().createMessage(chan, "**Sorry, I didn't catch the name. Oh wait! You didn't give me one!**");
 						return false;
 					}
-					if (next.startsWith('"')) 
+					if (next.startsWith('"'))
 					{
 						//! Should add the last next?
-						bool requireNext = true; 
-						do 
+						bool requireNext = true;
+						do
 						{
 							pollName += " " + next;
-							if (next.endsWith('"')) 
+							if (next.endsWith('"'))
 							{
 								requireNext = false;
 								break;
 							}
-							if (i+2 >= args.size()) 
+							if (i + 2 >= args.size())
 							{
 								UmikoBot::Instance().createMessage(chan, "**The string you provided never ends.**\nPlease fix that?");
 								return false;
 							}
 							next = args[(++i) + 1];
-						} 
-						while (!next.endsWith('"'));
-						if (requireNext) 
+						} while (!next.endsWith('"'));
+						if (requireNext)
 						{
 							pollName += " " + next;
 						}
 
 						//! remove the quotations
-						pollName.remove(1, 1); 
+						pollName.remove(1, 1);
 						pollName.chop(1);
 					}
 					else pollName = next;
 					++i;
 				}
-				else if (text == "--list") 
+				else if (text == "--list")
 				{
-					if (newPoll) 
+					if (newPoll)
 					{
 						UmikoBot::Instance().createMessage(chan, "**I am confused... Do you want to me to make a new poll or list the active polls?**");
 						return false;
 					}
 
-					if (cancelPoll) 
+					if (cancelPoll)
 					{
 						UmikoBot::Instance().createMessage(chan, "**I am confused... Do you want to me to cancel a poll or list the active polls?**");
 						return false;
@@ -290,15 +316,15 @@ FunModule::FunModule(UmikoBot* client) : Module("funutil", true), m_memeChannel(
 
 					listPoll = true;
 				}
-				else if (text == "--cancel") 
+				else if (text == "--cancel")
 				{
-					if (newPoll) 
+					if (newPoll)
 					{
 						UmikoBot::Instance().createMessage(chan, "**I am confused... Do you want to me to make a new poll or cancel an existing poll?**");
 						return false;
 					}
 
-					if (listPoll) 
+					if (listPoll)
 					{
 						UmikoBot::Instance().createMessage(chan, "**I am confused... Do you want to me to make a new poll or cancel an existing poll?**");
 						return false;
@@ -316,10 +342,10 @@ FunModule::FunModule(UmikoBot* client) : Module("funutil", true), m_memeChannel(
 					}
 
 					cancelPollIndex = next.toInt();
-					
+
 					++i;
 				}
-				else 
+				else
 				{
 					UmikoBot::Instance().createMessage(chan, "**I didn't expect this string in the arguments:** " + args[i] + "\nPlease fix that?");
 					return false;
@@ -330,37 +356,37 @@ FunModule::FunModule(UmikoBot* client) : Module("funutil", true), m_memeChannel(
 			return true;
 		};
 
-		if (parseArgs(args, message.channelId())) 
+		if (parseArgs(args, message.channelId()))
 		{
-			if (!listPolls && !cancelPoll) 
+			if (!listPolls && !cancelPoll)
 			{
 
 				client.getGuildMember(channel.guildId(), message.author().id())
-				.then([=](const Discord::GuildMember& member) 
+					.then([=](const Discord::GuildMember& member)
 				{
 					bool found = false;
 
-					for (auto& allowedRole : m_pollWhitelist[channel.guildId()]) 
+					for (auto& allowedRole : m_pollWhitelist[channel.guildId()])
 					{
-						if (member.roles().contains(allowedRole)) 
+						if (member.roles().contains(allowedRole))
 						{
 							found = true;
 							break;
 						}
 					}
 
-					if (!found) 
+					if (!found)
 					{
 						UmikoBot::Instance().createMessage(channel.id(), "**You're not allowed to create polls.**");
 						return;
 					}
 
-					if (lines.size() == 0) 
+					if (lines.size() == 0)
 					{
 						UmikoBot::Instance().createMessage(message.channelId(), "**A poll without anything to vote for huh? C'mon you can do better!**");
 						return;
 					}
-					if (lines.size() == 1) 
+					if (lines.size() == 1)
 					{
 						UmikoBot::Instance().createMessage(message.channelId(), "**Why would there be a poll if there's only one thing to choose?**");
 						return;
@@ -384,12 +410,12 @@ FunModule::FunModule(UmikoBot* client) : Module("funutil", true), m_memeChannel(
 
 						QString emojiData = emoji;
 
-						if (customEmote.exactMatch(emojiData)) 
+						if (customEmote.exactMatch(emojiData))
 						{
 							emojiData = emojiData.remove("<:");
 							emojiData = emojiData.remove(">");
 						}
-						else if (customAnimEmote.exactMatch(emojiData)) 
+						else if (customAnimEmote.exactMatch(emojiData))
 						{
 							isAnimated = true;
 							emojiData = emojiData.remove("<a:");
@@ -398,9 +424,9 @@ FunModule::FunModule(UmikoBot* client) : Module("funutil", true), m_memeChannel(
 
 						//! Check if the current emoji exists already
 
-						for (auto& opt : options) 
+						for (auto& opt : options)
 						{
-							if (opt.emote == emojiData) 
+							if (opt.emote == emojiData)
 							{
 								UmikoBot::Instance().createMessage(message.channelId(), "**You used this reaction choice multiple times:** " + emoji);
 								return;
@@ -414,7 +440,7 @@ FunModule::FunModule(UmikoBot* client) : Module("funutil", true), m_memeChannel(
 						options.push_back(opt);
 					}
 
-					if (options.length() > 10) 
+					if (options.length() > 10)
 					{
 						UmikoBot::Instance().createMessage(message.channelId(), "**Woah there! That's a lot of options for me to handle!**");
 						return;
@@ -429,10 +455,10 @@ FunModule::FunModule(UmikoBot* client) : Module("funutil", true), m_memeChannel(
 					snowflake_t guild = channel.guildId();
 
 					UmikoBot::Instance()
-					.createMessage(message.channelId(), embed)
-					.then(
-					[this, pollNum, options, maxReacts, pollName,
-						pollTime, guild](const Discord::Message& msg) 
+						.createMessage(message.channelId(), embed)
+						.then(
+							[this, pollNum, options, maxReacts, pollName,
+							pollTime, guild](const Discord::Message& msg)
 					{
 						int pos = 0;
 						if (m_polls[guild] == nullptr)
@@ -450,12 +476,12 @@ FunModule::FunModule(UmikoBot* client) : Module("funutil", true), m_memeChannel(
 					});
 
 				});
-				
+
 			}
-			else if (cancelPoll) 
+			else if (cancelPoll)
 			{
 				auto& serverPolls = m_polls[channel.guildId()];
-				if (serverPolls != nullptr && !serverPolls->isEmpty()) 
+				if (serverPolls != nullptr && !serverPolls->isEmpty())
 				{
 					bool found = false;
 
@@ -475,23 +501,23 @@ FunModule::FunModule(UmikoBot* client) : Module("funutil", true), m_memeChannel(
 							patch.setEmbed(embed);
 							UmikoBot::Instance().deleteAllReactions(notif_chan, poll_msg);
 							UmikoBot::Instance().editMessage(notif_chan, poll_msg, patch).then([notif_chan, poll_num](const Discord::Message&) {
-								UmikoBot::Instance().createMessage(notif_chan, "**Poll#" + QString::number(poll_num)+ " has been cancelled.**");
+								UmikoBot::Instance().createMessage(notif_chan, "**Poll#" + QString::number(poll_num) + " has been cancelled.**");
 							});
 							break;
 						}
 					}
 
-					if (!found) 
+					if (!found)
 					{
 						client.createMessage(channel.id(), "**No active poll with the provided number exists.**");
 					}
 				}
-				else 
+				else
 				{
 					client.createMessage(channel.id(), "**There are no active polls to cancel.**");
 				}
 			}
-			else 
+			else
 			{
 
 				if (lines.size() != 0) {
@@ -506,7 +532,7 @@ FunModule::FunModule(UmikoBot* client) : Module("funutil", true), m_memeChannel(
 
 				auto& serverPolls = m_polls[channel.guildId()];
 
-				if (serverPolls != nullptr && !serverPolls->isEmpty()) 
+				if (serverPolls != nullptr && !serverPolls->isEmpty())
 				{
 					for (auto& poll : *serverPolls) {
 
@@ -525,7 +551,7 @@ FunModule::FunModule(UmikoBot* client) : Module("funutil", true), m_memeChannel(
 						fields.push_back(field);
 					}
 				}
-				else 
+				else
 				{
 					embed.setDescription("No polls active.");
 					client.createMessage(channel.id(), embed);
@@ -540,21 +566,21 @@ FunModule::FunModule(UmikoBot* client) : Module("funutil", true), m_memeChannel(
 
 	});
 
-	RegisterCommand(Commands::FUN_GIVE_NEW_POLL_ACCESS, "give-new-poll-access", [this](Discord::Client& client, const Discord::Message& message, const Discord::Channel& channel) 
+	RegisterCommand(Commands::FUN_GIVE_NEW_POLL_ACCESS, "give-new-poll-access", [this](Discord::Client& client, const Discord::Message& message, const Discord::Channel& channel)
 	{
 		QStringList args = message.content().split(' ');
 
-		Permissions::ContainsPermission(client, channel.guildId(), message.author().id(), CommandPermission::ADMIN, [this, args, message, channel](bool result) 
+		Permissions::ContainsPermission(client, channel.guildId(), message.author().id(), CommandPermission::ADMIN, [this, args, message, channel](bool result)
 		{
 			GuildSetting* setting = &GuildSettings::GetGuildSetting(channel.guildId());
-			if (!result) 
+			if (!result)
 			{
 				UmikoBot::Instance().createMessage(message.channelId(), "**You don't have permissions to use this command.**");
 				return;
 			}
-			
 
-			if (args.size() < 2) 
+
+			if (args.size() < 2)
 			{
 				UmikoBot::Instance().createMessage(channel.id(), "**Wrong Usage of Command!**");
 				return;
@@ -562,7 +588,7 @@ FunModule::FunModule(UmikoBot* client) : Module("funutil", true), m_memeChannel(
 
 			snowflake_t guild = channel.guildId();
 			snowflake_t chan = channel.id();
-			
+
 			auto& roles = message.mentionRoles();
 
 			if (roles.isEmpty()) {
@@ -578,17 +604,17 @@ FunModule::FunModule(UmikoBot* client) : Module("funutil", true), m_memeChannel(
 			UmikoBot::Instance().createMessage(channel.id(), "**The roles have been added.**\nPeople with the role(s) can now create new polls!");
 
 		});
-		
+
 	});
-	
-	RegisterCommand(Commands::FUN_TAKE_NEW_POLL_ACCESS, "take-new-poll-access", [this](Discord::Client& client, const Discord::Message& message, const Discord::Channel& channel) 
+
+	RegisterCommand(Commands::FUN_TAKE_NEW_POLL_ACCESS, "take-new-poll-access", [this](Discord::Client& client, const Discord::Message& message, const Discord::Channel& channel)
 	{
 		QStringList args = message.content().split(' ');
 
-		Permissions::ContainsPermission(client, channel.guildId(), message.author().id(), CommandPermission::ADMIN, [this, args, message, channel](bool result) 
+		Permissions::ContainsPermission(client, channel.guildId(), message.author().id(), CommandPermission::ADMIN, [this, args, message, channel](bool result)
 		{
 			GuildSetting* setting = &GuildSettings::GetGuildSetting(channel.guildId());
-			if (!result) 
+			if (!result)
 			{
 				UmikoBot::Instance().createMessage(message.channelId(), "**You don't have permissions to use this command.**");
 				return;
@@ -604,13 +630,13 @@ FunModule::FunModule(UmikoBot* client) : Module("funutil", true), m_memeChannel(
 
 			auto& roles = message.mentionRoles();
 
-			if (roles.isEmpty()) 
+			if (roles.isEmpty())
 			{
 				UmikoBot::Instance().createMessage(channel.id(), "**Wrong Usage of Command!\n**Please mention some role(s) so that I can do the needed.");
 				return;
 			}
 
-			for (auto& role : roles) 
+			for (auto& role : roles)
 			{
 				m_pollWhitelist[guild].removeOne(role);
 			}
@@ -622,47 +648,47 @@ FunModule::FunModule(UmikoBot* client) : Module("funutil", true), m_memeChannel(
 	});
 }
 
-void FunModule::onReact(snowflake_t user, snowflake_t channel, snowflake_t message, const Discord::Emoji& emoji) const 
+void FunModule::onReact(snowflake_t user, snowflake_t channel, snowflake_t message, const Discord::Emoji& emoji) const
 {
 	auto polls = m_polls;
-	UmikoBot::Instance().getChannel(channel).then([user, channel, message, emoji, polls](const Discord::Channel& chan) 
+	UmikoBot::Instance().getChannel(channel).then([user, channel, message, emoji, polls](const Discord::Channel& chan)
 	{
 		auto guild = chan.guildId();
-		if (polls[guild] != nullptr) 
+		if (polls[guild] != nullptr)
 		{
-			for (auto poll : *polls[guild]) 
+			for (auto poll : *polls[guild])
 			{
-				if (poll->pollMsg == message) 
+				if (poll->pollMsg == message)
 				{
-					UmikoBot::Instance().getUser(user).then([channel, message, emoji, poll](const Discord::User& user) 
+					UmikoBot::Instance().getUser(user).then([channel, message, emoji, poll](const Discord::User& user)
 					{
-						if (!user.bot()) 
+						if (!user.bot())
 						{
 							QString emojiStr = utility::stringifyEmoji(emoji);
 							bool found = false;
-							for (auto& option : poll->options) 
+							for (auto& option : poll->options)
 							{
-								if (option.emote == emojiStr) 
+								if (option.emote == emojiStr)
 								{
 									found = true;
 									option.count++;
 									break;
 								}
 							}
-							if (!found) 
+							if (!found)
 							{
 								//This reaction wasn't one of the choices
 								UmikoBot::Instance().deleteUserReaction(channel, message, emojiStr, user.id());
 								return;
 							}
-							if (poll->maxVotes != -1) 
+							if (poll->maxVotes != -1)
 							{
 								std::size_t total = 0;
-								for (auto it = poll->options.begin(); it != poll->options.end(); ++it) 
+								for (auto it = poll->options.begin(); it != poll->options.end(); ++it)
 								{
 									total += it->count;
 								}
-								if (total == poll->maxVotes) 
+								if (total == poll->maxVotes)
 								{
 									//! Manually invoke timeout for the poll timer
 									poll->timer->QTimer::qt_metacall(QMetaObject::InvokeMetaMethod, 5, {});
@@ -678,27 +704,27 @@ void FunModule::onReact(snowflake_t user, snowflake_t channel, snowflake_t messa
 
 }
 
-void FunModule::onUnReact(snowflake_t user, snowflake_t channel, snowflake_t message, const Discord::Emoji& emoji) const 
+void FunModule::onUnReact(snowflake_t user, snowflake_t channel, snowflake_t message, const Discord::Emoji& emoji) const
 {
 	auto polls = m_polls;
 	UmikoBot::Instance().getChannel(channel)
-		.then([user, channel, message, emoji, polls](const Discord::Channel& chan) 
+		.then([user, channel, message, emoji, polls](const Discord::Channel& chan)
 	{
 		auto guild = chan.guildId();
-		if (polls[guild] != nullptr) 
+		if (polls[guild] != nullptr)
 		{
-			for (auto poll : *polls[guild]) 
+			for (auto poll : *polls[guild])
 			{
-				if (poll->pollMsg == message) 
+				if (poll->pollMsg == message)
 				{
-					UmikoBot::Instance().getUser(user).then([channel, message, emoji, poll](const Discord::User& user) 
+					UmikoBot::Instance().getUser(user).then([channel, message, emoji, poll](const Discord::User& user)
 					{
-						if (!user.bot()) 
+						if (!user.bot())
 						{
 							QString emojiStr = utility::stringifyEmoji(emoji);
-							for (auto& option : poll->options) 
+							for (auto& option : poll->options)
 							{
-								if (option.emote == emojiStr) 
+								if (option.emote == emojiStr)
 								{
 									option.count--;
 									break;
@@ -713,11 +739,11 @@ void FunModule::onUnReact(snowflake_t user, snowflake_t channel, snowflake_t mes
 	});
 }
 
-void FunModule::OnMessage(Discord::Client& client, const Discord::Message& message) 
+void FunModule::OnMessage(Discord::Client& client, const Discord::Message& message)
 {
-	for (auto& usr : message.mentions()) 
+	for (auto& usr : message.mentions())
 	{
-		if (usr.bot()) 
+		if (usr.bot())
 		{
 			snowflake_t chan = message.channelId();
 			UmikoBot::Instance().createReaction(chan, message.id(), utility::consts::emojis::reacts::ANGRY_PING)
@@ -732,7 +758,7 @@ void FunModule::OnMessage(Discord::Client& client, const Discord::Message& messa
 	Module::OnMessage(client, message);
 }
 
-void FunModule::pollReactAndAdd(const PollOptions& options, int pos, const Poll& poll, snowflake_t msg, snowflake_t chan, snowflake_t guild) 
+void FunModule::pollReactAndAdd(const PollOptions& options, int pos, const Poll& poll, snowflake_t msg, snowflake_t chan, snowflake_t guild)
 {
 
 	if (pos == options.size()) return;
@@ -740,40 +766,40 @@ void FunModule::pollReactAndAdd(const PollOptions& options, int pos, const Poll&
 	UmikoBot::Instance()
 		.createReaction(chan, msg, options.at(pos).emote)
 		.then([this, pos, options, poll, msg, chan, guild]
-		{
-			//! Add the reaction if success
-			poll->options.push_back(options.at(pos));
+	{
+		//! Add the reaction if success
+		poll->options.push_back(options.at(pos));
 
-			//! Continue with the next reaction
-			pollReactAndAdd(options, pos + 1, poll, msg, chan, guild);
+		//! Continue with the next reaction
+		pollReactAndAdd(options, pos + 1, poll, msg, chan, guild);
 
-		})
+	})
 		.otherwise([this, pos, options, poll, msg, chan, guild]() {
-			//! Remove the poll from the pending list if we couldn't 
-			//! add all reactions
-			for (int i = 0; i < m_polls[guild]->size(); i++) {
-				if (m_polls[guild]->at(i)->pollNum == i) {
-					m_polls[guild]->removeAt(i);
-					break;
-				}
+		//! Remove the poll from the pending list if we couldn't 
+		//! add all reactions
+		for (int i = 0; i < m_polls[guild]->size(); i++) {
+			if (m_polls[guild]->at(i)->pollNum == i) {
+				m_polls[guild]->removeAt(i);
+				break;
 			}
-			UmikoBot::Instance().deleteMessage(chan, msg);
-			UmikoBot::Instance().createMessage(chan, "**I'm sorry, but one (or more) of the vote options wasn't a reaction.**\nYou might wanna fix that. ||Unless you were trolling, and if that's the case, haha! I am well built!||");
-				return;
-		});
+		}
+		UmikoBot::Instance().deleteMessage(chan, msg);
+		UmikoBot::Instance().createMessage(chan, "**I'm sorry, but one (or more) of the vote options wasn't a reaction.**\nYou might wanna fix that. ||Unless you were trolling, and if that's the case, haha! I am well built!||");
+		return;
+	});
 }
 
-void FunModule::OnSave(QJsonDocument& doc) const 
+void FunModule::OnSave(QJsonDocument& doc) const
 {
 	QJsonObject docObj;
 
-	for (auto& server : m_pollWhitelist.keys()) 
+	for (auto& server : m_pollWhitelist.keys())
 	{
 		QJsonObject serverJSON;
 
 		QJsonArray list;
-		
-		for (auto& roleId : m_pollWhitelist[server]) 
+
+		for (auto& roleId : m_pollWhitelist[server])
 		{
 			list.push_back(QString::number(roleId));
 		}
@@ -786,7 +812,7 @@ void FunModule::OnSave(QJsonDocument& doc) const
 	doc.setObject(docObj);
 }
 
-void FunModule::OnLoad(const QJsonDocument& doc) 
+void FunModule::OnLoad(const QJsonDocument& doc)
 {
 	m_pollWhitelist.clear();
 
@@ -794,13 +820,13 @@ void FunModule::OnLoad(const QJsonDocument& doc)
 
 	auto servers = docObj.keys();
 
-	for (auto& server : servers) 
+	for (auto& server : servers)
 	{
 		snowflake_t guild = server.toULongLong();
 		auto serverObj = docObj[server].toObject();
 		auto list = serverObj["poll-whitelist"].toArray();
-		
-		for (auto role : list) 
+
+		for (auto role : list)
 		{
 			snowflake_t roleId = role.toString().toULongLong();
 			m_pollWhitelist[guild].push_back(roleId);
