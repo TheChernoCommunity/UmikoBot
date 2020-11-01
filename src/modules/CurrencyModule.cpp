@@ -436,11 +436,6 @@ CurrencyModule::CurrencyModule(UmikoBot* client) : Module("currency", true), m_c
 	RegisterCommand(Commands::CURRENCY_SET_PRIZE_CHANNEL, "setannouncechan", [this](Client& client, const Message& message, const Channel& channel) 
 	{
 		QStringList args = message.content().split(' ');
-		GuildSetting* setting = &GuildSettings::GetGuildSetting(channel.guildId());
-		QString prefix = setting->prefix;
-
-		if (args.first() != prefix + "setannouncechan")
-			return;
 
 		UmikoBot::VerifyAndRunAdminCmd(client, message, channel, 1, args, false, [this, &client, channel, message]()
 		{
@@ -694,7 +689,7 @@ CurrencyModule::CurrencyModule(UmikoBot* client) : Module("currency", true), m_c
 		client.createMessage(message.channelId(), embed);
 
 	});
-	
+
 	RegisterCommand(Commands::CURRENCY_BRIBE, "bribe", [this](Client& client, const Message& message, const Channel& channel)
 	{
 
@@ -821,7 +816,7 @@ CurrencyModule::CurrencyModule(UmikoBot* client) : Module("currency", true), m_c
 	{
 		QStringList args = message.content().split(' ');
 
-		UmikoBot::VerifyAndRunAdminCmd(client, message, channel, 2, args, true, [this, &client, channel, message, args]() 
+		UmikoBot::VerifyAndRunAdminCmd(client, message, channel, 2, args, true, [this, &client, channel, message, args]()
 		{
 			auto& config = getServerData(channel.guildId());
 			config.bribeSuccessChance = args.at(1).toInt();
@@ -985,11 +980,6 @@ CurrencyModule::CurrencyModule(UmikoBot* client) : Module("currency", true), m_c
 	{
 
 		QStringList args = message.content().split(' ');
-		GuildSetting* setting = &GuildSettings::GetGuildSetting(channel.guildId());
-		QString prefix = setting->prefix;
-
-		if (args.first() != prefix + "setstealfine")
-			return;
 
 		UmikoBot::VerifyAndRunAdminCmd(client, message, channel, 2, args, true, [this, &client, channel, message, args]()
 		{
@@ -1016,11 +1006,6 @@ CurrencyModule::CurrencyModule(UmikoBot* client) : Module("currency", true), m_c
 	{
 
 		QStringList args = message.content().split(' ');
-		GuildSetting* setting = &GuildSettings::GetGuildSetting(channel.guildId());
-		QString prefix = setting->prefix;
-
-		if (args.first() != prefix + "setstealjailhours")
-			return;
 
 		UmikoBot::VerifyAndRunAdminCmd(client, message, channel, 2, args, true, [this, &client, channel, message, args]()
 		{
@@ -1034,11 +1019,6 @@ CurrencyModule::CurrencyModule(UmikoBot* client) : Module("currency", true), m_c
 	{
 
 		QStringList args = message.content().split(' ');
-		GuildSetting* setting = &GuildSettings::GetGuildSetting(channel.guildId());
-		QString prefix = setting->prefix;
-
-		if (args.first() != prefix + "setdailybonus")
-			return;
 
 		UmikoBot::VerifyAndRunAdminCmd(client, message, channel, 2, args, true, [this, &client, channel, message, args]()
 		{
@@ -1052,11 +1032,6 @@ CurrencyModule::CurrencyModule(UmikoBot* client) : Module("currency", true), m_c
 	{
 
 		QStringList args = message.content().split(' ');
-		GuildSetting* setting = &GuildSettings::GetGuildSetting(channel.guildId());
-		QString prefix = setting->prefix;
-
-		if (args.first() != prefix + "setdailybonusperiod")
-			return;
 
 		UmikoBot::VerifyAndRunAdminCmd(client, message, channel, 2, args, true, [this, &client, channel, message, args]()
 		{
@@ -1076,7 +1051,8 @@ CurrencyModule::CurrencyModule(UmikoBot* client) : Module("currency", true), m_c
 			auto& config = getServerData(channel.guildId());
 			auto amt = args.at(1).toDouble();
 
-			for (auto& user : guildList[channel.guildId()]) {
+			for (auto& user : guildList[channel.guildId()])
+			{
 				user.setCurrency(user.currency() + amt);
 			}
 
