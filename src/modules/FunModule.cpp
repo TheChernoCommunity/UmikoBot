@@ -10,6 +10,7 @@
 #define POLL_DEFAULT_TIME 1.0*60.0*60.0		//seconds ~~ 1 hr
 #define POLL_MAX_TIME 168.0					//hours   ~~ 1 week
 #define POLL_MIN_TIME 1.0/60.0				//hours   ~~ 1 mins
+#define ROLL_LIMIT	2147483647
 
 FunModule::FunModule(UmikoBot* client) : Module("funutil", true), m_memeChannel(0), m_client(client)
 {
@@ -68,24 +69,21 @@ FunModule::FunModule(UmikoBot* client) : Module("funutil", true), m_memeChannel(
 
 	RegisterCommand(Commands::FUN_ROLL, "roll", [this](Discord::Client& client, const Discord::Message& message, const Discord::Channel& channel)
 	{
-
 		QStringList args = message.content().split(' ');
+		GuildSetting* setting = &GuildSettings::GetGuildSetting(channel.guildId());
+		QString prefix = setting->prefix;
+		QRegExp reg("[+-]?\\d*\\.?\\d+");
 
-		double max;
-		double min;
+		float max;
+		float min;
 
-		if (args.size() != 3)
+		if (args.size() == 1)
 		{
 			client.createMessage(message.channelId(), "**Wrong Usage of Command!** ");
 			return;
 		}
 
 		if (args.size() == 4)
-      
-		double max;
-		double min;
-
-		if (args.size() != 3)
 		{
 			client.createMessage(message.channelId(), "**Wrong Usage of Command!** ");
 			return;
@@ -97,17 +95,34 @@ FunModule::FunModule(UmikoBot* client) : Module("funutil", true), m_memeChannel(
 			return;
 		}
 
-		if (args.at(1) == args.at(2))
+		if (args.size() == 2)
 		{
-			client.createMessage(message.channelId(), "**The numbers are same, please roll different numbers.**");
+			min = args.at(1).toDouble();
+			max = min;
+			min = 0.0;
+		}
+		else if (args.size() == 3)
+		{
+			min = args.at(1).toDouble();
+			max = args.at(2).toDouble();
+		}
+		else
+		{
+			min = 1.0;
+		}
+
+		if (min > ROLL_LIMIT)
+		{
+			client.createMessage(message.channelId(), "**You can't roll that number!** ");
 			return;
 		}
-		min = args.at(1).toDouble();
-		max = args.at(2).toDouble();
 
-    min = args.at(1).toDouble();
-		max = args.at(2).toDouble();
-    
+		if (max > ROLL_LIMIT)
+		{
+			client.createMessage(message.channelId(), "**You can't roll that number!**");
+			return;
+		}
+
 		std::random_device rand_device;
 		std::mt19937 gen(rand_device());
 
@@ -116,7 +131,7 @@ FunModule::FunModule(UmikoBot* client) : Module("funutil", true), m_memeChannel(
 
 		std::uniform_int_distribution<> dist(min, max);
 
-		QString text = QString("My Value was: **" + QString::number(dist(gen)) + "**");
+		QString text = QString("My Value was:** " + QString::number(dist(gen)) + "**");
 		client.createMessage(message.channelId(), text);
 
 	});
