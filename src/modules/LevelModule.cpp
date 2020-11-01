@@ -38,10 +38,6 @@ LevelModule::LevelModule(UmikoBot* client)
 		GuildSetting s = GuildSettings::GetGuildSetting(channel.guildId());
 		QString prefix = s.prefix;
 
-		if (args.first() != prefix + "top")
-			return;
-
-		
 		if (args.size() == 2) {
 			qSort(exp.begin(), exp.end(),
 				[](const LevelModule::GuildLevelData& v1, const LevelModule::GuildLevelData& v2)
@@ -231,9 +227,6 @@ LevelModule::LevelModule(UmikoBot* client)
 			bot->createMessage(message.channelId(), embed);
 		};
 		
-		if (args.first() != prefix + "rank")
-			return;
-		
 		if (args.size() < 2)
 		{
 			printHelp();
@@ -384,9 +377,6 @@ LevelModule::LevelModule(UmikoBot* client)
 		QStringList args = message.content().split(' ');
 		QString prefix = setting->prefix;
 
-		if (args.first() != prefix + "setmaxlevel")
-			return;
-
 		auto printHelp = [&client, prefix, message]()
 		{
 			UmikoBot* bot = reinterpret_cast<UmikoBot*>(&client);
@@ -422,9 +412,6 @@ LevelModule::LevelModule(UmikoBot* client)
 		GuildSetting* setting = &GuildSettings::GetGuildSetting(channel.guildId());
 		QStringList args = message.content().split(' ');
 		QString prefix = setting->prefix;
-
-		if (args.first() != prefix + "setexpreq")
-			return;
 
 		auto printHelp = [&client, prefix, message]()
 		{
@@ -462,9 +449,6 @@ LevelModule::LevelModule(UmikoBot* client)
 		QStringList args = message.content().split(' ');
 		QString prefix = setting->prefix;
 
-		if (args.first() != prefix + "setgrowthrate")
-			return;
-
 		auto printHelp = [&client, prefix, message]()
 		{
 			UmikoBot* bot = reinterpret_cast<UmikoBot*>(&client);
@@ -500,9 +484,6 @@ LevelModule::LevelModule(UmikoBot* client)
 		GuildSetting s = GuildSettings::GetGuildSetting(channel.guildId());
 		QString prefix = s.prefix;
 		QStringList args = message.content().split(' ');
-
-		if (args.first() != prefix + "givexp")
-			return;
 
 		auto printHelp = [&client, prefix, message]()
 		{
@@ -588,9 +569,6 @@ LevelModule::LevelModule(UmikoBot* client)
 		GuildSetting s = GuildSettings::GetGuildSetting(channel.guildId());
 		QString prefix = s.prefix;
 		QStringList args = message.content().split(' ');
-
-		if (args.first() != prefix + "takexp")
-			return;
 
 		auto printHelp = [&client, prefix, message]()
 		{
@@ -679,9 +657,6 @@ LevelModule::LevelModule(UmikoBot* client)
 		GuildSetting s = GuildSettings::GetGuildSetting(channel.guildId());
 		QString prefix = s.prefix;
 		QStringList args = message.content().split(' ');
-
-		if (args.first() != prefix + "blockxp")
-			return;
 
 		auto printHelp = [&client, prefix, message]()
 		{

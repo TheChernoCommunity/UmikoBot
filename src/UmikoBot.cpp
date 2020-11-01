@@ -171,10 +171,6 @@ UmikoBot::UmikoBot(QObject* parent)
 
 		if (args.size() > 1) 
 		{
-			if (args.first() != GuildSettings::GetGuildSetting(channel.guildId()).prefix + "status")
-				return;
-			
-
 			QList<User> mentions = message.mentions();
 			if (mentions.size() > 0)
 			{
@@ -217,7 +213,7 @@ UmikoBot::UmikoBot(QObject* parent)
 		QString prefix = GuildSettings::GetGuildSetting(channel.guildId()).prefix;
 		if (args.size() > 1)
 		{
-			if (args.first() != prefix + "help" || args.size() != 2)
+			if (args.size() != 2)
 				return;
 
 			QString commandName = args[1];
@@ -296,9 +292,6 @@ UmikoBot::UmikoBot(QObject* parent)
 		GuildSetting& s = GuildSettings::GetGuildSetting(channel.guildId());
 		QStringList args = message.content().split(' ');
 
-		if (args.first() != s.prefix + "setprefix")
-			return;
-
 		UmikoBot::VerifyAndRunAdminCmd(client, message, channel, 2, args, false, [this, &client, channel, message, args, &s]()
 		{
 			QString prefix = "";
@@ -320,8 +313,6 @@ UmikoBot::UmikoBot(QObject* parent)
 	{
 		QStringList args = message.content().split(" ");
 		QString prefix = GuildSettings::GetGuildSetting(channel.guildId()).prefix;
-		if (args.first() != prefix + "module")
-			return;
 
 		auto printHelp = [this, prefix, message]() 
 		{
@@ -450,8 +441,6 @@ UmikoBot::UmikoBot(QObject* parent)
 	{
 		QStringList args = message.content().split(" ");
 		QString prefix = GuildSettings::GetGuildSetting(channel.guildId()).prefix;
-		if (args.first() != prefix + "output")
-			return;
 
 		auto printHelp = [this, prefix, message]()
 		{

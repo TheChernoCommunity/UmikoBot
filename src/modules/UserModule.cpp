@@ -132,12 +132,7 @@ UserModule::UserModule()
 		[this](Client& client, const Message& message, const Channel& channel)
 	{
 		QStringList args = message.content().split(' ');
-		GuildSetting* setting = &GuildSettings::GetGuildSetting(channel.guildId());
-		QString prefix = setting->prefix;
-
-		if (args.first() != prefix + "stats")
-			return;
-
+		
 		if (args.size() > 2)
 		{
 			client.createMessage(message.channelId(), "**Wrong Usage of Command!**");
