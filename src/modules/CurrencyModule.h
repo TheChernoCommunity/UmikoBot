@@ -97,10 +97,16 @@ public:
 		snowflake_t giveawayChannelId { 0 };
 		QString currencyName;
 		QString currencySymbol;
+		QString currentEvent;
 		bool isRandomGiveawayDone{ false };
 		bool allowGiveaway{ false };
+		bool isEventRunning{ false };
+		bool eventIsTimed{ false };
+		bool eventHighRiskHighRewardRunning{ false };
+		bool eventLowRiskLowRewardRunning{ false };
 		snowflake_t giveawayClaimer { 0 };
 		QTimer* freebieTimer{ nullptr };
+		QTimer* eventTimer{ nullptr };
 		int dailyBonusAmount { 50 };
 		int dailyBonusPeriod { 3 };
 		int stealSuccessChance { 30 };

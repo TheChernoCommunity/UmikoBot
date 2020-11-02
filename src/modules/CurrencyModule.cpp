@@ -22,6 +22,13 @@
 //! Gamble Timeout in seconds
 #define gambleTimeout 20
 
+#define highRiskRewardBonus 50
+#define highRiskRewardStealDecrease 10
+
+#define lowRiskRewardPenalty 50
+#define lowRiskRewardLeastAmoutToSteal 80
+#define lowRiskRewardStealIncrease 20
+
 CurrencyModule::CurrencyModule(UmikoBot* client) : Module("currency", true), m_client(client)
 {
 
@@ -1197,6 +1204,49 @@ CurrencyModule::CurrencyModule(UmikoBot* client) : Module("currency", true), m_c
 			
 		auto& victimCurrency = guildList[channel.guildId()][getUserIndex(channel.guildId(), victimId)];
 		auto& authorCurrency = guildList[channel.guildId()][getUserIndex(channel.guildId(), authorId)];
+		qDebug() << config.stealSuccessChance;
+		if (roll && config.eventHighRiskHighRewardRunning)
+		{
+			QString num = QString::number(highRiskRewardBonus);
+			victimCurrency.setCurrency(victimCurrency.currency() - amountToSteal);
+			authorCurrency.setCurrency(authorCurrency.currency() + amountToSteal + highRiskRewardBonus);
+
+			QString stealAmount = QString::number(amountToSteal);
+			QString output = QString(
+				":man_detective: **Steal success!** :man_detective:\n"
+				"*%1* has discreetly stolen **`%2 %3`** from under *%4's* nose.\n"
+				"HighRiskHighReward event **BONUS**: `%5 %3`\n"
+			).arg(thiefName, stealAmount, config.currencySymbol, victimName, num);
+
+			client.createMessage(message.channelId(), output);
+			return;
+		}
+		else if (roll && config.eventLowRiskLowRewardRunning)
+		{
+			if (amountToSteal < lowRiskRewardLeastAmoutToSteal)
+			{
+				QString num = QString::number(lowRiskRewardLeastAmoutToSteal);
+				QString desc = QString(
+					"**You can't steal that amount beacuse LowRiskLowReward event is running!**\n"
+					"You have to steal more than `%2 %1`\n"
+				).arg(config.currencySymbol, num);
+				client.createMessage(message.channelId(), desc);
+				return;
+			}
+			QString num = QString::number(lowRiskRewardPenalty);
+			victimCurrency.setCurrency(victimCurrency.currency() - amountToSteal);
+			authorCurrency.setCurrency(authorCurrency.currency() + (amountToSteal - lowRiskRewardPenalty));
+
+			QString stealAmount = QString::number(amountToSteal);
+			QString output = QString(
+				":man_detective: **Steal success!** :man_detective:\n"
+				"*%1* has discreetly stolen **`%2 %3`** from under *%4's* nose.\n"
+				"LowRiskLowReward event **PENALTY**: `%5 %3`\n"
+			).arg(thiefName, stealAmount, config.currencySymbol, victimName, num);
+
+			client.createMessage(message.channelId(), output);
+			return;
+		}
 
 		if (roll)
 		{
@@ -1211,7 +1261,8 @@ CurrencyModule::CurrencyModule(UmikoBot* client) : Module("currency", true), m_c
 				
 			client.createMessage(message.channelId(), output);
 		}
-		else
+
+		if(!roll)
 		{
 			authorCurrency.setCurrency(authorCurrency.currency() - amountToSteal * config.stealFinePercent / 100);
 			victimCurrency.setCurrency(victimCurrency.currency() + amountToSteal * config.stealVictimBonusPercent / 100);
@@ -1239,22 +1290,25 @@ CurrencyModule::CurrencyModule(UmikoBot* client) : Module("currency", true), m_c
 		Permissions::ContainsPermission(client, channel.guildId(), message.author().id(), CommandPermission::ADMIN,
 		[this, args, &client, message, channel](bool result) 
 		{
+			auto& config = getServerData(channel.guildId());
 			GuildSetting* setting = &GuildSettings::GetGuildSetting(channel.guildId());
 			if (!result)
 			{
 				client.createMessage(message.channelId(), "**You don't have permissions to use this command.**");
 				return;
 			}
-
 			if (args.size() == 1 || args.size() > 2)
 			{
 				client.createMessage(message.channelId(), "**Wrong Usage of Command!** ");
 				return;
 			}
-
+			if (config.isEventRunning)
+			{
+				client.createMessage(message.channelId(), "**You cannot set configarations regarding steal while an event is running!** ");
+				return;
+			}
 			if (args.size() == 2)
 			{
-				auto& config = getServerData(channel.guildId());
 				config.stealSuccessChance = args.at(1).toInt();
 				client.createMessage(message.channelId(), "Steal Success Chance set to **" + QString::number(config.stealSuccessChance) + "%**");
 			}
@@ -1270,22 +1324,25 @@ CurrencyModule::CurrencyModule(UmikoBot* client) : Module("currency", true), m_c
 		Permissions::ContainsPermission(client, channel.guildId(), message.author().id(), CommandPermission::ADMIN,
 		[this, args, &client, message, channel](bool result) 
 		{
+			auto& config = getServerData(channel.guildId());
 			GuildSetting* setting = &GuildSettings::GetGuildSetting(channel.guildId());
 			if (!result)
 			{
 				client.createMessage(message.channelId(), "**You don't have permissions to use this command.**");
 				return;
 			}
-
 			if (args.size() == 1 || args.size() > 2)
 			{
 				client.createMessage(message.channelId(), "**Wrong Usage of Command!** ");
 				return;
 			}
-
+			if (config.isEventRunning)
+			{
+				client.createMessage(message.channelId(), "**You cannot set configarations regarding steal while an event is running!** ");
+				return;
+			}
 			if (args.size() == 2)
 			{
-				auto& config = getServerData(channel.guildId());
 				config.stealFinePercent = args.at(1).toInt();
 				client.createMessage(message.channelId(), "Steal Fine Amount set to **" + QString::number(config.stealFinePercent) + "%**");
 			}
@@ -1301,22 +1358,25 @@ CurrencyModule::CurrencyModule(UmikoBot* client) : Module("currency", true), m_c
 		Permissions::ContainsPermission(client, channel.guildId(), message.author().id(), CommandPermission::ADMIN,
 		[this, args, &client, message, channel](bool result) 
 		{
+			auto& config = getServerData(channel.guildId());
 			GuildSetting* setting = &GuildSettings::GetGuildSetting(channel.guildId());
 			if (!result)
 			{
 				client.createMessage(message.channelId(), "**You don't have permissions to use this command.**");
 				return;
 			}
-
 			if (args.size() == 1 || args.size() > 2)
 			{
 				client.createMessage(message.channelId(), "**Wrong Usage of Command!** ");
 				return;
 			}
-
+			if (config.isEventRunning)
+			{
+				client.createMessage(message.channelId(), "**You cannot set configarations regarding steal while an event is running!** ");
+				return;
+			}
 			if (args.size() == 2)
 			{
-				auto& config = getServerData(channel.guildId());
 				config.stealVictimBonusPercent = args.at(1).toInt();
 				client.createMessage(message.channelId(), "Steal Victim Bonus set to **" + QString::number(config.stealVictimBonusPercent) + "%**");
 			}
@@ -1332,32 +1392,265 @@ CurrencyModule::CurrencyModule(UmikoBot* client) : Module("currency", true), m_c
 		Permissions::ContainsPermission(client, channel.guildId(), message.author().id(), CommandPermission::ADMIN,
 		[this, args, &client, message, channel](bool result) 
 		{
+			auto& config = getServerData(channel.guildId());
 			GuildSetting* setting = &GuildSettings::GetGuildSetting(channel.guildId());
 			if (!result)
 			{
 				client.createMessage(message.channelId(), "**You don't have permissions to use this command.**");
 				return;
 			}
-
 			if (args.size() == 1 || args.size() > 2)
 			{
 				client.createMessage(message.channelId(), "**Wrong Usage of Command!** ");
 				return;
 			}
-
+			if (config.isEventRunning)
+			{
+				client.createMessage(message.channelId(), "**You cannot set configarations regarding steal while an event is running!** ");
+				return;
+			}
 			if (args.size() == 2)
 			{
-				auto& config = getServerData(channel.guildId());
 				config.stealFailedJailTime = args.at(1).toInt();
-				client.createMessage(message.channelId(), "Steal Jail Time set to **" + QString::number(config.stealFailedJailTime) + " hours**");
+				client.createMessage(message.channelId(), "Steal Jail Time set to **" + QString::number(config.stealFailedJailTime) + " hour(s)**");
 			}
 
 		});
 	});
+	RegisterCommand(Commands::CURRENCY_EVENT, "event", [this](Discord::Client& client, const Discord::Message& message, const Discord::Channel& channel)
+	{
+		QStringList args = message.content().split(' ');
+		auto& config = getServerData(channel.guildId());
+		
+		if (args.size() > 2)
+		{
+			client.createMessage(message.channelId(), "**Wrong Usage of Command!** ");
+			return;
+		}
+		if (config.eventHighRiskHighRewardRunning && config.eventIsTimed == false)
+		{
+			QString eventDesc = QString("**HighRiskHighReward event: The steal chance is decreased but if you succeed you will get bonus %1!**").arg(config.currencySymbol);
+			config.currentEvent = eventDesc;
+			client.createMessage(message.channelId(), config.currentEvent);
+			return;
+			
+		}
+		if (config.eventLowRiskLowRewardRunning && config.eventIsTimed == false)
+		{
+			QString eventDesc = QString("**LowRiskLowReward event: The steal chance is increased but you have to give a penalty if you succeed!**");
+			config.currentEvent = eventDesc;
+			client.createMessage(message.channelId(), config.currentEvent);
+			return;
+		}
+		if(args.size() == 2)
+		{
+			if (args.at(1) == "--time")
+			{
+				if (config.eventIsTimed)
+				{
+					int remainingTime = config.eventTimer->remainingTime();
+					QString time = utility::StringifyMilliseconds(remainingTime);
+					QString output = QString("**Time remaining to end the running event is `%1`**").arg(time);
+					client.createMessage(message.channelId(), output);
+					return;
+				}
+				if (config.eventIsTimed == false)
+				{
+					if (config.eventLowRiskLowRewardRunning == false || config.eventHighRiskHighRewardRunning == false)
+					{
+						client.createMessage(message.channelId(), "**No event is active at this moment**");
+						return;
+					}
+					client.createMessage(message.channelId(), "**The event is not timed!**");
+					return;
+				}
 
+			}
+		}
+		else if(config.eventHighRiskHighRewardRunning == false && config.eventLowRiskLowRewardRunning == false)
+		{
+			client.createMessage(message.channelId(), "**No event is active at this moment.**");
+		}
+
+	});
+
+	RegisterCommand(Commands::CURRENCY_START_EVENT, "launch", [this](Discord::Client& client, const Discord::Message& message, const Discord::Channel& channel)
+	{
+		QStringList args = message.content().split(' ');
+		snowflake_t authorId = message.author().id();
+
+		Permissions::ContainsPermission(client, channel.guildId(), message.author().id(), CommandPermission::ADMIN,
+			[this, args, &client, message, channel](bool result)
+			{
+				auto& config = getServerData(channel.guildId());
+
+				if (!result)
+				{
+					client.createMessage(message.channelId(), "**You don't have permissions launch events.**");
+					return;
+				}
+				if (args.size() < 2 || args.size() > 3)
+				{
+					client.createMessage(message.channelId(), "**Wrong Usage of Command!** ");
+					return;
+				}
+				if(args.size() == 2)
+				{
+					if (config.eventHighRiskHighRewardRunning)
+					{
+						client.createMessage(message.channelId(), "**HighRiskHighReward event is already running. Please end this event to start a new one!**\n");
+						return;
+					}
+					if (config.eventLowRiskLowRewardRunning)
+					{
+						client.createMessage(message.channelId(), "**LowRiskLowReward event is already running. Please end this event to start a new one!**\n");
+						return;
+					}
+					if (config.isEventRunning)
+					{
+						client.createMessage(message.channelId(), "An event is already running. Please stop that to start a new event!");
+					}
+					if (args.at(1) == "HighRiskHighReward" && config.isEventRunning == false)
+					{
+						config.isEventRunning = true;
+						config.eventHighRiskHighRewardRunning = true;
+						config.stealSuccessChance -= highRiskRewardStealDecrease;
+						QString output = QString("**Hey everyone! HighRiskHighReward event is being launched!**\n"
+							"Give command `!event` to see what event is running and it's changes!");
+
+						client.createMessage(message.channelId(), output);
+						return;
+					}
+					if (args.at(1) == "LowRiskLowReward" && config.isEventRunning == false)
+					{
+						config.isEventRunning = true;
+						config.eventLowRiskLowRewardRunning = true;
+						config.stealSuccessChance += lowRiskRewardStealIncrease;
+						QString output = QString("**Hey everyone! LowRiskLowReward event is being launched!**\n"
+							"Give command `!event` to see what event is running and it's changes!");
+
+						client.createMessage(message.channelId(), output);
+					}
+				}
+				else if (args.size() == 3)
+				{
+					double time = args.at(2).toDouble();
+					config.eventIsTimed = true;
+
+					if (config.eventTimer != nullptr)
+					{
+						delete config.eventTimer;
+						config.eventTimer = nullptr;
+					}
+					config.eventTimer = new QTimer;
+					config.eventTimer->setInterval(time * 3600000);
+					config.eventTimer->setSingleShot(true);
+
+					if (args.at(1) == "HighRiskHighReward" && config.isEventRunning == false)
+					{
+						QString num = QString::number(time);
+						config.isEventRunning = true;
+						config.eventHighRiskHighRewardRunning = true;
+						config.stealSuccessChance -= highRiskRewardStealDecrease;
+						QString output = QString("**Hey everyone! HighRiskHighReward event is being launched for `%1` hour(s)!**\n"
+											"Give command `!event` to see what event is running and it's changes!").arg(num);
+
+						client.createMessage(message.channelId(), output);
+					}
+					if (args.at(1) == "LowRiskLowReward" && config.isEventRunning == false)
+					{
+						QString num = QString::number(time);
+						config.isEventRunning = true;
+						config.eventLowRiskLowRewardRunning = true;
+						config.stealSuccessChance += lowRiskRewardStealIncrease;
+						QString output = QString("**Hey everyone! LowRiskLowReward event is being launched for `%1` hour(s)!**\n"
+							"Give command `!event` to see what event is running and it's changes!").arg(num);
+
+						client.createMessage(message.channelId(), output);
+					}
+					auto guildID = channel.guildId();
+					auto chan = message.channelId();
+
+					QObject::connect(config.eventTimer, &QTimer::timeout, [this, &client, guildID, chan]()
+						{
+							auto& config = getServerData(guildID);
+							config.eventIsTimed = false;
+							if (config.eventHighRiskHighRewardRunning)
+							{
+								config.isEventRunning = false;
+								config.eventHighRiskHighRewardRunning = false;
+								config.stealSuccessChance += highRiskRewardStealDecrease;
+								client.createMessage(chan, "**Hey everyone! HighRiskHighReward event is ended!**\n");
+							}
+							else if (config.eventLowRiskLowRewardRunning)
+							{
+								config.isEventRunning = false;
+								config.eventLowRiskLowRewardRunning = false;
+								config.stealSuccessChance -= lowRiskRewardStealIncrease;
+								client.createMessage(chan, "**Hey everyone! LowRiskLowReward event is ended!**\n");
+							}
+						});
+					config.eventTimer->start();
+					
+				}
+
+			});
+	});
+	RegisterCommand(Commands::CURRENCY_END_EVENT, "end", [this](Discord::Client& client, const Discord::Message& message, const Discord::Channel& channel)
+		{
+			QStringList args = message.content().split(' ');
+			snowflake_t authorId = message.author().id();
+
+			Permissions::ContainsPermission(client, channel.guildId(), message.author().id(), CommandPermission::ADMIN,
+				[this, args, &client, message, channel](bool result)
+				{
+					auto& config = getServerData(channel.guildId());
+
+					GuildSetting* setting = &GuildSettings::GetGuildSetting(channel.guildId());
+					if (!result)
+					{
+						client.createMessage(message.channelId(), "**You don't have permissions end events.**");
+						return;
+					}
+					if (args.size() == 1 || args.size() > 2)
+					{
+						client.createMessage(message.channelId(), "**Wrong Usage of Command!** ");
+						return;
+					}
+					if (config.eventLowRiskLowRewardRunning == false && config.eventHighRiskHighRewardRunning == false)
+					{
+						client.createMessage(message.channelId(), "**No event is running, so you can't end an event!**\n");
+					}
+
+					if (args.at(1) == "HighRiskHighReward" && config.eventLowRiskLowRewardRunning)
+					{
+						client.createMessage(message.channelId(), "**LowRiskLowReward event is running, so u can't end HighRiskHighReward event!**\n");
+						return;
+					}
+					if (args.at(1) == "LowRiskLowReward" && config.eventHighRiskHighRewardRunning)
+					{
+						client.createMessage(message.channelId(), "**HighRiskHighReward event is running, so u can't end LowRiskLowReward event!**\n");
+						return;
+					}
+					if (args.at(1) == "HighRiskHighReward" && config.eventHighRiskHighRewardRunning)
+					{
+						config.isEventRunning = false;
+						config.eventHighRiskHighRewardRunning = false;
+						config.stealSuccessChance += highRiskRewardStealDecrease;
+						client.createMessage(message.channelId(), "**Hey everyone! HighRiskHighReward event is ended!**\n");
+						return;
+					}
+					if (args.at(1) == "LowRiskLowReward" && config.eventLowRiskLowRewardRunning)
+					{
+						config.isEventRunning = false;
+						config.eventLowRiskLowRewardRunning = false;
+						config.stealSuccessChance -= lowRiskRewardStealIncrease;
+						client.createMessage(message.channelId(), "**Hey everyone! LowRiskLowReward event is ended!**\n");
+					}
+				});
+		});
 	RegisterCommand(Commands::CURRENCY_SET_DAILY_BONUS_AMOUNT, "setdailybonus", [this](Discord::Client& client, const Discord::Message& message, const Discord::Channel& channel) 
 	{
-
 		QStringList args = message.content().split(' ');
 
 		Permissions::ContainsPermission(client, channel.guildId(), message.author().id(), CommandPermission::ADMIN,
@@ -1584,7 +1877,7 @@ void CurrencyModule::OnSave(QJsonDocument& doc) const
 		for (auto server : serverCurrencyConfig.keys())
 		{
 			QJsonObject obj;
-			
+
 			auto config = serverCurrencyConfig[server];
 			obj["name"] = config.currencyName;
 			obj["symbol"] = config.currencySymbol;
@@ -1607,6 +1900,15 @@ void CurrencyModule::OnSave(QJsonDocument& doc) const
 			obj["bribeLeastAmount"] = QString::number(config.bribeLeastAmount);
 			obj["bribeSuccessChance"] = QString::number(config.bribeSuccessChance);
 
+			config.isEventRunning = false;
+			config.eventHighRiskHighRewardRunning = false;
+			config.eventLowRiskLowRewardRunning = false;
+			config.eventIsTimed = false;
+
+			obj["isEventRunning"] = config.isEventRunning;
+			obj["eventHighRiskHighRewardRunning"] = config.eventHighRiskHighRewardRunning;
+			obj["eventLowRiskLowRewardRunning"] = config.eventLowRiskLowRewardRunning;
+			obj["eventIsTimed"] = config.eventIsTimed;
 			serverList[QString::number(server)] = obj;
 			
 		}
@@ -1679,6 +1981,10 @@ void CurrencyModule::OnLoad(const QJsonDocument& doc)
 			config.bribeSuccessChance = serverObj["bribeSuccessChance"].toString("68").toUInt();
 			config.bribeMaxAmount = serverObj["bribeMaxAmount"].toString("150").toInt();
 			config.bribeLeastAmount = serverObj["bribeLeastAmount"].toString("20").toInt();
+			config.isEventRunning = serverObj["isEventRunning"].toBool();
+			config.eventHighRiskHighRewardRunning = serverObj["eventHighRiskHighRewardRunning"].toBool();
+			config.eventLowRiskLowRewardRunning = serverObj["eventLowRiskLowRewardRunning"].toBool();
+			config.eventIsTimed = serverObj["eventIsTimed"].toBool();
 
 			auto guildId = server.toULongLong();
 			serverCurrencyConfig.insert(guildId, config);

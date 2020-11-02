@@ -7,7 +7,7 @@
 	},
 	"GLOBAL_HELP": {
 		"brief": "Returns the usage of a command",
-		"usage": "help [page/command]",
+		"usage": "help [command]",
 		"additional": "",
 		"admin": false
 	},

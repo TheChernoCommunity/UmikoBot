@@ -70,15 +70,15 @@ FunModule::FunModule(UmikoBot* client) : Module("funutil", true), m_memeChannel(
 		{
 
 		QStringList args = message.content().split(' ');
-		
-		double max;
-		double min;
 
 		if (args.size() != 3)
 		{
 			client.createMessage(message.channelId(), "**Wrong Usage of Command!** ");
 			return;
 		}
+
+		double min = args.at(1).toDouble();
+		double max = args.at(2).toDouble();
 
 		QRegExp re("[+-]?\\d*\\.?\\d+");
 		if (!re.exactMatch(args.at(1)) || !re.exactMatch(args.at(2)))
@@ -87,14 +87,19 @@ FunModule::FunModule(UmikoBot* client) : Module("funutil", true), m_memeChannel(
 			return;
 		}
 
-		if (args.at(1) == args.at(2))
+		//Max and min in 32-bit is 2147483647 and -2147483647
+		if (max >= 2147483647 || min >= 2147483647 || max <= -2147483647 || min <= -2147483647)
 		{
-			client.createMessage(message.channelId(), "**The numbers are same, please roll different numbers.**");
+			client.createMessage(message.channelId(), "**You can't roll that number!**");
 			return;
 		}
-		min = args.at(1).toDouble();
-		max = args.at(2).toDouble();
-		
+
+		if (args.at(1) == args.at(2))
+		{
+			client.createMessage(message.channelId(), "My Value was: **" + args.at(1) + "**");
+			return;
+		}
+
 		std::random_device rand_device;
 		std::mt19937 gen(rand_device());
 
