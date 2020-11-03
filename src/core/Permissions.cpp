@@ -3,7 +3,6 @@
 
 void Permissions::ContainsPermission(Discord::Client& client, snowflake_t guildId, snowflake_t memberId, unsigned int permissionList, PermissionCallback callback)
 {
-	return callback(true);
 	client.getGuildMember(guildId, memberId).then(
 		[&client, guildId, memberId, permissionList, callback](const Discord::GuildMember& member)
 	{

@@ -270,6 +270,22 @@
 		"usage": "compensate <amount>",
 		"admin": true
 	},
+	"CURRENCY_EVENT": {
+		"brief": "Retrieve information about an running event.",
+		"usage": "event",
+		"additional": "**Example: ** `!event` will retrieve information about the running event (if there is any)",
+		"admin": false
+	},
+	"CURRENCY_LAUNCH_EVENT": {
+		"brief": "Starts an event.",
+		"usage": "launch <event-name> <expiry-time>",
+		"admin": true
+	},
+	"CURRENCY_END_EVENT": {
+		"brief": "Stops the running event manually.",
+		"usage": "endevent",
+		"admin": true
+	},
 	"FUN_MEME": {
 		"brief": "Shows memes from reddit.",
 		"usage": "meme",
