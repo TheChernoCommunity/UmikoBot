@@ -23,7 +23,7 @@
 #define gambleTimeout 20
 
 #define highRiskRewardBonus 60
-#define highRiskRewardStealDecrease 10
+#define highRiskRewardStealDecrease 8
 
 #define lowRiskRewardPenalty 50
 #define lowRiskRewardLeastAmoutToSteal 60
@@ -1430,43 +1430,46 @@ CurrencyModule::CurrencyModule(UmikoBot* client) : Module("currency", true), m_c
 			client.createMessage(message.channelId(), "**Wrong Usage of Command!** ");
 			return;
 		}
-		if (config.isEventRunning)
-		{
-			if (config.eventHighRiskHighRewardRunning)
-			{
-				int num = config.eventTimer->remainingTime();
-				QString time = utility::StringifyMilliseconds(num);
-
-				QString eventDesc = QString("**HighRiskHighReward event: The steal chance is decreased but if you succeed you will get bonus %1!**\n"
-											"**Event expire's in `%2`**").arg(config.currencySymbol, time);
-				config.currentEvent = eventDesc;
-				client.createMessage(message.channelId(), config.currentEvent);
-				return;
-
-			}
-			if (config.eventLowRiskLowRewardRunning)
-			{
-				int num = config.eventTimer->remainingTime();
-				QString time = utility::StringifyMilliseconds(num);
-
-				QString eventDesc = QString("**LowRiskLowReward event: The steal chance is increased but you have to give a penalty if you succeed!**\n"
-											"**Event expire's in `%1`**").arg(time);
-				config.currentEvent = eventDesc;
-				client.createMessage(message.channelId(), config.currentEvent);
-				return;
-			}
-		}
-		else
+		if (config.isEventRunning == false)
 		{
 			client.createMessage(message.channelId(), "**No event is active at this moment.**");
+			return;
 		}
+		if (config.eventHighRiskHighRewardRunning)
+		{
+			int num = config.eventTimer->remainingTime();
+			QString time = utility::StringifyMilliseconds(num);
 
+			Discord::Embed embed;
+			embed.setColor(15844367);
+			embed.setTitle("**HighRiskHighReward** event");
+			embed.setDescription("The steal chance is **decreased** but if you succeed you will get **bonus "+ config.currencySymbol +"**!\n"
+								"Event **expire's** in `"+ time +"`");
+
+			client.createMessage(message.channelId(), embed);
+			return;
+
+		}
+		if (config.eventLowRiskLowRewardRunning)
+		{
+			int num = config.eventTimer->remainingTime();
+			QString time = utility::StringifyMilliseconds(num);
+
+			Discord::Embed embed;
+			embed.setColor(15844367);
+			embed.setTitle("**LowRiskLowReward** event");
+			embed.setDescription("The steal chance is **increased** but you have to give a **penalty** if you succeed!\n"
+								"Event **expire's** in `" + time + "`");
+
+			client.createMessage(message.channelId(), embed);
+			return;
+		}
+		
 	});
 
 	RegisterCommand(Commands::CURRENCY_LAUNCH_EVENT, "launch", [this](Discord::Client& client, const Discord::Message& message, const Discord::Channel& channel)
 	{
 		QStringList args = message.content().split(' ');
-		snowflake_t authorId = message.author().id();
 
 		Permissions::ContainsPermission(client, channel.guildId(), message.author().id(), CommandPermission::ADMIN,
 			[this, args, &client, message, channel](bool result)
@@ -1503,7 +1506,7 @@ CurrencyModule::CurrencyModule(UmikoBot* client) : Module("currency", true), m_c
 					client.createMessage(message.channelId(), "**Currently you can't launch events with an expiry time of more than one day**.");
 					return;
 				}
-				if (config.eventTimer != nullptr)
+				if (config.eventTimer != nullptr) //Delete the previous timer
 				{
 					delete config.eventTimer;
 					config.eventTimer = nullptr;
@@ -1516,24 +1519,30 @@ CurrencyModule::CurrencyModule(UmikoBot* client) : Module("currency", true), m_c
 				if (args.at(1) == "HighRiskHighReward")
 				{
 					QString num = QString::number(time);
+
+					Discord::Embed embed;
+					embed.setColor(15844367);
+					embed.setTitle("Hey everyone! **HighRiskHighReward** event is launched for `"+ num +"` hour(s)!");
+					embed.setDescription("Give command `!event` to see what event is running and it's changes!");
+					
 					config.isEventRunning = true;
 					config.eventHighRiskHighRewardRunning = true;
 					config.stealSuccessChance -= highRiskRewardStealDecrease;
-					QString output = QString("**Hey everyone! HighRiskHighReward event is being launched for `%1` hour(s)!**\n"
-											"Give command `!event` to see what event is running and it's changes!").arg(num);
-
-					client.createMessage(message.channelId(), output);
+					client.createMessage(message.channelId(), embed);
 				}
 				if (args.at(1) == "LowRiskLowReward")
 				{
 					QString num = QString::number(time);
+
+					Discord::Embed embed;
+					embed.setColor(15844367);
+					embed.setTitle("Hey everyone! **LowRiskLowReward** event is launched for `" + num + "` hour(s)!");
+					embed.setDescription("Give command `!event` to see what event is running and it's changes!");
+
 					config.isEventRunning = true;
 					config.eventLowRiskLowRewardRunning = true;
 					config.stealSuccessChance += lowRiskRewardStealIncrease;
-					QString output = QString("**Hey everyone! LowRiskLowReward event is being launched for `%1` hour(s)!**\n"
-											"Give command `!event` to see what event is running and it's changes!").arg(num);
-
-					client.createMessage(message.channelId(), output);
+					client.createMessage(message.channelId(), embed);
 				}
 				auto guildID = channel.guildId();
 				auto chan = message.channelId();
@@ -1543,17 +1552,25 @@ CurrencyModule::CurrencyModule(UmikoBot* client) : Module("currency", true), m_c
 						auto& config = getServerData(guildID);
 						if (config.eventHighRiskHighRewardRunning)
 						{
+							Discord::Embed embed;
+							embed.setColor(15158332);
+							embed.setTitle("Hey everyone! **HighRiskHighReward** event has **ended**!");
+
 							config.isEventRunning = false;
 							config.eventHighRiskHighRewardRunning = false;
 							config.stealSuccessChance += highRiskRewardStealDecrease;
-							client.createMessage(chan, "**Hey everyone! HighRiskHighReward event is ended!**\n");
+							client.createMessage(chan, embed);
 						}
 						else if (config.eventLowRiskLowRewardRunning)
 						{
+							Discord::Embed embed;
+							embed.setColor(15158332);
+							embed.setTitle("Hey everyone! **LowRiskLowReward** event has **ended**!");
+
 							config.isEventRunning = false;
 							config.eventLowRiskLowRewardRunning = false;
 							config.stealSuccessChance -= lowRiskRewardStealIncrease;
-							client.createMessage(chan, "**Hey everyone! LowRiskLowReward event is ended!**\n");
+							client.createMessage(chan, embed);
 						}
 					});
 				config.eventTimer->start();
@@ -1562,7 +1579,6 @@ CurrencyModule::CurrencyModule(UmikoBot* client) : Module("currency", true), m_c
 	RegisterCommand(Commands::CURRENCY_END_EVENT, "endevent", [this](Discord::Client& client, const Discord::Message& message, const Discord::Channel& channel)
 		{
 			QStringList args = message.content().split(' ');
-			snowflake_t authorId = message.author().id();
 
 			Permissions::ContainsPermission(client, channel.guildId(), message.author().id(), CommandPermission::ADMIN,
 				[this, args, &client, message, channel](bool result)
@@ -1589,20 +1605,28 @@ CurrencyModule::CurrencyModule(UmikoBot* client) : Module("currency", true), m_c
 					{
 						if (config.eventHighRiskHighRewardRunning)
 						{
+							Discord::Embed embed;
+							embed.setColor(15158332);
+							embed.setTitle("Hey everyone! **HighRiskHighReward** event has **ended**!");
+
 							config.isEventRunning = false;
 							config.eventHighRiskHighRewardRunning = false;
 							config.eventTimer->stop();
 							config.stealSuccessChance += highRiskRewardStealDecrease;
-							client.createMessage(message.channelId(), "**Hey everyone! HighRiskHighReward event is ended!**\n");
+							client.createMessage(message.channelId(), embed);
 							return;
 						}
 						if (config.eventLowRiskLowRewardRunning)
 						{
+							Discord::Embed embed;
+							embed.setColor(15158332);
+							embed.setTitle("Hey everyone! **LowRiskLowReward** event has **ended**!");
+
 							config.isEventRunning = false;
 							config.eventLowRiskLowRewardRunning = false;
 							config.eventTimer->stop();
 							config.stealSuccessChance -= lowRiskRewardStealIncrease;
-							client.createMessage(message.channelId(), "**Hey everyone! LowRiskLowReward event is ended!**\n");
+							client.createMessage(message.channelId(), embed);
 						}
 					}
 				});

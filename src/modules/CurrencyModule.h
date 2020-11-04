@@ -112,7 +112,6 @@ public:
 		int bribeSuccessChance { 68 };
 
 		QTimer* eventTimer{ nullptr };
-		QString currentEvent;
 		bool isEventRunning{ false };
 		bool eventHighRiskHighRewardRunning{ false };
 		bool eventLowRiskLowRewardRunning{ false };
