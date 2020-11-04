@@ -286,6 +286,11 @@
 		"usage": "endevent",
 		"admin": true
 	},
+	"RESTORE": {
+		"brief": "Restores the Bot. Should be used by the Admin if the bot crashed during an event.",
+		"usage": "restore",
+		"admin": true
+	},
 	"FUN_MEME": {
 		"brief": "Shows memes from reddit.",
 		"usage": "meme",

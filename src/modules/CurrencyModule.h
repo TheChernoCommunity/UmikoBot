@@ -4,6 +4,15 @@
 #include "UmikoBot.h"
 #include <random>
 
+
+//Used for the events (Needed in the EventModule.cpp and CurrencyModule.cpp)
+#define highRiskRewardBonus 60
+#define highRiskRewardStealDecrease 8
+
+#define lowRiskRewardPenalty 50
+#define lowRiskRewardLeastAmoutToSteal 60
+#define lowRiskRewardStealIncrease 20
+
 class UmikoBot;
 
 class CurrencyModule : public Module
@@ -103,19 +112,13 @@ public:
 		QTimer* freebieTimer{ nullptr };
 		int dailyBonusAmount { 50 };
 		int dailyBonusPeriod { 3 };
-		int stealSuccessChance { 30 };
+		int stealSuccessChance{ 30 };
 		int stealFinePercent { 50 };
 		int stealVictimBonusPercent { 25 };
 		int stealFailedJailTime { 3 };
 		int bribeMaxAmount { 150 };
 		int bribeLeastAmount { 20 };
 		int bribeSuccessChance { 68 };
-
-		QTimer* eventTimer{ nullptr };
-		bool isEventRunning{ false };
-		bool eventHighRiskHighRewardRunning{ false };
-		bool eventLowRiskLowRewardRunning{ false };
-		void OnEventLoad();
 	};
 
 private:

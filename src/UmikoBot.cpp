@@ -7,6 +7,7 @@
 #include "modules/ModerationModule.h"
 #include "modules/FunModule.h"
 #include "modules/UserModule.h"
+#include "modules/EventModule.h"
 
 #include "Logger.h"
 
@@ -35,6 +36,7 @@ UmikoBot::UmikoBot(QObject* parent)
 	m_modules.push_back(new ModerationModule);
 	m_modules.push_back(new FunModule(this));
 	m_modules.push_back(new UserModule);
+	m_modules.push_back(new EventModule(this));
 	
 	Q_FOREACH(Module* module, m_modules)
 	{
@@ -813,9 +815,11 @@ void UmikoBot::Load()
 		Command(CURRENCY_SET_BRIBE_SUCCESS_CHANCE),
 		Command(CURRENCY_SET_MAX_BRIBE_AMOUNT),
 		Command(CURRENCY_SET_LEAST_BRIBE_AMOUNT),
-		Command(CURRENCY_LAUNCH_EVENT),
-		Command(CURRENCY_END_EVENT),
-		Command(CURRENCY_EVENT),
+
+		Command(EVENT_LAUNCH),
+		Command(EVENT_END),
+		Command(EVENT),
+		Command(RESTORE),
 
 		Command(FUN_MEME),
 		Command(FUN_POLL),
