@@ -9,10 +9,11 @@ class EventModule : public Module
 public:
 	struct EventConfig
 	{
-		QTimer* eventTimer{ nullptr };
-		bool isEventRunning{ false };
-		bool eventHighRiskHighRewardRunning{ false };
-		bool eventLowRiskLowRewardRunning{ false };
+		QTimer* eventTimer { nullptr };
+		bool isEventRunning { false };
+		bool eventHighRiskHighRewardRunning { false };
+		bool eventLowRiskLowRewardRunning { false };
+		bool restored { false };
 	};
 	EventModule(UmikoBot* client);
 

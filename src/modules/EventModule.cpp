@@ -235,31 +235,33 @@ EventModule::EventModule(UmikoBot* client) : Module("event", true), m_client(cli
 				}
 			});
 	});
-	RegisterCommand(Commands::RESTORE, "restore", [this](Discord::Client& client, const Discord::Message& message, const Discord::Channel& channel)
-	{
-		QStringList args = message.content().split(' ');
-		Permissions::ContainsPermission(client, channel.guildId(), message.author().id(), CommandPermission::ADMIN,
-			[this, args, &client, message, channel](bool result)
+}
+
+void EventModule::OnMessage(Discord::Client& client, const Discord::Message& message)
+{
+	CurrencyModule* currencyModule = static_cast<CurrencyModule*>(UmikoBot::Instance().GetModuleByName("currency"));
+	client.getChannel(message.channelId()).then(
+		[this, message, &client, currencyModule](const Discord::Channel& channel)
+		{
+			if (channel.guildId() != 0 && !message.author().bot())
 			{
-				auto& config = getEventServerData(channel.guildId());
-				CurrencyModule* currencyModule = static_cast<CurrencyModule*>(UmikoBot::Instance().GetModuleByName("currency"));
+				auto guildId = channel.guildId();
+				auto& config = getEventServerData(guildId);
 				auto& currencyConfig = currencyModule->getServerData(channel.guildId());
-				if (!result)
+
+				if (config.restored == true)
 				{
-					client.createMessage(message.channelId(), "**You don't have permissions to use this command.**");
 					return;
 				}
-				if (args.size() != 1)
-				{
-					client.createMessage(message.channelId(), "**Wrong Usage of Command!** ");
-					return;
-				}
+
 				if (config.isEventRunning == false)
 				{
-					client.createMessage(message.channelId(), "Nothing to restore.");
+					config.restored = true;
+					return;
 				}
-				if (config.isEventRunning)
+				if (config.restored == false)
 				{
+					config.restored = true;
 					if (config.eventHighRiskHighRewardRunning)
 					{
 						config.isEventRunning = false;
@@ -272,14 +274,11 @@ EventModule::EventModule(UmikoBot* client) : Module("event", true), m_client(cli
 						config.eventLowRiskLowRewardRunning = false;
 						currencyConfig.stealSuccessChance -= lowRiskRewardStealIncrease;
 					}
-					client.createMessage(message.channelId(), "**Restored!**");
 				}
-			});
-	});
-}
+			}
+		});
 
-void EventModule::OnMessage(Discord::Client& client, const Discord::Message& message)
-{
+
 	Module::OnMessage(client, message);
 }
 
@@ -299,6 +298,7 @@ void EventModule::OnSave(QJsonDocument& doc) const
 			obj["isEventRunning"] = config.isEventRunning;
 			obj["eventHighRiskHighRewardRunning"] = config.eventHighRiskHighRewardRunning;
 			obj["eventLowRiskLowRewardRunning"] = config.eventLowRiskLowRewardRunning;
+			obj["restored"] = config.restored;
 			serverList[QString::number(server)] = obj;
 		}
 		doc.setObject(serverList);
@@ -325,8 +325,9 @@ void EventModule::OnLoad(const QJsonDocument& doc)
 			config.isEventRunning = serverObj["isEventRunning"].toBool();
 			config.eventHighRiskHighRewardRunning = serverObj["eventHighRiskHighRewardRunning"].toBool();
 			config.eventLowRiskLowRewardRunning = serverObj["eventLowRiskLowRewardRunning"].toBool();
+			config.restored = serverObj["restored"].toBool();
+			config.restored = false;
 			auto guildId = server.toULongLong();
-
 			serverEventConfig.insert(guildId, config);
 		}
 		eventConfigfile.close();

@@ -270,25 +270,20 @@
 		"usage": "compensate <amount>",
 		"admin": true
 	},
-	"CURRENCY_EVENT": {
-		"brief": "Retrieve information about an running event.",
+	"EVENT": {
+		"brief": "Retrieve information about the running event(s).",
 		"usage": "event",
-		"additional": "**Example: ** `!event` will retrieve information about the running event (if there is any)",
+		"additional": "**Example: ** `!event` will retrieve information about the running event(s)",
 		"admin": false
 	},
-	"CURRENCY_LAUNCH_EVENT": {
+	"EVENT_LAUNCH": {
 		"brief": "Starts an event.",
-		"usage": "launch <event-name> <expiry-time>",
+		"usage": "launch <event-name> <expiry-time-in-hours>",
 		"admin": true
 	},
-	"CURRENCY_END_EVENT": {
+	"EVENT_END": {
 		"brief": "Stops the running event manually.",
 		"usage": "endevent",
-		"admin": true
-	},
-	"RESTORE": {
-		"brief": "Restores the Bot. Should be used by the Admin if the bot crashed during an event.",
-		"usage": "restore",
 		"admin": true
 	},
 	"FUN_MEME": {

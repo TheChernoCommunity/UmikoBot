@@ -61,7 +61,6 @@ namespace Commands {
 		EVENT_LAUNCH,
 		EVENT_END,
 		EVENT,
-		RESTORE,
 
 		FUN_MEME,
 		FUN_ROLL,

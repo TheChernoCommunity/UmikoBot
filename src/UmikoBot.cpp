@@ -819,7 +819,6 @@ void UmikoBot::Load()
 		Command(EVENT_LAUNCH),
 		Command(EVENT_END),
 		Command(EVENT),
-		Command(RESTORE),
 
 		Command(FUN_MEME),
 		Command(FUN_POLL),
