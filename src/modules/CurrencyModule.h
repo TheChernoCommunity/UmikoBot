@@ -6,11 +6,10 @@
 
 
 //Used for the events (Needed in the EventModule.cpp and CurrencyModule.cpp)
-#define highRiskRewardBonus 60
+#define highRiskRewardBonus 50 // In percentage
 #define highRiskRewardStealDecrease 8
 
-#define lowRiskRewardPenalty 50
-#define lowRiskRewardLeastAmoutToSteal 60
+#define lowRiskRewardPenalty 40 //In percentage
 #define lowRiskRewardStealIncrease 20
 
 class UmikoBot;

@@ -27,6 +27,6 @@ public:
 		return serverEventConfig[guild];
 	}
 private:
+	QMap<snowflake_t, QList<snowflake_t>> m_EventWhitelist;
 	QMap<snowflake_t, EventConfig>serverEventConfig;
-	UmikoBot* m_client;
 };

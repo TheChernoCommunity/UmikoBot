@@ -819,6 +819,8 @@ void UmikoBot::Load()
 		Command(EVENT_LAUNCH),
 		Command(EVENT_END),
 		Command(EVENT),
+		Command(EVENT_GIVE_NEW_ACCESS),
+		Command(EVENT_TAKE_NEW_ACCESS),
 
 		Command(FUN_MEME),
 		Command(FUN_POLL),

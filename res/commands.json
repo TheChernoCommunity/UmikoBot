@@ -273,7 +273,6 @@
 	"EVENT": {
 		"brief": "Retrieve information about the running event(s).",
 		"usage": "event",
-		"additional": "**Example: ** `!event` will retrieve information about the running event(s)",
 		"admin": false
 	},
 	"EVENT_LAUNCH": {
@@ -284,6 +283,16 @@
 	"EVENT_END": {
 		"brief": "Stops the running event manually.",
 		"usage": "endevent",
+		"admin": true
+	},
+	"EVENT_GIVE_NEW_ACCESS": {
+		"brief": "Gives event launching and ending ability to the people with the mentioned role(s).",
+		"usage": "give-new-event-access <role-mention(s)>",
+		"admin": true
+	},
+	"EVENT_TAKE_NEW_ACCESS": {
+		"brief": "Removes event launching and ending ability from the provided role(s) that previously had event launching and ending abilities.",
+		"usage": "take-new-event-access <role-mention(s)>",
 		"admin": true
 	},
 	"FUN_MEME": {

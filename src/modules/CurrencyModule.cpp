@@ -1020,7 +1020,7 @@ CurrencyModule::CurrencyModule(UmikoBot* client) : Module("currency", true), m_c
 
 			QString output = QString(
 				":police_officer: **Your bribes don't affect my loyalty!** :police_officer:\n"
-				"You have been reported and your sentence has been extended by `1` hour!.\n"
+				"You have been reported and your sentence has been extended by `1` hour!\n"
 				"*(You need to wait %1 to get out of jail)*"
 			).arg(time);
 			client.createMessage(message.channelId(), output);
@@ -1207,9 +1207,10 @@ CurrencyModule::CurrencyModule(UmikoBot* client) : Module("currency", true), m_c
 
 		if (roll && eventConfig.eventHighRiskHighRewardRunning)
 		{
-			QString num = QString::number(highRiskRewardBonus);
+			double bonus = amountToSteal * highRiskRewardBonus * 0.01;
 			victimCurrency.setCurrency(victimCurrency.currency() - amountToSteal);
-			authorCurrency.setCurrency(authorCurrency.currency() + amountToSteal + highRiskRewardBonus);
+			authorCurrency.setCurrency(authorCurrency.currency() + amountToSteal + bonus);
+			QString num = QString::number(bonus);
 
 			QString stealAmount = QString::number(amountToSteal);
 			QString output = QString(
@@ -1222,22 +1223,12 @@ CurrencyModule::CurrencyModule(UmikoBot* client) : Module("currency", true), m_c
 			return;
 		}
 
-		if (amountToSteal < lowRiskRewardLeastAmoutToSteal && eventConfig.eventLowRiskLowRewardRunning)
-		{
-			QString num = QString::number(lowRiskRewardLeastAmoutToSteal);
-			QString desc = QString(
-				"**You can't steal that amount beacuse LowRiskLowReward event is running!**\n"
-				"*(You have to steal more than or equal to `%2 %1`)*\n"
-			).arg(config.currencySymbol, num);
-			client.createMessage(message.channelId(), desc);
-			return;
-		}
-
 		if (roll && eventConfig.eventLowRiskLowRewardRunning)
 		{
-			QString num = QString::number(lowRiskRewardPenalty);
-			victimCurrency.setCurrency(victimCurrency.currency() - amountToSteal);
-			authorCurrency.setCurrency(authorCurrency.currency() + (amountToSteal - lowRiskRewardPenalty));
+			double penalty = amountToSteal * lowRiskRewardPenalty * 0.01;
+			victimCurrency.setCurrency(victimCurrency.currency() - (amountToSteal - penalty));
+			authorCurrency.setCurrency(authorCurrency.currency() + (amountToSteal - penalty));
+			QString num = QString::number(penalty);
 
 			QString stealAmount = QString::number(amountToSteal);
 			QString output = QString(
@@ -1250,7 +1241,7 @@ CurrencyModule::CurrencyModule(UmikoBot* client) : Module("currency", true), m_c
 			return;
 		}
 
-		else if (roll)
+		if (roll)
 		{
 			victimCurrency.setCurrency(victimCurrency.currency() - amountToSteal);
 			authorCurrency.setCurrency(authorCurrency.currency() + amountToSteal);
@@ -1260,11 +1251,10 @@ CurrencyModule::CurrencyModule(UmikoBot* client) : Module("currency", true), m_c
 					":man_detective: **Steal success!** :man_detective:\n"
 					"*%1* has discreetly stolen **`%2 %3`** from under *%4's* nose.\n"
 				).arg(thiefName, stealAmount, config.currencySymbol, victimName);
-				
 			client.createMessage(message.channelId(), output);
 		}
 
-		else if(!roll)
+		else
 		{
 			authorCurrency.setCurrency(authorCurrency.currency() - amountToSteal * config.stealFinePercent / 100);
 			victimCurrency.setCurrency(victimCurrency.currency() + amountToSteal * config.stealVictimBonusPercent / 100);
