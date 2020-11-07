@@ -4,7 +4,6 @@
 #include "UmikoBot.h"
 #include <random>
 
-
 //Used for the events (Needed in the EventModule.cpp and CurrencyModule.cpp)
 #define highRiskRewardBonus 50 // In percentage
 #define highRiskRewardStealDecrease 8
@@ -109,9 +108,10 @@ public:
 		bool allowGiveaway{ false };
 		snowflake_t giveawayClaimer { 0 };
 		QTimer* freebieTimer{ nullptr };
+		int nonChangedStealSuccessChance{ 30 };
 		int dailyBonusAmount { 50 };
 		int dailyBonusPeriod { 3 };
-		int stealSuccessChance{ 30 };
+		int stealSuccessChance{ nonChangedStealSuccessChance };
 		int stealFinePercent { 50 };
 		int stealVictimBonusPercent { 25 };
 		int stealFailedJailTime { 3 };

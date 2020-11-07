@@ -302,7 +302,8 @@
 	},
 	"FUN_ROLL": {
 		"brief": "Gets a random number.",
-		"usage": "roll <min> <max>",
+		"usage": "roll <min> <max> or !roll <max>",
+		"additional": "**Example: ** `!roll 1 10` will get a random number between `1` and `10` (inclusive). The `!roll` command can also be used with a single argument, in that case `!roll 10` will get a random value from `0` to `10`.",
 		"admin": false
   	},
 	"FUN_POLL": {

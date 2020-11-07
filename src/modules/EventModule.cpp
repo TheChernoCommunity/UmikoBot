@@ -339,46 +339,6 @@ EventModule::EventModule(UmikoBot* client) : Module("event", true)
 
 void EventModule::OnMessage(Discord::Client& client, const Discord::Message& message)
 {
-	CurrencyModule* currencyModule = static_cast<CurrencyModule*>(UmikoBot::Instance().GetModuleByName("currency"));
-	client.getChannel(message.channelId()).then(
-		[this, message, &client, currencyModule](const Discord::Channel& channel)
-		{
-			if (channel.guildId() != 0 && !message.author().bot())
-			{
-				auto guildId = channel.guildId();
-				auto& config = getEventServerData(guildId);
-				auto& currencyConfig = currencyModule->getServerData(channel.guildId());
-
-				if (config.restored)
-				{
-					return;
-				}
-
-				if (!config.isEventRunning)
-				{
-					config.restored = true;
-					return;
-				}
-				if (!config.restored)
-				{
-					config.restored = true;
-					if (config.eventHighRiskHighRewardRunning)
-					{
-						config.isEventRunning = false;
-						config.eventHighRiskHighRewardRunning = false;
-						currencyConfig.stealSuccessChance += highRiskRewardStealDecrease;
-					}
-					if (config.eventLowRiskLowRewardRunning)
-					{
-						config.isEventRunning = false;
-						config.eventLowRiskLowRewardRunning = false;
-						currencyConfig.stealSuccessChance -= lowRiskRewardStealIncrease;
-					}
-				}
-			}
-		});
-
-
 	Module::OnMessage(client, message);
 }
 
@@ -396,11 +356,6 @@ void EventModule::OnSave(QJsonDocument& doc) const
 			QJsonObject obj;
 			QJsonArray list;
 			auto config = serverEventConfig[server];
-
-			obj["isEventRunning"] = config.isEventRunning;
-			obj["eventHighRiskHighRewardRunning"] = config.eventHighRiskHighRewardRunning;
-			obj["eventLowRiskLowRewardRunning"] = config.eventLowRiskLowRewardRunning;
-			obj["restored"] = config.restored;
 			for (auto& server : m_EventWhitelist.keys())
 			{
 				for (auto& roleId : m_EventWhitelist[server])
@@ -435,11 +390,9 @@ void EventModule::OnLoad(const QJsonDocument& doc)
 		for (const auto& server : servers)
 		{
 			auto serverObj = rootObj[server].toObject();
-			config.isEventRunning = serverObj["isEventRunning"].toBool();
-			config.eventHighRiskHighRewardRunning = serverObj["eventHighRiskHighRewardRunning"].toBool();
-			config.eventLowRiskLowRewardRunning = serverObj["eventLowRiskLowRewardRunning"].toBool();
-			config.restored = serverObj["restored"].toBool();
-			config.restored = false;
+			config.isEventRunning = false;
+			config.eventHighRiskHighRewardRunning = false;
+			config.eventLowRiskLowRewardRunning = false;
 
 			m_EventWhitelist.clear();
 			auto servers = rootObj.keys();
@@ -456,8 +409,6 @@ void EventModule::OnLoad(const QJsonDocument& doc)
 					m_EventWhitelist[guild].push_back(roleId);
 				}
 			}
-
-
 			auto guildId = server.toULongLong();
 			serverEventConfig.insert(guildId, config);
 		}

@@ -1204,7 +1204,6 @@ CurrencyModule::CurrencyModule(UmikoBot* client) : Module("currency", true), m_c
 
 		EventModule* eventModule = static_cast<EventModule*>(UmikoBot::Instance().GetModuleByName("event"));
 		auto& eventConfig = eventModule->getEventServerData(channel.guildId());
-
 		if (roll && eventConfig.eventHighRiskHighRewardRunning)
 		{
 			double bonus = amountToSteal * highRiskRewardBonus * 0.01;
@@ -1302,6 +1301,7 @@ CurrencyModule::CurrencyModule(UmikoBot* client) : Module("currency", true), m_c
 			}
 			if (args.size() == 2)
 			{
+				config.nonChangedStealSuccessChance = args.at(1).toInt();
 				config.stealSuccessChance = args.at(1).toInt();
 				client.createMessage(message.channelId(), "Steal Success Chance set to **" + QString::number(config.stealSuccessChance) + "%**");
 			}
@@ -1657,6 +1657,7 @@ void CurrencyModule::OnSave(QJsonDocument& doc) const
 			obj["freebieExpireTime"] = QString::number(config.freebieExpireTime);
 			obj["dailyBonusAmount"] = QString::number(config.dailyBonusAmount);
 			obj["dailyBonusPeriod"] = QString::number(config.dailyBonusPeriod);
+			obj["nonChangedStealSuccessChance"] = QString::number(config.nonChangedStealSuccessChance);
 			obj["stealSuccessChance"] = QString::number(config.stealSuccessChance);
 			obj["stealFinePercent"] = QString::number(config.stealFinePercent);
 			obj["stealVictimBonusPercent"] = QString::number(config.stealVictimBonusPercent);
@@ -1728,13 +1729,15 @@ void CurrencyModule::OnLoad(const QJsonDocument& doc)
 			config.freebieExpireTime = serverObj["freebieExpireTime"].toString().toUInt();
 			config.dailyBonusAmount = serverObj["dailyBonusAmount"].toString("50").toUInt();
 			config.dailyBonusPeriod = serverObj["dailyBonusPeriod"].toString("3").toUInt();
-			config.stealSuccessChance = serverObj["stealSuccessChance"].toString("30").toUInt();
+			config.nonChangedStealSuccessChance = serverObj["nonChangedStealSuccessChance"].toString("30").toInt();
+			config.stealSuccessChance = config.nonChangedStealSuccessChance;
 			config.stealFinePercent = serverObj["stealFinePercent"].toString("50").toUInt();
 			config.stealVictimBonusPercent = serverObj["stealVictimBonusPercent"].toString("25").toUInt();
 			config.stealFailedJailTime = serverObj["stealFailedJailTime"].toString("3").toUInt();
 			config.bribeSuccessChance = serverObj["bribeSuccessChance"].toString("68").toUInt();
 			config.bribeMaxAmount = serverObj["bribeMaxAmount"].toString("150").toInt();
 			config.bribeLeastAmount = serverObj["bribeLeastAmount"].toString("20").toInt();
+
 			auto guildId = server.toULongLong();
 
 			serverCurrencyConfig.insert(guildId, config);

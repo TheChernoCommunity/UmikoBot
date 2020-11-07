@@ -13,7 +13,6 @@ public:
 		bool isEventRunning { false };
 		bool eventHighRiskHighRewardRunning { false };
 		bool eventLowRiskLowRewardRunning { false };
-		bool restored { false };
 	};
 	EventModule(UmikoBot* client);
 

@@ -78,13 +78,29 @@ FunModule::FunModule(UmikoBot* client) : Module("funutil", true), m_memeChannel(
 		}
 		if (args.size() == 2)
 		{
+			double min = 0;
+			double max = args.at(1).toDouble();
 			QRegExp re("[+-]?\\d*\\.?\\d+");
 			if (!re.exactMatch(args.at(1)))
 			{
 				client.createMessage(message.channelId(), "**You must roll with numbers!**");
 				return;
 			}
-			client.createMessage(message.channelId(), "**Why you are using `!roll` if you are giving me 1 value?**");
+			if (max > 2147483647 || max < -2147483647)
+			{
+				client.createMessage(message.channelId(), "**You can't roll that number!**");
+				return;
+			}
+			std::random_device rand_device;
+			std::mt19937 gen(rand_device());
+
+			if (max < min)
+				std::swap(min, max);
+
+			std::uniform_int_distribution<> dist(min, max);
+
+			QString text = QString("My Value was: **" + QString::number(dist(gen)) + "**");
+			client.createMessage(message.channelId(), text);
 			return;
 		}
 
