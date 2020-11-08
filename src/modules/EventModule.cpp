@@ -215,7 +215,6 @@ EventModule::EventModule(UmikoBot* client) : Module("event", true)
 
 						config.isEventRunning = true;
 						config.eventHighRiskHighRewardRunning = true;
-						currencyConfig.stealSuccessChance -= highRiskRewardStealDecrease;
 						UmikoBot::Instance().createMessage(message.channelId(), embed);
 					}
 					if (args.at(1) == "LowRiskLowReward")
@@ -229,7 +228,6 @@ EventModule::EventModule(UmikoBot* client) : Module("event", true)
 
 						config.isEventRunning = true;
 						config.eventLowRiskLowRewardRunning = true;
-						currencyConfig.stealSuccessChance += lowRiskRewardStealIncrease;
 						UmikoBot::Instance().createMessage(message.channelId(), embed);
 					}
 					auto guildID = channel.guildId();
@@ -249,7 +247,6 @@ EventModule::EventModule(UmikoBot* client) : Module("event", true)
 
 								config.isEventRunning = false;
 								config.eventHighRiskHighRewardRunning = false;
-								currencyConfig.stealSuccessChance += highRiskRewardStealDecrease;
 								UmikoBot::Instance().createMessage(chan, embed);
 							}
 							else if (config.eventLowRiskLowRewardRunning)
@@ -260,7 +257,6 @@ EventModule::EventModule(UmikoBot* client) : Module("event", true)
 
 								config.isEventRunning = false;
 								config.eventLowRiskLowRewardRunning = false;
-								currencyConfig.stealSuccessChance -= lowRiskRewardStealIncrease;
 								UmikoBot::Instance().createMessage(chan, embed);
 							}
 						});
@@ -316,7 +312,7 @@ EventModule::EventModule(UmikoBot* client) : Module("event", true)
 						config.isEventRunning = false;
 						config.eventHighRiskHighRewardRunning = false;
 						config.eventTimer->stop();
-						currencyConfig.stealSuccessChance += highRiskRewardStealDecrease;
+
 						UmikoBot::Instance().createMessage(message.channelId(), embed);
 						return;
 					}
@@ -329,7 +325,6 @@ EventModule::EventModule(UmikoBot* client) : Module("event", true)
 						config.isEventRunning = false;
 						config.eventLowRiskLowRewardRunning = false;
 						config.eventTimer->stop();
-						currencyConfig.stealSuccessChance -= lowRiskRewardStealIncrease;
 						UmikoBot::Instance().createMessage(message.channelId(), embed);
 					}
 				}

@@ -6,10 +6,8 @@
 
 //Used for the events (Needed in the EventModule.cpp and CurrencyModule.cpp)
 #define highRiskRewardBonus 50 // In percentage
-#define highRiskRewardStealDecrease 8
-
 #define lowRiskRewardPenalty 40 //In percentage
-#define lowRiskRewardStealIncrease 20
+
 
 class UmikoBot;
 
@@ -108,16 +106,18 @@ public:
 		bool allowGiveaway{ false };
 		snowflake_t giveawayClaimer { 0 };
 		QTimer* freebieTimer{ nullptr };
-		int nonChangedStealSuccessChance{ 30 };
 		int dailyBonusAmount { 50 };
 		int dailyBonusPeriod { 3 };
-		int stealSuccessChance{ nonChangedStealSuccessChance };
+		int stealSuccessChance{ 30 };
 		int stealFinePercent { 50 };
 		int stealVictimBonusPercent { 25 };
 		int stealFailedJailTime { 3 };
 		int bribeMaxAmount { 150 };
 		int bribeLeastAmount { 20 };
 		int bribeSuccessChance { 68 };
+
+		int lowRiskRewardStealSuccessChance { 50 };
+		int highRiskRewardStealSuccessChance{ 20 };
 	};
 
 private:
