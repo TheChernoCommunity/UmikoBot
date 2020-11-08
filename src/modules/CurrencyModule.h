@@ -4,6 +4,10 @@
 #include "UmikoBot.h"
 #include <random>
 
+//Used for the events (Needed in the EventModule.cpp and CurrencyModule.cpp)
+#define highRiskRewardBonus 50 // In percentage
+#define lowRiskRewardPenalty 40 //In percentage
+
 class UmikoBot;
 
 class CurrencyModule : public Module
@@ -110,6 +114,9 @@ public:
 		int bribeMaxAmount { 150 };
 		int bribeLeastAmount { 20 };
 		int bribeSuccessChance { 68 };
+
+		int lowRiskRewardStealSuccessChance{ 50 };
+		int highRiskRewardStealSuccessChance{ 20 };
 	};
 
 private:
