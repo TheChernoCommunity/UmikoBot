@@ -924,14 +924,10 @@ CurrencyModule::CurrencyModule(UmikoBot* client) : Module("currency", true), m_c
 
 		EventModule* eventModule = static_cast<EventModule*>(UmikoBot::Instance().GetModuleByName("event"));
 		auto& eventConfig = eventModule->getEventServerData(channel.guildId());
-
+		
 		if (eventConfig.eventHighRiskHighRewardRunning)
 		{
 			double successChance = (config.highRiskRewardStealSuccessChance / 100.0) * qExp(-0.0001 * qPow(amountToSteal, 1.5));
-
-			QString thiefName = UmikoBot::Instance().GetName(channel.guildId(), authorId);
-			QString victimName = UmikoBot::Instance().GetName(channel.guildId(), victimId);
-
 			std::random_device device;
 			std::mt19937 prng{ device() };
 			std::discrete_distribution<> distribution{ { 1 - successChance, successChance } };
@@ -977,9 +973,6 @@ CurrencyModule::CurrencyModule(UmikoBot* client) : Module("currency", true), m_c
 		else if (eventConfig.eventLowRiskLowRewardRunning)
 		{
 			double successChance = (config.lowRiskRewardStealSuccessChance / 100.0) * qExp(-0.0001 * qPow(amountToSteal, 1.5));
-
-			QString thiefName = UmikoBot::Instance().GetName(channel.guildId(), authorId);
-			QString victimName = UmikoBot::Instance().GetName(channel.guildId(), victimId);
 
 			std::random_device device;
 			std::mt19937 prng{ device() };
