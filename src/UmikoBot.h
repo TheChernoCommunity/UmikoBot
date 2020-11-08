@@ -112,6 +112,8 @@ public:
 	QString GetCommandHelp(QString commandName, QString prefix);
 	QList<Command> GetAllCommands();
 
+	static void VerifyAndRunAdminCmd(Discord::Client& client, const Discord::Message& message, const Discord::Channel& channel, unsigned int requiredNumberOfArgs, const QStringList& args, bool argumentShouldBeANumber, std::function<void()> callback);
+
 private slots:
 	void OnDisconnected();
 

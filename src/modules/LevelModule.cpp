@@ -4,6 +4,8 @@
 
 #include <QtMath>
 
+using namespace Discord;
+
 LevelModule::LevelModule(UmikoBot* client)
 	: Module("levels", true), m_client(client)
 {
@@ -29,24 +31,20 @@ LevelModule::LevelModule(UmikoBot* client)
 	qsrand(now.msec());
 
 	RegisterCommand(Commands::LEVEL_MODULE_TOP, "top",
-		[this](Discord::Client& client, const Discord::Message& message, const Discord::Channel& channel)
+		[this](Client& client, const Message& message, const Channel& channel)
 	{
 		auto& exp = m_exp[channel.guildId()];
 		QStringList args = message.content().split(' ');
 		GuildSetting s = GuildSettings::GetGuildSetting(channel.guildId());
 		QString prefix = s.prefix;
 
-		if (args.first() != prefix + "top")
-			return;
-
-		
 		if (args.size() == 2) {
 			qSort(exp.begin(), exp.end(),
 				[](const LevelModule::GuildLevelData& v1, const LevelModule::GuildLevelData& v2)
 			{
 				return v1.exp > v2.exp;
 			});
-			Discord::Embed embed;
+			Embed embed;
 			embed.setColor(qrand() % 16777216);
 			embed.setTitle("Top " + args.back());
 
@@ -144,7 +142,7 @@ LevelModule::LevelModule(UmikoBot* client)
 				return;
 			}
 
-			Discord::Embed embed;
+			Embed embed;
 			embed.setColor(qrand() % 16777216);
 			if (count2 == count1) 
 			{
@@ -202,7 +200,7 @@ LevelModule::LevelModule(UmikoBot* client)
 		else
 		{
 			UmikoBot* bot = reinterpret_cast<UmikoBot*>(&client);
-			Discord::Embed embed;
+			Embed embed;
 			embed.setColor(qrand() % 16777216);
 			embed.setTitle("Help top");
 			QString description = bot->GetCommandHelp("top", prefix);
@@ -212,7 +210,7 @@ LevelModule::LevelModule(UmikoBot* client)
 	});
 
 	RegisterCommand(Commands::LEVEL_MODULE_RANK, "rank",
-		[this](Discord::Client& client, const Discord::Message& message, const Discord::Channel& channel)
+		[this](Client& client, const Message& message, const Channel& channel)
 	{
 		QStringList args = message.content().split(' ');
 		GuildSetting* setting = &GuildSettings::GetGuildSetting(channel.guildId());
@@ -221,16 +219,13 @@ LevelModule::LevelModule(UmikoBot* client)
 		auto printHelp = [&client, prefix, message]()
 		{
 			UmikoBot* bot = reinterpret_cast<UmikoBot*>(&client);
-			Discord::Embed embed;
+			Embed embed;
 			embed.setColor(qrand() % 16777216);
 			embed.setTitle("Help rank");
 			QString description = bot->GetCommandHelp("rank", prefix);
 			embed.setDescription(description);
 			bot->createMessage(message.channelId(), embed);
 		};
-		
-		if (args.first() != prefix + "rank")
-			return;
 		
 		if (args.size() < 2)
 		{
@@ -241,7 +236,7 @@ LevelModule::LevelModule(UmikoBot* client)
 		if (args.last() == "list" && args.size() == 2)
 		{
 			QList<LevelRank> ranks = setting->ranks;
-			Discord::Embed embed;
+			Embed embed;
 			embed.setColor(qrand() % 16777216);
 			embed.setTitle("Rank list");
 
@@ -257,16 +252,10 @@ LevelModule::LevelModule(UmikoBot* client)
 			client.createMessage(message.channelId(), embed);
 		}
 		else if (args[1] == "add" && args.size() > 3)
-			Permissions::ContainsPermission(client, channel.guildId(), message.author().id(), CommandPermission::ADMIN,
-				[args, &client, message, channel](bool result)
+			UmikoBot::VerifyAndRunAdminCmd(client, message, channel, 4, args, false, [this, &client, channel, message, args]()
 			{
 				GuildSetting* setting = &GuildSettings::GetGuildSetting(channel.guildId());
-				if (!result)
-				{
-					client.createMessage(message.channelId(), "You don't have permissions to use this command.");
-					return;
-				}
-
+				
 				bool ok;
 				unsigned int minimumLevel = args[2].toUInt(&ok);
 				if (!ok)
@@ -306,15 +295,8 @@ LevelModule::LevelModule(UmikoBot* client)
 					}
 			});
 		else if (args[1] == "remove" && args.size() == 3)
-			Permissions::ContainsPermission(client, channel.guildId(), message.author().id(), CommandPermission::ADMIN,
-				[args, &client, message, channel](bool result)
+			UmikoBot::VerifyAndRunAdminCmd(client, message, channel, 3, args, false, [this, &client, channel, message, args]()
 			{
-				if (!result)
-				{
-					client.createMessage(message.channelId(), "You don't have permissions to use this command.");
-					return;
-				}
-
 				GuildSetting* setting = &GuildSettings::GetGuildSetting(channel.guildId());
 
 				bool ok;
@@ -335,14 +317,8 @@ LevelModule::LevelModule(UmikoBot* client)
 				setting->ranks.erase(setting->ranks.begin() + id);
 			});
 		else if (args[1] == "edit" && args.size() >= 4)
-			Permissions::ContainsPermission(client, channel.guildId(), message.author().id(), CommandPermission::ADMIN,
-				[args, &client, message, channel, printHelp](bool result)
+			UmikoBot::VerifyAndRunAdminCmd(client, message, channel, 5, args, false, [this, &client, channel, message, args, printHelp]()
 			{
-				if (!result)
-				{
-					client.createMessage(message.channelId(), "You don't have permissions to use this command.");
-					return;
-				}
 				GuildSetting* setting = &GuildSettings::GetGuildSetting(channel.guildId());
 
 				bool ok;
@@ -395,19 +371,16 @@ LevelModule::LevelModule(UmikoBot* client)
 	});
 
 	RegisterCommand(Commands::LEVEL_MODULE_MAX_LEVEL, "setmaxlevel",
-		[this](Discord::Client& client, const Discord::Message& message, const Discord::Channel& channel)
+		[this](Client& client, const Message& message, const Channel& channel)
 	{
 		GuildSetting* setting = &GuildSettings::GetGuildSetting(channel.guildId());
 		QStringList args = message.content().split(' ');
 		QString prefix = setting->prefix;
 
-		if (args.first() != prefix + "setmaxlevel")
-			return;
-
 		auto printHelp = [&client, prefix, message]()
 		{
 			UmikoBot* bot = reinterpret_cast<UmikoBot*>(&client);
-			Discord::Embed embed;
+			Embed embed;
 			embed.setColor(qrand() % 16777216);
 			embed.setTitle("Help setmaxlevel");
 			QString description = bot->GetCommandHelp("setmaxlevel", prefix);
@@ -423,23 +396,10 @@ LevelModule::LevelModule(UmikoBot* client)
 				return;
 			}
 
-			Permissions::ContainsPermission(client, channel.guildId(), message.author().id(), CommandPermission::ADMIN,
-				[args, &client, message, channel, printHelp, setting](bool result)
+			UmikoBot::VerifyAndRunAdminCmd(client, message, channel, 2, args, true, [this, &client, channel, message, args, setting]()
 			{
-				if (!result)
-				{
-					client.createMessage(message.channelId(), "You don't have permissions to use this command.");
-					return;
-				}
-				bool ok;
-				unsigned int level = args[1].toUInt(&ok);
-				if (!ok)
-				{
-					client.createMessage(message.channelId(), "Invalid level.");
-					return;
-				}
-				setting->maximumLevel = level;
-				client.createMessage(message.channelId(), "Maximum level set to " + QString::number(level) + " succesfully!");
+				setting->maximumLevel = args[1].toUInt();
+				client.createMessage(message.channelId(), "Maximum level set to " + QString::number(setting->maximumLevel) + " succesfully!");
 			});
 		}
 		else
@@ -447,19 +407,16 @@ LevelModule::LevelModule(UmikoBot* client)
 	});
 
 	RegisterCommand(Commands::LEVEL_MODULE_EXP_REQUIREMENT, "setexpreq",
-		[this](Discord::Client& client, const Discord::Message& message, const Discord::Channel& channel)
+		[this](Client& client, const Message& message, const Channel& channel)
 	{
 		GuildSetting* setting = &GuildSettings::GetGuildSetting(channel.guildId());
 		QStringList args = message.content().split(' ');
 		QString prefix = setting->prefix;
 
-		if (args.first() != prefix + "setexpreq")
-			return;
-
 		auto printHelp = [&client, prefix, message]()
 		{
 			UmikoBot* bot = reinterpret_cast<UmikoBot*>(&client);
-			Discord::Embed embed;
+			Embed embed;
 			embed.setColor(qrand() % 16777216);
 			embed.setTitle("Help setexpreq");
 			QString description = bot->GetCommandHelp("setexpreq", prefix);
@@ -475,23 +432,10 @@ LevelModule::LevelModule(UmikoBot* client)
 				return;
 			}
 
-			Permissions::ContainsPermission(client, channel.guildId(), message.author().id(), CommandPermission::ADMIN,
-				[args, &client, message, channel, printHelp, setting](bool result)
+			UmikoBot::VerifyAndRunAdminCmd(client, message, channel, 2, args, true, [this, &client, channel, message, args, setting]()
 			{
-				if (!result)
-				{
-					client.createMessage(message.channelId(), "You don't have permissions to use this command.");
-					return;
-				}
-				bool ok;
-				unsigned int expReq = args[1].toUInt(&ok);
-				if (!ok)
-				{
-					client.createMessage(message.channelId(), "Invalid exp requirement.");
-					return;
-				}
-				setting->expRequirement = expReq;
-				client.createMessage(message.channelId(), "Exp requirement set to " + QString::number(expReq) + " succesfully!");
+				setting->expRequirement = args[1].toUInt();
+				client.createMessage(message.channelId(), "Exp requirement set to " + QString::number(setting->expRequirement) + " succesfully!");
 			});
 		}
 		else
@@ -499,19 +443,16 @@ LevelModule::LevelModule(UmikoBot* client)
 	});
 
 	RegisterCommand(Commands::LEVEL_MODULE_EXP_GROWTH_RATE, "setgrowthrate",
-		[this](Discord::Client& client, const Discord::Message& message, const Discord::Channel& channel)
+		[this](Client& client, const Message& message, const Channel& channel)
 	{
 		GuildSetting* setting = &GuildSettings::GetGuildSetting(channel.guildId());
 		QStringList args = message.content().split(' ');
 		QString prefix = setting->prefix;
 
-		if (args.first() != prefix + "setgrowthrate")
-			return;
-
 		auto printHelp = [&client, prefix, message]()
 		{
 			UmikoBot* bot = reinterpret_cast<UmikoBot*>(&client);
-			Discord::Embed embed;
+			Embed embed;
 			embed.setColor(qrand() % 16777216);
 			embed.setTitle("Help setgrowthrate");
 			QString description = bot->GetCommandHelp("setgrowthrate", prefix);
@@ -527,23 +468,10 @@ LevelModule::LevelModule(UmikoBot* client)
 				return;
 			}
 
-			Permissions::ContainsPermission(client, channel.guildId(), message.author().id(), CommandPermission::ADMIN,
-				[args, &client, message, channel, printHelp, setting](bool result)
+			UmikoBot::VerifyAndRunAdminCmd(client, message, channel, 2, args, true, [this, &client, channel, message, args, setting]()
 			{
-				if (!result)
-				{
-					client.createMessage(message.channelId(), "You don't have permissions to use this command.");
-					return;
-				}
-				bool ok;
-				float growthRate = args[1].toFloat(&ok);
-				if (!ok || growthRate < 1)
-				{
-					client.createMessage(message.channelId(), "Invalid growth rate.");
-					return;
-				}
-				setting->growthRate = growthRate;
-				client.createMessage(message.channelId(), "Growth rate set to " + QString::number(growthRate) + " succesfully!");
+				setting->growthRate = args[1].toFloat();
+				client.createMessage(message.channelId(), "Growth rate set to " + QString::number(setting->growthRate) + " succesfully!");
 			});
 		}
 		else
@@ -551,19 +479,16 @@ LevelModule::LevelModule(UmikoBot* client)
 	});
 
 	RegisterCommand(Commands::LEVEL_MODULE_EXP_GIVE, "givexp",
-		[this](Discord::Client& client, const Discord::Message& message, const Discord::Channel& channel)
+		[this](Client& client, const Message& message, const Channel& channel)
 	{
 		GuildSetting s = GuildSettings::GetGuildSetting(channel.guildId());
 		QString prefix = s.prefix;
 		QStringList args = message.content().split(' ');
 
-		if (args.first() != prefix + "givexp")
-			return;
-
 		auto printHelp = [&client, prefix, message]()
 		{
 			UmikoBot* bot = reinterpret_cast<UmikoBot*>(&client);
-			Discord::Embed embed;
+			Embed embed;
 			embed.setColor(qrand() % 16777216);
 			embed.setTitle("Help givexp");
 			QString description = bot->GetCommandHelp("givexp", prefix);
@@ -573,16 +498,9 @@ LevelModule::LevelModule(UmikoBot* client)
 
 		if (args.size() >= 3)
 		{
-			Permissions::ContainsPermission(client, channel.guildId(), message.author().id(), CommandPermission::ADMIN,
-				[this, args, &client, message, channel, printHelp, s](bool result)
+			UmikoBot::VerifyAndRunAdminCmd(client, message, channel, 3, args, false, [this, &client, channel, message, args, s]()
 			{
 				auto& exp = m_exp[channel.guildId()];
-
-				if (!result)
-				{
-					client.createMessage(message.channelId(), "You don't have permissions to use this command.");
-					return;
-				}
 
 				snowflake_t userId = static_cast<UmikoBot*>(&client)->GetUserFromArg(channel.guildId(), args, 2);
 
@@ -646,19 +564,16 @@ LevelModule::LevelModule(UmikoBot* client)
 	});
 
 	RegisterCommand(Commands::LEVEL_MODULE_EXP_TAKE, "takexp",
-		[this](Discord::Client& client, const Discord::Message& message, const Discord::Channel& channel)
+		[this](Client& client, const Message& message, const Channel& channel)
 	{
 		GuildSetting s = GuildSettings::GetGuildSetting(channel.guildId());
 		QString prefix = s.prefix;
 		QStringList args = message.content().split(' ');
 
-		if (args.first() != prefix + "takexp")
-			return;
-
 		auto printHelp = [&client, prefix, message]()
 		{
 			UmikoBot* bot = reinterpret_cast<UmikoBot*>(&client);
-			Discord::Embed embed;
+			Embed embed;
 			embed.setColor(qrand() % 16777216);
 			embed.setTitle("Help takexp");
 			QString description = bot->GetCommandHelp("takexp", prefix);
@@ -668,16 +583,9 @@ LevelModule::LevelModule(UmikoBot* client)
 
 		if (args.size() >= 3)
 		{
-			Permissions::ContainsPermission(client, channel.guildId(), message.author().id(), CommandPermission::ADMIN,
-				[this, args, &client, message, channel, printHelp, s](bool result)
+			UmikoBot::VerifyAndRunAdminCmd(client, message, channel, 3, args, false, [this, &client, channel, message, args, s]()
 			{
 				auto& exp = m_exp[channel.guildId()];
-
-				if (!result)
-				{
-					client.createMessage(message.channelId(), "You don't have permissions to use this command.");
-					return;
-				}
 
 				snowflake_t userId = static_cast<UmikoBot*>(&client)->GetUserFromArg(channel.guildId(), args, 2);
 
@@ -744,19 +652,16 @@ LevelModule::LevelModule(UmikoBot* client)
 	});
 
 	RegisterCommand(Commands::LEVEL_MODULE_BLOCK_EXP, "blockxp",
-		[this](Discord::Client& client, const Discord::Message& message, const Discord::Channel& channel)
+		[this](Client& client, const Message& message, const Channel& channel)
 	{
 		GuildSetting s = GuildSettings::GetGuildSetting(channel.guildId());
 		QString prefix = s.prefix;
 		QStringList args = message.content().split(' ');
 
-		if (args.first() != prefix + "blockxp")
-			return;
-
 		auto printHelp = [&client, prefix, message]()
 		{
 			UmikoBot* bot = reinterpret_cast<UmikoBot*>(&client);
-			Discord::Embed embed;
+			Embed embed;
 			embed.setColor(qrand() % 16777216);
 			embed.setTitle("Help blockxp");
 			QString description = bot->GetCommandHelp("blockxp", prefix);
@@ -766,15 +671,8 @@ LevelModule::LevelModule(UmikoBot* client)
 
 		if (args.size() > 1 && args[1] == "whitelist")
 		{
-			Permissions::ContainsPermission(client, channel.guildId(), message.author().id(), CommandPermission::ADMIN,
-				[this, &client, printHelp, message, args, channel](bool result)
+			UmikoBot::VerifyAndRunAdminCmd(client, message, channel, 2, args, false, [this, &client, channel, message, args]()
 			{
-				if (!result)
-				{
-					client.createMessage(message.channelId(), "You don't have permissions to use this command.");
-					return;
-				}
-
 				GuildSetting& s = GuildSettings::GetGuildSetting(channel.guildId());
 				for (int i = 0; i < s.levelBlacklistedChannels.size(); i++) {
 					if (s.levelBlacklistedChannels[i] == channel.id())
@@ -799,15 +697,8 @@ LevelModule::LevelModule(UmikoBot* client)
 		}
 		else if (args.size() > 1 && args[1] == "blacklist")
 		{
-			Permissions::ContainsPermission(client, channel.guildId(), message.author().id(), CommandPermission::ADMIN,
-				[this, &client, printHelp, message, args, channel](bool result)
+			UmikoBot::VerifyAndRunAdminCmd(client, message, channel, 2, args, false, [this, &client, channel, message, args]()
 			{
-				if (!result)
-				{
-					client.createMessage(message.channelId(), "You don't have permissions to use this command.");
-					return;
-				}
-
 				GuildSetting& s = GuildSettings::GetGuildSetting(channel.guildId());
 				for (int i = 0; i < s.levelWhitelistedChannels.size(); i++) {
 					if (s.levelWhitelistedChannels[i] == channel.id())
@@ -1010,12 +901,12 @@ void LevelModule::StatusCommand(QString& result, snowflake_t guild, snowflake_t 
 	result += "\n";
 }
 
-void LevelModule::OnMessage(Discord::Client& client, const Discord::Message& message) 
+void LevelModule::OnMessage(Client& client, const Message& message) 
 {
 	Module::OnMessage(client, message);
 
 	client.getChannel(message.channelId()).then(
-		[this, message](const Discord::Channel& channel) 
+		[this, message](const Channel& channel) 
 	{
 		auto& exp = m_exp[channel.guildId()];
 

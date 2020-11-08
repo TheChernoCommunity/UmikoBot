@@ -1,4 +1,5 @@
 #include "Module.h"
+#include "core/Permissions.h"
 
 #include <QtCore/QFile>
 #include <QtCore/QJsonDocument>

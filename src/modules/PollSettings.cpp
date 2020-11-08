@@ -2,6 +2,8 @@
 
 #define EMBED_BAR_MAX_WIDTH 15.0
 
+using namespace Discord;
+
 FunModule::PollSettings::PollSettings(const PollOptions& op, long long maxvotes, snowflake_t chan, const QString& name, int num, double time, const ServerPolls& pollList, snowflake_t msg) 
 	: options(op), maxVotes(maxvotes), notifChannel(chan), 
 	pollName(name), pollNum(num), polls(pollList), pollMsg(msg) 
@@ -29,7 +31,7 @@ FunModule::PollSettings::PollSettings(const PollOptions& op, long long maxvotes,
 
 		if (total == 0) total = 1;
 
-		QList<Discord::EmbedField> fields;
+		QList<EmbedField> fields;
 
 		for (auto& option : settings->options) 
 		{
@@ -49,7 +51,7 @@ FunModule::PollSettings::PollSettings(const PollOptions& op, long long maxvotes,
 				str += utility::consts::emojis::BLACK_BLOCK;
 			}
 
-			Discord::EmbedField field;
+			EmbedField field;
 			QRegExp reg{ ".+:\\d+" };
 
 			QString desc = "";
@@ -75,13 +77,13 @@ FunModule::PollSettings::PollSettings(const PollOptions& op, long long maxvotes,
 			fields.push_back(field);
 		}
 
-		Discord::Embed embed;
+		Embed embed;
 		embed.setColor(qrand() % 16777216);
 		embed.setTitle("Results for Poll#" + QString::number(poll_num) + " " + poll_name);
 		embed.setFields(fields);
 
 
-		UmikoBot::Instance().createMessage(notif_chan, embed).then([poll_num, serverPolls](const Discord::Message& message) 
+		UmikoBot::Instance().createMessage(notif_chan, embed).then([poll_num, serverPolls](const Message& message) 
 		{
 
 			auto settings = serverPolls->at(poll_num);
@@ -95,7 +97,7 @@ FunModule::PollSettings::PollSettings(const PollOptions& op, long long maxvotes,
 
 			//! This part is used to get the guild id
 
-			UmikoBot::Instance().getChannel(notif_chan).then([poll_num, resultMsg, serverPolls](const Discord::Channel& chan) 
+			UmikoBot::Instance().getChannel(notif_chan).then([poll_num, resultMsg, serverPolls](const Channel& chan) 
 			{
 
 				auto settings = serverPolls->at(poll_num);
@@ -103,9 +105,9 @@ FunModule::PollSettings::PollSettings(const PollOptions& op, long long maxvotes,
 				auto notif_chan = settings->notifChannel;
 				auto poll_msg = settings->pollMsg;
 
-				Discord::MessagePatch patch;
+				MessagePatch patch;
 
-				Discord::Embed embed;
+				Embed embed;
 				embed.setColor(qrand() % 16777216);
 				embed.setTitle("Poll#" + QString::number(poll_num) + " " + poll_name);
 				embed.setDescription("This poll has ended. See the results [here.](https://discordapp.com/channels/"
