@@ -1116,6 +1116,8 @@ CurrencyModule::CurrencyModule(UmikoBot* client) : Module("currency", true), m_c
 		UmikoBot::VerifyAndRunAdminCmd(client, message, channel, 2, args, true, [this, &client, channel, message, args]()
 		{
 			auto& config = getServerData(channel.guildId());
+			EventModule* eventModule = static_cast<EventModule*>(UmikoBot::Instance().GetModuleByName("event"));
+			auto& eventConfig = eventModule->getEventServerData(channel.guildId());
 			if (eventConfig.isEventRunning)
 			{
 				client.createMessage(message.channelId(), "**You cannot set configarations regarding steal while an event is running!** ");
