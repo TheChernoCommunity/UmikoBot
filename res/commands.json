@@ -7,7 +7,7 @@
 	},
 	"GLOBAL_HELP": {
 		"brief": "Returns the usage of a command",
-		"usage": "help [page/command]",
+		"usage": "help [command]",
 		"additional": "",
 		"admin": false
 	},
@@ -270,6 +270,31 @@
 		"usage": "compensate <amount>\ncompensate @Person <amount>",
 		"admin": true
 	},
+	"EVENT": {
+		"brief": "Retrieve information about the running event(s).",
+		"usage": "event",
+		"admin": false
+	},
+	"EVENT_LAUNCH": {
+		"brief": "Starts an event.",
+		"usage": "launch <event-name> <expiry-time-in-hours>",
+		"admin": true
+	},
+	"EVENT_END": {
+		"brief": "Stops the running event manually.",
+		"usage": "endevent",
+		"admin": true
+	},
+	"EVENT_GIVE_NEW_ACCESS": {
+		"brief": "Gives event launching and ending ability to the people with the mentioned role(s).",
+		"usage": "give-new-event-access <role-mention(s)>",
+		"admin": true
+	},
+	"EVENT_TAKE_NEW_ACCESS": {
+		"brief": "Removes event launching and ending ability from the provided role(s) that previously had event launching and ending abilities.",
+		"usage": "take-new-event-access <role-mention(s)>",
+		"admin": true
+	},
 	"FUN_MEME": {
 		"brief": "Shows memes from reddit.",
 		"usage": "meme",
@@ -277,7 +302,8 @@
 	},
 	"FUN_ROLL": {
 		"brief": "Gets a random number.",
-		"usage": "roll <min> <max>",
+		"usage": "roll <min> <max> (more details below)",
+		"additional": "**Example: ** `!roll 1 10` will get a random number between `1` and `10` (inclusive). The `!roll` command can also be used with a single argument, in that case `!roll 10` will get a random value from `0` to `10`.",
 		"admin": false
   	},
 	"FUN_POLL": {
