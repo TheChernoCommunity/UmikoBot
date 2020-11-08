@@ -220,12 +220,12 @@
 		"admin": true
 	},
 	"CURRENCY_SET_MAX_BRIBE_AMOUNT": {
-		"brief": "Sets the max amount that a user can !bribe.",
+		"brief": "Sets the max amount that a user can `!bribe`.",
 		"usage": "setmaxbribeamount <amount>",
 		"admin": true
 	},
 	"CURRENCY_SET_LEAST_BRIBE_AMOUNT": {
-		"brief": "Sets the least amount that a user can !bribe.",
+		"brief": "Sets the least amount that a user can `!bribe`.",
 		"usage": "setleastbribeamount <amount>",
 		"admin": true
 	},
@@ -302,8 +302,8 @@
 	},
 	"FUN_ROLL": {
 		"brief": "Gets a random number.",
-		"usage": "roll <min> <max> (more details below)",
-		"additional": "**Example: ** `!roll 1 10` will get a random number between `1` and `10` (inclusive). The `!roll` command can also be used with a single argument, in that case `!roll 10` will get a random value from `0` to `10`.",
+		"usage": "roll <min> <max>\nroll <max>",
+		"additional": "**Example:\n** `!roll 4 10`: Gets a random number between `4` and `10` (inclusive).\n `roll 10`: Gets a random number from `0` to `10` (inclusive).",
 		"admin": false
   	},
 	"FUN_POLL": {

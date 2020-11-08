@@ -1,4 +1,4 @@
-#include "UmikoBot.h"
+﻿#include "UmikoBot.h"
 #include "EventModule.h"
 #include "core/Permissions.h"
 #include "core/Utility.h"
@@ -41,7 +41,7 @@ EventModule::EventModule(UmikoBot* client) : Module("event", true)
 				Embed embed;
 				embed.setColor(15844367);
 				embed.setTitle("**HighRiskHighReward** event");
-				embed.setDescription("The steal chance is **decreased** but if you succeed you will get **bonus " + currencyConfig.currencySymbol + "**!\n"
+				embed.setDescription("The steal chance is **decreased** but if you succeed you will get **BONUS " + currencyConfig.currencySymbol + "**!\n"
 					"Event **expires** in `" + time + "`");
 
 				client.createMessage(message.channelId(), embed);
@@ -56,8 +56,8 @@ EventModule::EventModule(UmikoBot* client) : Module("event", true)
 				Embed embed;
 				embed.setColor(15844367);
 				embed.setTitle("**LowRiskLowReward** event");
-				embed.setDescription("The steal chance is **increased** but you have to give a **penalty** if you succeed!\n"
-					"Event **expires** in `" + time + "`");
+				embed.setDescription("The steal chance is **increased** but you have to give a **PENALTY** if you succeed!\n"
+									"Event **expires** in `" + time + "`");
 
 				client.createMessage(message.channelId(), embed);
 				return;
@@ -67,7 +67,7 @@ EventModule::EventModule(UmikoBot* client) : Module("event", true)
 	RegisterCommand(Commands::EVENT_GIVE_NEW_ACCESS, "give-new-event-access", [this](Client& client, const Message& message, const Channel& channel)
 		{
 			QStringList args = message.content().split(' ');
-			UmikoBot::VerifyAndRunAdminCmd(client, message, channel, 2, args, true, [this, &client, channel, message, args]()
+			UmikoBot::VerifyAndRunAdminCmd(client, message, channel, 2, args, false, [this, &client, channel, message, args]()
 				{
 
 					snowflake_t guild = channel.guildId();
@@ -91,7 +91,7 @@ EventModule::EventModule(UmikoBot* client) : Module("event", true)
 		{
 			QStringList args = message.content().split(' ');
 
-			UmikoBot::VerifyAndRunAdminCmd(client, message, channel, 2, args, true, [this, &client, channel, message, args]()
+			UmikoBot::VerifyAndRunAdminCmd(client, message, channel, 2, args, false, [this, &client, channel, message, args]()
 				{
 
 					snowflake_t guild = channel.guildId();
@@ -180,14 +180,18 @@ EventModule::EventModule(UmikoBot* client) : Module("event", true)
 							UmikoBot::Instance().createMessage(message.channelId(), "`" + args.at(1) + "` is not an event");
 							return;
 						}
+						QString eventEmoji = QString(utility::consts::emojis::REGIONAL_INDICATOR_E) + " " +QString(utility::consts::emojis::REGIONAL_INDICATOR_V) + " " +
+														QString(utility::consts::emojis::REGIONAL_INDICATOR_E) + " " + QString(utility::consts::emojis::REGIONAL_INDICATOR_N) + " " +
+																QString(utility::consts::emojis::REGIONAL_INDICATOR_T);
+
 						if (args.at(1) == "HighRiskHighReward")
 						{
 							QString num = QString::number(time);
 
 							Embed embed;
 							embed.setColor(15844367);
-							embed.setTitle("**HighRiskHighReward** event has been launched for `" + num + "` hour(s)!");
-							embed.setDescription("Give command `!event` to see what event is running and its changes!");
+							embed.setTitle(eventEmoji);
+							embed.setDescription("**HighRiskHighReward** event has been launched for `" + num + "` hour(s)!\nGive command `!event` to see what event is running and its changes!");
 
 							config.isEventRunning = true;
 							config.eventHighRiskHighRewardRunning = true;
@@ -199,8 +203,8 @@ EventModule::EventModule(UmikoBot* client) : Module("event", true)
 
 							Embed embed;
 							embed.setColor(15844367);
-							embed.setTitle("**LowRiskLowReward** event has been launched for `" + num + "` hour(s)!");
-							embed.setDescription("Give command `!event` to see what event is running and its changes!");
+							embed.setTitle(eventEmoji);
+							embed.setDescription("**LowRiskLowReward** event has been launched for `" + num + "` hour(s)!\nGive command `!event` to see what event is running and its changes!");
 
 							config.isEventRunning = true;
 							config.eventLowRiskLowRewardRunning = true;
@@ -209,7 +213,7 @@ EventModule::EventModule(UmikoBot* client) : Module("event", true)
 						auto guildID = channel.guildId();
 						auto chan = message.channelId();
 
-						QObject::connect(config.eventTimer, &QTimer::timeout, [this, guildID, chan]()
+						QObject::connect(config.eventTimer, &QTimer::timeout, [this, guildID, chan, eventEmoji]()
 							{
 								CurrencyModule* currencyModule = static_cast<CurrencyModule*>(UmikoBot::Instance().GetModuleByName("currency"));
 								auto& currencyConfig = currencyModule->getServerData(guildID);
@@ -219,7 +223,8 @@ EventModule::EventModule(UmikoBot* client) : Module("event", true)
 								{
 									Embed embed;
 									embed.setColor(15158332);
-									embed.setTitle("**HighRiskHighReward** event has **ended**!");
+									embed.setTitle(eventEmoji);
+									embed.setDescription("**HighRiskHighReward** event has **ended**!");
 
 									config.isEventRunning = false;
 									config.eventHighRiskHighRewardRunning = false;
@@ -229,7 +234,8 @@ EventModule::EventModule(UmikoBot* client) : Module("event", true)
 								{
 									Embed embed;
 									embed.setColor(15158332);
-									embed.setTitle("**LowRiskLowReward** event has **ended**!");
+									embed.setTitle(eventEmoji);
+									embed.setDescription("**LowRiskLowReward** event has **ended**!");
 
 									config.isEventRunning = false;
 									config.eventLowRiskLowRewardRunning = false;
@@ -266,7 +272,10 @@ EventModule::EventModule(UmikoBot* client) : Module("event", true)
 						CurrencyModule* currencyModule = static_cast<CurrencyModule*>(UmikoBot::Instance().GetModuleByName("currency"));
 						auto& currencyConfig = currencyModule->getServerData(channel.guildId());
 
-						GuildSetting* setting = &GuildSettings::GetGuildSetting(channel.guildId());
+						QString eventEmoji = QString(utility::consts::emojis::REGIONAL_INDICATOR_E) + " " + QString(utility::consts::emojis::REGIONAL_INDICATOR_V) + " " +
+												QString(utility::consts::emojis::REGIONAL_INDICATOR_E) + " " + QString(utility::consts::emojis::REGIONAL_INDICATOR_N) + " " +
+													QString(utility::consts::emojis::REGIONAL_INDICATOR_T);
+
 						if (args.size() != 1)
 						{
 							UmikoBot::Instance().createMessage(message.channelId(), "**Wrong Usage of Command!** ");
@@ -274,7 +283,8 @@ EventModule::EventModule(UmikoBot* client) : Module("event", true)
 						}
 						if (!config.isEventRunning)
 						{
-							UmikoBot::Instance().createMessage(message.channelId(), "**No event is running, so you can't end an event!**\n");
+							UmikoBot::Instance().createMessage(message.channelId(), "**What do I even end?**\n"
+																					"I (unlike you) can properly keep track of things, and no events are going on at the moment.");
 							return;
 						}
 						if (config.eventTimer->isActive())
@@ -283,7 +293,8 @@ EventModule::EventModule(UmikoBot* client) : Module("event", true)
 							{
 								Embed embed;
 								embed.setColor(15158332);
-								embed.setTitle("**HighRiskHighReward** event has **ended**!");
+								embed.setTitle(eventEmoji);
+								embed.setDescription("**HighRiskHighReward** event has **ended**!");
 
 								config.isEventRunning = false;
 								config.eventHighRiskHighRewardRunning = false;
@@ -296,7 +307,8 @@ EventModule::EventModule(UmikoBot* client) : Module("event", true)
 							{
 								Embed embed;
 								embed.setColor(15158332);
-								embed.setTitle("**LowRiskLowReward** event has **ended**!");
+								embed.setTitle(eventEmoji);
+								embed.setDescription("**LowRiskLowReward** event has **ended**!");
 
 								config.isEventRunning = false;
 								config.eventLowRiskLowRewardRunning = false;
