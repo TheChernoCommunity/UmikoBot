@@ -12,6 +12,7 @@ class UmikoBot;
 
 class CurrencyModule : public Module
 {
+	friend class EventModule;
 public:
 	struct UserCurrency
 	{
@@ -167,7 +168,7 @@ public:
 	void StatusCommand(QString& result, snowflake_t guild, snowflake_t user) override;
 	void OnMessage(Discord::Client& client, const Discord::Message& message) override;
 
-	UserCurrency getUserData(snowflake_t guild, snowflake_t id)
+	UserCurrency& getUserData(snowflake_t guild, snowflake_t id)
 	{
 		for (auto user : guildList[guild])
 		{

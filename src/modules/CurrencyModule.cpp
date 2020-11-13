@@ -923,7 +923,7 @@ CurrencyModule::CurrencyModule(UmikoBot* client) : Module("currency", true), m_c
 		auto& authorCurrency = guildList[channel.guildId()][getUserIndex(channel.guildId(), authorId)];
 
 		EventModule* eventModule = static_cast<EventModule*>(UmikoBot::Instance().GetModuleByName("event"));
-		auto& eventConfig = eventModule->getEventServerData(channel.guildId());
+		auto& eventConfig = eventModule->getServerEventData(channel.guildId());
 		
 		if (eventConfig.eventHighRiskHighRewardRunning)
 		{
@@ -1066,7 +1066,7 @@ CurrencyModule::CurrencyModule(UmikoBot* client) : Module("currency", true), m_c
 		{
 			auto& config = getServerData(channel.guildId());
 			EventModule* eventModule = static_cast<EventModule*>(UmikoBot::Instance().GetModuleByName("event"));
-			auto& eventConfig = eventModule->getEventServerData(channel.guildId());
+			auto& eventConfig = eventModule->getServerEventData(channel.guildId());
 			if (eventConfig.isEventRunning)
 			{
 				client.createMessage(message.channelId(), "**You cannot set configarations regarding steal while an event is running!** ");
@@ -1086,7 +1086,7 @@ CurrencyModule::CurrencyModule(UmikoBot* client) : Module("currency", true), m_c
 		{
 			auto& config = getServerData(channel.guildId());
 			EventModule* eventModule = static_cast<EventModule*>(UmikoBot::Instance().GetModuleByName("event"));
-			auto& eventConfig = eventModule->getEventServerData(channel.guildId());
+			auto& eventConfig = eventModule->getServerEventData(channel.guildId());
 			if (eventConfig.isEventRunning)
 			{
 				client.createMessage(message.channelId(), "**You cannot set configarations regarding steal while an event is running!** ");
@@ -1106,7 +1106,7 @@ CurrencyModule::CurrencyModule(UmikoBot* client) : Module("currency", true), m_c
 		{
 			auto& config = getServerData(channel.guildId());
 			EventModule* eventModule = static_cast<EventModule*>(UmikoBot::Instance().GetModuleByName("event"));
-			auto& eventConfig = eventModule->getEventServerData(channel.guildId());
+			auto& eventConfig = eventModule->getServerEventData(channel.guildId());
 			if (eventConfig.isEventRunning)
 			{
 				client.createMessage(message.channelId(), "**You cannot set configarations regarding steal while an event is running!** ");
@@ -1126,7 +1126,7 @@ CurrencyModule::CurrencyModule(UmikoBot* client) : Module("currency", true), m_c
 		{
 			auto& config = getServerData(channel.guildId());
 			EventModule* eventModule = static_cast<EventModule*>(UmikoBot::Instance().GetModuleByName("event"));
-			auto& eventConfig = eventModule->getEventServerData(channel.guildId());
+			auto& eventConfig = eventModule->getServerEventData(channel.guildId());
 			if (eventConfig.isEventRunning)
 			{
 				client.createMessage(message.channelId(), "**You cannot set configarations regarding steal while an event is running!** ");
@@ -1361,7 +1361,7 @@ void CurrencyModule::OnSave(QJsonDocument& doc) const
 			obj["dailyStreak"] = (int) user->dailyStreak;
 			obj["numberOfDailysClaimed"] = (int) user->numberOfDailysClaimed;
 			obj["numberOfGiveawaysClaimed"] = (int) user->numberOfGiveawaysClaimed;
-
+			qDebug() << "SAVED!";
 			serverJSON[QString::number(user->userId)] = obj;
 		}
 

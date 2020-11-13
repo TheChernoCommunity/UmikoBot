@@ -81,6 +81,7 @@ namespace utility
 				};
 			}
 			
+			constexpr auto TICKETS = ":tickets:";
 			constexpr auto GREEN_BLOCK = "<:green_block:777298339858612255>";
 			constexpr auto BLACK_BLOCK = "<:black_block:777298360267833345>";
 			constexpr auto WE_SMART = "<:wesmart:777299810658680892>";
