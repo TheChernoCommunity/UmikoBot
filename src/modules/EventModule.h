@@ -18,9 +18,12 @@ public:
 	struct EventConfig
 	{
 		QTimer* eventTimer{ nullptr };
+		QTimer* raffleDrawRewardClaimTimer{ nullptr };
 		bool isEventRunning{ false };
 		bool eventHighRiskHighRewardRunning{ false };
 		bool eventLowRiskLowRewardRunning{ false };
+		int luckyTicket{ 0 };
+		bool claimedReward = true;
 		bool eventRaffleDrawRunning{ false };
 		unsigned int currentTicketIndex{ 0 };
 		int raffleDrawTicketPrice{ 50 };

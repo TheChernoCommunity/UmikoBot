@@ -1361,7 +1361,7 @@ void CurrencyModule::OnSave(QJsonDocument& doc) const
 			obj["dailyStreak"] = (int) user->dailyStreak;
 			obj["numberOfDailysClaimed"] = (int) user->numberOfDailysClaimed;
 			obj["numberOfGiveawaysClaimed"] = (int) user->numberOfGiveawaysClaimed;
-			qDebug() << "SAVED!";
+			
 			serverJSON[QString::number(user->userId)] = obj;
 		}
 
