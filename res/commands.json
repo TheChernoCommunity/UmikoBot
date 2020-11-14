@@ -295,6 +295,28 @@
 		"usage": "take-new-event-access <role-mention(s)>",
 		"admin": true
 	},
+	"EVENT_SET_TICKET_PRICE": {
+		"brief": "Sets the ticket price of the RaffleDraw.",
+		"usage": "setticketprice <amount>",
+		"admin": true
+	},
+	"EVENT_TICKET": {
+		"brief": "Retrive information about the ticket(s) of the user.",
+		"usage": "ticket",
+		"admin": false
+	},
+	"EVENT_BUY_TICKET": {
+		"brief": "Buy ticket(s) for the RaffleDraw event",
+		"usage": "buyticket <amount>",
+		"additional": "**Example:** `!buyticket 4` will cut the required money and give the user `4` tickets",
+		"admin": false
+	},
+	"EVENT_GET_REWARD": {
+		"brief": "Gets the price of the RaffleDraw event when the lucky ticket is announced.",
+		"usage": "getreward",
+		"additional": "Only use this when the lucky ticket is announced and you have the lucky ticket.",
+		"admin": false
+	},
 	"FUN_MEME": {
 		"brief": "Shows memes from reddit.",
 		"usage": "meme",
@@ -305,7 +327,7 @@
 		"usage": "roll <min> <max>\nroll <max>",
 		"additional": "**Example:\n** `!roll 4 10`: Gets a random number between `4` and `10` (inclusive).\n `roll 10`: Gets a random number from `0` to `10` (inclusive).",
 		"admin": false
-  	},
+	},
 	"FUN_POLL": {
 		"brief": "Creates a new poll.",
 		"usage": "poll [options] <new-line> <reaction-1> <text-1> <new-line> <reaction-2> <text-2> <newline> ...",

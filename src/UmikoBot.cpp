@@ -813,6 +813,7 @@ void UmikoBot::Load()
 		Command(EVENT),
 		Command(EVENT_GIVE_NEW_ACCESS),
 		Command(EVENT_TAKE_NEW_ACCESS),
+		Command(EVENT_GET_REWARD),
 		Command(EVENT_BUY_TICKET),
 		Command(EVENT_TICKET),
 		Command(EVENT_SET_TICKET_PRICE),
