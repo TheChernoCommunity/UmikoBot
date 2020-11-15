@@ -4,6 +4,7 @@
 #include <QtCore/QTime>
 #include <QtCore/QRegExp>
 #include <Discord/Objects/Emoji.h>
+#include <array>
 
 namespace utility 
 {
@@ -15,14 +16,75 @@ namespace utility
 		{
 			namespace reacts 
 			{
-				constexpr auto ANGRY_PING = "anrgyping:769293579251613736";
-				constexpr auto PARTY_CAT = "partyCat:748191651830169691";
-			}
+				constexpr auto ANGRY_PING = "anrgyping:777298312021672038";
+				constexpr auto PARTY_CAT = "partyCat:777298761318793217";
 
-			constexpr auto GREEN_BLOCK = "<:green_block:769176236101861407>";
-			constexpr auto BLACK_BLOCK = "<:black_block:769175573317812254>";
-			constexpr auto WE_SMART = "<:wesmart:388340133864407043>";
-			constexpr auto AANGER = "<:aanger:730377398314467439>";
+				constexpr auto ARROW_FORWARD  = u8"▶️";
+				constexpr auto ARROW_BACKWARD = u8"◀️";
+				constexpr auto X_CANCEL = u8"❌";
+
+				constexpr auto REGIONAL_INDICATOR_A = u8"🇦";
+				constexpr auto REGIONAL_INDICATOR_B = u8"🇧";
+				constexpr auto REGIONAL_INDICATOR_C = u8"🇨";
+				constexpr auto REGIONAL_INDICATOR_D = u8"🇩";
+				constexpr auto REGIONAL_INDICATOR_E = u8"🇪";
+				constexpr auto REGIONAL_INDICATOR_F = u8"🇫";
+				constexpr auto REGIONAL_INDICATOR_G = u8"🇬";
+				constexpr auto REGIONAL_INDICATOR_H = u8"🇭";
+				constexpr auto REGIONAL_INDICATOR_I = u8"🇮";
+				constexpr auto REGIONAL_INDICATOR_J = u8"🇯";
+				constexpr auto REGIONAL_INDICATOR_K = u8"🇰";
+				constexpr auto REGIONAL_INDICATOR_L = u8"🇱";
+				constexpr auto REGIONAL_INDICATOR_M = u8"🇲";
+				constexpr auto REGIONAL_INDICATOR_N = u8"🇳";
+				constexpr auto REGIONAL_INDICATOR_O = u8"🇴";
+				constexpr auto REGIONAL_INDICATOR_P = u8"🇵";
+				constexpr auto REGIONAL_INDICATOR_Q = u8"🇶";
+				constexpr auto REGIONAL_INDICATOR_R = u8"🇷";
+				constexpr auto REGIONAL_INDICATOR_S = u8"🇸";
+				constexpr auto REGIONAL_INDICATOR_T = u8"🇹";
+				constexpr auto REGIONAL_INDICATOR_U = u8"🇺";
+				constexpr auto REGIONAL_INDICATOR_V = u8"🇻";
+				constexpr auto REGIONAL_INDICATOR_W = u8"🇼";
+				constexpr auto REGIONAL_INDICATOR_X = u8"🇽";
+				constexpr auto REGIONAL_INDICATOR_Y = u8"🇾";
+				constexpr auto REGIONAL_INDICATOR_Z = u8"🇿";
+				constexpr std::array<const char*, 26> REGIONAL_INDICATORS =
+				{
+					REGIONAL_INDICATOR_A,
+					REGIONAL_INDICATOR_B,
+					REGIONAL_INDICATOR_C,
+					REGIONAL_INDICATOR_D,
+					REGIONAL_INDICATOR_E,
+					REGIONAL_INDICATOR_F,
+					REGIONAL_INDICATOR_G,
+					REGIONAL_INDICATOR_H,
+					REGIONAL_INDICATOR_I,
+					REGIONAL_INDICATOR_J,
+					REGIONAL_INDICATOR_K,
+					REGIONAL_INDICATOR_L,
+					REGIONAL_INDICATOR_M,
+					REGIONAL_INDICATOR_N,
+					REGIONAL_INDICATOR_O,
+					REGIONAL_INDICATOR_P,
+					REGIONAL_INDICATOR_Q,
+					REGIONAL_INDICATOR_R,
+					REGIONAL_INDICATOR_S,
+					REGIONAL_INDICATOR_T,
+					REGIONAL_INDICATOR_U,
+					REGIONAL_INDICATOR_V,
+					REGIONAL_INDICATOR_W,
+					REGIONAL_INDICATOR_X,
+					REGIONAL_INDICATOR_Y,
+					REGIONAL_INDICATOR_Z,
+				};
+			}
+			
+			constexpr auto GREEN_BLOCK = "<:green_block:777298339858612255>";
+			constexpr auto BLACK_BLOCK = "<:black_block:777298360267833345>";
+			constexpr auto WE_SMART = "<:wesmart:777299810658680892>";
+			constexpr auto AANGER = "<:aanger:777298666485841921>";
+			constexpr auto SHOPPING_BAGS = ":shopping_bags:";
 		}
 	}
 
