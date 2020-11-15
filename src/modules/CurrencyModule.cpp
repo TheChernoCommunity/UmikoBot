@@ -1479,7 +1479,7 @@ void CurrencyModule::OnLoad(const QJsonDocument& doc)
 			config.bribeMaxAmount = serverObj["bribeMaxAmount"].toString("150").toInt();
 			config.bribeLeastAmount = serverObj["bribeLeastAmount"].toString("20").toInt();
 
-			config.highRiskRewardStealSuccessChance = serverObj["highRiskRewardStealSuccessChance"].toString("20").toInt();
+			config.highRiskRewardStealSuccessChance = serverObj["highRiskRewardStealSuccessChance"].toString("30").toInt();
 			config.lowRiskRewardStealSuccessChance = serverObj["lowRiskRewardStealSuccessChance"].toString("50").toInt();
 
 			auto guildId = server.toULongLong();

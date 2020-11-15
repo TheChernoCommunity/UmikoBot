@@ -117,7 +117,7 @@ public:
 		int bribeSuccessChance { 68 };
 
 		int lowRiskRewardStealSuccessChance{ 50 };
-		int highRiskRewardStealSuccessChance{ 20 };
+		int highRiskRewardStealSuccessChance{ 30 };
 	};
 
 private:

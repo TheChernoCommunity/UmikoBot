@@ -189,16 +189,16 @@ EventModule::EventModule(UmikoBot* client) : Module("event", true)
 					config.eventTimer->setInterval(time * 3600000);
 					config.eventTimer->setSingleShot(true);
 
-					if (args.at(1) != "HighRiskHighReward" && args.at(1) != "LowRiskLowReward" && args.at(1) != "RaffleDraw")
+					if (args.at(1) != "HRHR" && args.at(1) != "LRLR" && args.at(1) != "RaffleDraw")
 					{
-						UmikoBot::Instance().createMessage(message.channelId(), "`" + args.at(1) + "` is not an event");
+						UmikoBot::Instance().createMessage(message.channelId(), "`" + args.at(1) + "` is not an event name or code!");
 						return;
 					}
 					QString eventEmoji = QString(utility::consts::emojis::REGIONAL_INDICATOR_E) + " " +QString(utility::consts::emojis::REGIONAL_INDICATOR_V) + " " +
 													QString(utility::consts::emojis::REGIONAL_INDICATOR_E) + " " + QString(utility::consts::emojis::REGIONAL_INDICATOR_N) + " " +
 															QString(utility::consts::emojis::REGIONAL_INDICATOR_T);
 
-					if (args.at(1) == "HighRiskHighReward")
+					if (args.at(1) == "HRHR")
 					{
 						QString num = QString::number(time);
 
@@ -211,7 +211,7 @@ EventModule::EventModule(UmikoBot* client) : Module("event", true)
 						config.eventHighRiskHighRewardRunning = true;
 						UmikoBot::Instance().createMessage(message.channelId(), embed);
 					}
-					if (args.at(1) == "LowRiskLowReward")
+					if (args.at(1) == "LRLR")
 					{
 						QString num = QString::number(time);
 
@@ -292,7 +292,6 @@ EventModule::EventModule(UmikoBot* client) : Module("event", true)
 								Embed embed;
 								embed.setColor(15844367);
 								embed.setTitle(eventEmoji);
-								embed.setDescription("**RAFFLE DRAW** event has **ended**!");
 
 								if (config.currentTicketIndex == 0)
 								{
@@ -311,27 +310,29 @@ EventModule::EventModule(UmikoBot* client) : Module("event", true)
 								int luckyTicketId = QRandomGenerator::global()->bounded(1, lastTicket);
 								QString tiketId = QString::number(luckyTicketId);
 								embed.setDescription("**RAFFLE DRAW** event has **ended**!\n"
-													"**The ticket which wins the draw is `" + tiketId + "`**\n"
-													"**The owner can claim their rewards within 24 hours**");
+									"**The lucky ticket which wins the draw is `" + tiketId + "`**\n"
+									"**The owner can claim their rewards within 24 hours**");
 								config.luckyTicket = luckyTicketId;
 								config.claimedReward = false;
 								config.currentTicketIndex = 0;
 
 								//Set the reward claiming time (24 hours)
 								config.raffleDrawRewardClaimTimer = new QTimer;
-								config.raffleDrawRewardClaimTimer->setInterval(24 * 360/*0000*/);
+								config.raffleDrawRewardClaimTimer->setInterval(24 * 3600000);
 								config.raffleDrawRewardClaimTimer->setSingleShot(true);
 
 								QObject::connect(config.raffleDrawRewardClaimTimer, &QTimer::timeout, [this, guildID, chan, authorId]()
-								{
-									auto& config = getServerEventData(guildID);
-									config.currentTicketIndex = 0;
-									for (auto& user : raffleDrawGuildList[guildID])
-										user.m_TicketIds.clear();
-									config.claimedReward = true;
-								});
-								config.raffleDrawRewardClaimTimer->start();
+									{
+										auto& config = getServerEventData(guildID);
+										config.currentTicketIndex = 0;
+										for (auto& user : raffleDrawGuildList[guildID])
+											user.m_TicketIds.clear();
+										config.claimedReward = true;
+										UmikoBot::Instance().createMessage(chan, "The owner of the price in the RaffleDraw didn't get their rewards!\n"
+											"The role(s) who have permission can start this event again!");
+									});
 
+								config.raffleDrawRewardClaimTimer->start();
 								config.isEventRunning = false;
 								config.eventRaffleDrawRunning = false;
 								UmikoBot::Instance().createMessage(chan, embed);
@@ -433,7 +434,7 @@ EventModule::EventModule(UmikoBot* client) : Module("event", true)
 							int luckyTicketId = QRandomGenerator::global()->bounded(1, lastTicket);
 							QString tiketId = QString::number(luckyTicketId);
 							embed.setDescription("**RAFFLE DRAW** event has **ended**!\n"
-												"**The ticket which wins the draw is `" + tiketId + "`**\n"
+												"**The lucky ticket which wins the draw is `" + tiketId + "`**\n"
 												"**The owner can claim their rewards within 24 hours**");
 							config.luckyTicket = luckyTicketId;
 							config.claimedReward = false;
@@ -511,7 +512,7 @@ EventModule::EventModule(UmikoBot* client) : Module("event", true)
 			}
 			if (config.raffleDrawRewardClaimTimer->isActive())
 			{
-				client.createMessage(message.channelId(), "**BRUH, you don't have the ticket!**");
+				client.createMessage(message.channelId(), "**BRUH, you don't have the lucky ticket!**");
 				return;
 			}
 		}
@@ -555,12 +556,12 @@ EventModule::EventModule(UmikoBot* client) : Module("event", true)
 
 		if (authorCurrency.currency() <= 0)
 		{
-			client.createMessage(message.channelId(), "**Haha, you poor people can't buy tickets!**");
+			client.createMessage(message.channelId(), "**Haha you poor bruh. Git gud enough to afford tickets.**");
 			return;
 		}
 		if (totalFee > authorCurrency.currency())
 		{
-			client.createMessage(message.channelId(), "**Can you afford that much money?**");
+			client.createMessage(message.channelId(), "**Can you afford that much ticket?**");
 			return;
 		}
 		auto& configRD = raffleDrawGuildList[channel.guildId()][raffleDrawGetUserIndex(channel.guildId(), authorID)];
@@ -574,7 +575,7 @@ EventModule::EventModule(UmikoBot* client) : Module("event", true)
 		authorCurrency.setCurrency(authorCurrency.currency() - totalFee);
 		QString ticketEmoji = QString(utility::consts::emojis::TICKETS);
 		QString ticketAmount = QString::number(configRD.m_TicketIds.size());
-		client.createMessage(message.channelId(), ticketEmoji + " **You own** `" + ticketAmount + "` **ticket(s) now!**\n *(You can buy them more to increase your chance)*");
+		client.createMessage(message.channelId(), ticketEmoji + " **You own** `" + ticketAmount + "` **ticket(s) now!**\n *(Buy them more to increase your chance)*");
 	});
 	RegisterCommand(Commands::EVENT_TICKET, "ticket", [this](Client& client, const Message& message, const Channel& channel)
 	{
@@ -588,14 +589,14 @@ EventModule::EventModule(UmikoBot* client) : Module("event", true)
 		auto& config = getServerEventData(channel.guildId());
 		if (configRD.m_TicketIds.size() == 0)
 		{
-			client.createMessage(message.channelId(), "**You have no tickets.\nYou can buy them by using** `!buyticket <amount>`");
+			client.createMessage(message.channelId(), "**You have no tickets.**\nYou can buy them by using `!buyticket <amount>`");
 			return;
 		}
 		QString name = UmikoBot::Instance().GetName(channel.guildId(), message.author().id());
 		QString totalTicket = QString::number(configRD.m_TicketIds.size());
 		QString ticketEmoji = QString(utility::consts::emojis::TICKETS);
 		QString ticketAmount = QString::number(configRD.m_TicketIds.size());
-		QString txt = QString("Total Ticket(s) of **%1**: `%2`\nYour ticket numbers are:\n").arg(name, totalTicket);
+		QString txt = QString(ticketEmoji + "Total Ticket(s) belonging to **%1**: `%2`\nYour ticket numbers are:\n").arg(name, totalTicket);
 
 		for (int tickets : configRD.m_TicketIds)
 		{
