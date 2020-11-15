@@ -3,6 +3,7 @@
 #include <QtCore/QString>
 #include <QtCore/QTime>
 #include <QtCore/QRegExp>
+#include <QtCore/QStringList>
 #include <Discord/Objects/Emoji.h>
 #include <array>
 
@@ -90,34 +91,69 @@ namespace utility
 
 	enum class StringMSFormat 
 	{
-		MINIMAL,
 		DESCRIPTIVE,
-		MINIMAL_COMMA,
-		DESCRIPTIVE_COMMA
+		DESCRIPTIVE_COMMA,
+		MINIMAL,
+		MINIMAL_COMMA
 	};
 
-	inline QString StringifyMilliseconds(int milliseconds, StringMSFormat fmt = StringMSFormat::DESCRIPTIVE_COMMA) 
-	{
-		QTime conv{ 0, 0, 0 };
-		conv = conv.addMSecs(milliseconds);
-		QString hours = QString::number(conv.hour());
-		QString mins  = QString::number(conv.minute());
-		QString secs  = QString::number(conv.second());
-		QString time; 
+	inline QString StringifyMilliseconds(qint64 milliseconds, StringMSFormat fmt = StringMSFormat::DESCRIPTIVE_COMMA) 
+	{	
+		QDateTime conv;
+		QDateTime start;
+		start.setOffsetFromUtc(0);
+		start.setMSecsSinceEpoch(0);
+
+		conv.setOffsetFromUtc(0);
+		conv.setMSecsSinceEpoch(milliseconds);
+
+		QStringList values;
+
+#define get(x) QString::number(conv.toString(#x).toInt() - start.toString(#x).toInt())
+		values.push_back(get(yyyy));	//! years
+		values.push_back(get(M));		//! months
+		values.push_back(get(d));		//! days
+		values.push_back(get(h));		//! hours
+		values.push_back(get(m));		//! mins
+		values.push_back(get(s));		//! seconds
+#undef get
 		
+		const QStringList descriptiveUnits = {"years", "months", "days", "hrs", "mins", "secs"};
+		const QStringList minimalUnits = { "y", "M", "d", "h", "m", "s" };
+		QString sep = " ";
+
 		switch (fmt) 
 		{
-		case StringMSFormat::DESCRIPTIVE:
-			time = hours + "hrs " + mins + "mins " + secs + "secs";
-			break;
 		case StringMSFormat::DESCRIPTIVE_COMMA:
-			time = hours + "hrs, " + mins + "mins, " + secs + "secs";
-			break;
-		case StringMSFormat::MINIMAL:
-			time = hours + "h " + mins + "m " + secs + "s";
-			break;
 		case StringMSFormat::MINIMAL_COMMA:
-			time = hours + "h, " + mins + "m, " + secs + "s";
+			sep = ", ";
+		}
+
+		int off = 0;
+
+		for (const auto& value : values) 
+		{
+			if (value != "0") break;
+			off++;
+		}
+
+		QString time;
+
+		switch (fmt) 
+		{
+		case StringMSFormat::MINIMAL:
+		case StringMSFormat::MINIMAL_COMMA:
+			for (int i = off; i < values.size(); i++) 
+			{
+				time += values.at(i) + minimalUnits.at(i) + ((i == values.size()-1) ? "" : sep);
+			}
+			break;
+		case StringMSFormat::DESCRIPTIVE:
+		case StringMSFormat::DESCRIPTIVE_COMMA:
+			for (int i = off; i < values.size(); i++) 
+			{
+				time += values.at(i) + descriptiveUnits.at(i) + ((i == values.size() - 1) ? "" : sep);
+			}
 			break;
 		}
 
