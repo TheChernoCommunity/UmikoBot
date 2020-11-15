@@ -12,19 +12,19 @@ public:
 	struct UserCurrency
 	{
 	private:
-		double m_Currency;
+		int m_Currency;
 
 	public:
 		snowflake_t userId;
 		bool isDailyClaimed;
 		bool isBribeUsed;
-		double maxCurrency;
+		int maxCurrency;
 		unsigned int dailyStreak;
 		QTimer* jailTimer;
 		unsigned int numberOfDailysClaimed;
 		unsigned int numberOfGiveawaysClaimed;
 
-		UserCurrency(snowflake_t userId, double currency, double maxCurrency, bool isDailyClaimed, unsigned int dailyStreak, unsigned int numberOfDailysClaimed, unsigned int numberOfGiveawaysClaimed)
+		UserCurrency(snowflake_t userId, int currency, int maxCurrency, bool isDailyClaimed, unsigned int dailyStreak, unsigned int numberOfDailysClaimed, unsigned int numberOfGiveawaysClaimed)
 			: userId(userId), maxCurrency(maxCurrency), isDailyClaimed(isDailyClaimed), isBribeUsed(false), dailyStreak(dailyStreak), jailTimer(new QTimer()), numberOfDailysClaimed(numberOfDailysClaimed), numberOfGiveawaysClaimed(numberOfGiveawaysClaimed)
 		{
 			setCurrency(currency);
@@ -70,12 +70,12 @@ public:
 			return *this;
 		}
 
-		double currency() const
+		int currency() const
 		{
 			return m_Currency;
 		}
 
-		void setCurrency(double value)
+		void setCurrency(int value)
 		{
 			m_Currency = value;
 
@@ -88,12 +88,12 @@ public:
 	{
 		double randGiveawayProb { 0.001 };
 		unsigned int freebieExpireTime { 60 };	//in seconds
-		int dailyReward { 100 };
-		int freebieReward { 300 };
-		int gambleReward { 50 };
+		int dailyReward { 10000 };
+		int freebieReward { 30000 };
+		int gambleReward { 5000 };
 		int minGuess { 0 };
 		int maxGuess { 5 };
-		int gambleLoss { 10 };
+		int gambleLoss { 1000 };
 		snowflake_t giveawayChannelId { 0 };
 		QString currencyName;
 		QString currencySymbol;
@@ -101,14 +101,14 @@ public:
 		bool allowGiveaway{ false };
 		snowflake_t giveawayClaimer { 0 };
 		QTimer* freebieTimer{ nullptr };
-		int dailyBonusAmount { 50 };
+		int dailyBonusAmount { 5000 };
 		int dailyBonusPeriod { 3 };
 		int stealSuccessChance { 30 };
 		int stealFinePercent { 50 };
 		int stealVictimBonusPercent { 25 };
 		int stealFailedJailTime { 3 };
-		int bribeMaxAmount { 150 };
-		int bribeLeastAmount { 20 };
+		int bribeMaxAmount { 15000 };
+		int bribeLeastAmount { 2000 };
 		int bribeSuccessChance { 68 };
 	};
 
