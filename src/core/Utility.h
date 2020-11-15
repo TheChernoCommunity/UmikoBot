@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 #include <QtCore/QTimer>
 #include <QtCore/QString>
 #include <QtCore/QTime>
@@ -166,5 +166,12 @@ namespace utility
 		str = emoji.name();
 		str += (emoji.id() == 0) ? "" : ":" + QString::number(emoji.id());
 		return str;
+	}
+
+	inline QString spaces(int length) 
+	{
+		QString txt;
+		for (; length; length--) txt += " ";
+		return txt;
 	}
 }
