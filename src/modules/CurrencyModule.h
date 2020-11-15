@@ -12,20 +12,20 @@ public:
 	struct UserCurrency
 	{
 	private:
-		double m_Currency;
+        int m_Currency;
 
 	public:
 		snowflake_t userId;
 		bool isDailyClaimed;
 		bool isBribeUsed;
-		double maxCurrency;
+        int maxCurrency;
 		unsigned int dailyStreak;
 		QTimer* jailTimer;
 		unsigned int numberOfDailysClaimed;
 		unsigned int numberOfGiveawaysClaimed;
 
 		UserCurrency(snowflake_t userId, double currency, double maxCurrency, bool isDailyClaimed, unsigned int dailyStreak, unsigned int numberOfDailysClaimed, unsigned int numberOfGiveawaysClaimed)
-			: userId(userId), maxCurrency(maxCurrency), isDailyClaimed(isDailyClaimed), isBribeUsed(false), dailyStreak(dailyStreak), jailTimer(new QTimer()), numberOfDailysClaimed(numberOfDailysClaimed), numberOfGiveawaysClaimed(numberOfGiveawaysClaimed)
+            : userId(userId), maxCurrency(std::floor(maxCurrency * 100)), isDailyClaimed(isDailyClaimed), isBribeUsed(false), dailyStreak(dailyStreak), jailTimer(new QTimer()), numberOfDailysClaimed(numberOfDailysClaimed), numberOfGiveawaysClaimed(numberOfGiveawaysClaimed)
 		{
 			setCurrency(currency);
 			jailTimer->setSingleShot(true);
@@ -59,7 +59,7 @@ public:
 			numberOfDailysClaimed = other.numberOfDailysClaimed;
 			numberOfGiveawaysClaimed = other.numberOfGiveawaysClaimed;
 
-			jailTimer = new QTimer();
+            jailTimer = new QTimer();
 			jailTimer->setSingleShot(true);
 
 			if (other.jailTimer->remainingTime() > 0)
@@ -70,17 +70,17 @@ public:
 			return *this;
 		}
 
-		double currency() const
+        double currency() const
 		{
-			return m_Currency;
+            return (double)m_Currency / 100.0;
 		}
 
 		void setCurrency(double value)
 		{
-			m_Currency = value;
+            m_Currency = std::floor(value * 100);
 
-			if (maxCurrency < currency())
-				maxCurrency = currency();
+            if (maxCurrency < currency())
+                maxCurrency = std::floor(currency() * 100);
 		}
 	};
 
