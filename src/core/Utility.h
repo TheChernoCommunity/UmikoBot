@@ -82,6 +82,10 @@ namespace utility
 			}
 			
 			constexpr auto TICKETS = ":tickets:";
+			constexpr auto REGIONAL_INDICATOR_E = ":regional_indicator_e:";
+			constexpr auto REGIONAL_INDICATOR_V = ":regional_indicator_v:";
+			constexpr auto REGIONAL_INDICATOR_N = ":regional_indicator_n:";
+			constexpr auto REGIONAL_INDICATOR_T = ":regional_indicator_t:";
 			constexpr auto GREEN_BLOCK = "<:green_block:777298339858612255>";
 			constexpr auto BLACK_BLOCK = "<:black_block:777298360267833345>";
 			constexpr auto WE_SMART = "<:wesmart:777299810658680892>";

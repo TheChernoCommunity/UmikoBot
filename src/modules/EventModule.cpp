@@ -174,9 +174,9 @@ EventModule::EventModule(UmikoBot* client) : Module("event", true)
 						UmikoBot::Instance().createMessage(message.channelId(), "**Wrong Usage of Command!**.");
 						return;
 					}
-					if (time > 24)
+					if (time > 576)
 					{
-						UmikoBot::Instance().createMessage(message.channelId(), "**Currently you can't launch events with an expiry time of more than one day**.");
+						UmikoBot::Instance().createMessage(message.channelId(), "**You can't launch events with an expiry time of more than 24 days!**.");
 						return;
 					}
 					if (config.eventTimer != nullptr) //Delete the previous timer
