@@ -1,17 +1,14 @@
 name: CI
 
-env:
-  QTDIR: C:/Qt/5.15.1/msvc2019_64
-
 on:
   push:
-    branches: [ master ]
+    branches: [master]
   pull_request:
-    branches: [ master ]
+    branches: [master]
 
 jobs:
-  build:
-    runs-on: self-hosted
+  build_windows:
+    runs-on: [self-hosted, windows]
     defaults:
       run:
         shell: powershell
@@ -20,7 +17,24 @@ jobs:
       with:
         submodules: true
     - name: Generate Project Files
+      env:
+        QTDIR: C:/Qt/5.15.1/msvc2019_64
       run: premake5.exe vs2019
-
     - name: Build Solution
       run: C:/"Program Files (x86)"/"Microsoft Visual Studio"/2019/BuildTools/MSBuild/Current/Bin/MSBuild.exe -property:Platform=x64 -property:Configuration=Release -maxCpuCount -verbosity:minimal -noLogo sln/UmikoBot.sln
+  build_linux:
+    runs-on: [self-hosted, linux]
+    defaults:
+      run:
+        shell: bash
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        submodules: true
+    - name: Generate Project Files
+      run: premake5 qmake
+    - name: Make project
+      run: |
+        cd sln
+        qmake-qt5
+        make
