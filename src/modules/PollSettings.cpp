@@ -14,11 +14,12 @@ FunModule::PollSettings::PollSettings(const PollOptions& op, long long maxvotes,
 	timer->start();
 
 	QObject::connect(timer.get(), &QTimer::timeout,
-	[poll_num = pollNum, serverPolls = polls]() 
+	[this]() 
 	{
-
+		auto poll_num = this->pollNum;
+		auto serverPolls = this->polls;
 		//! Create a message with the results
-		auto settings = serverPolls->at(poll_num);
+		auto settings = serverPolls->at(this->pollNum);
 		auto poll_name = settings->pollName;
 		auto notif_chan = settings->notifChannel;
 		auto poll_msg = settings->pollMsg;
@@ -120,11 +121,18 @@ FunModule::PollSettings::PollSettings(const PollOptions& op, long long maxvotes,
 				UmikoBot::Instance().deleteAllReactions(chan.id(), poll_msg);
 
 				//! Remove the poll from our pending list
+				bool removedOne = false;
 				for (int i = 0; i < serverPolls->size(); i++) 
 				{
 					if (serverPolls->at(i)->pollNum == poll_num) 
 					{
 						serverPolls->removeAt(i);
+						removedOne = true;
+						if (serverPolls->empty()) break;
+					}
+					if (removedOne) 
+					{
+						serverPolls->at(i)->pollNum--;
 					}
 				}
 				
