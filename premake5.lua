@@ -1,7 +1,7 @@
 if _ACTION:match("vs*") then
-	require "extensions/premake-qt/qt"
+	require "pmk/extensions/premake-qt/qt"
 elseif _ACTION == "qmake" then
-	require "extensions/premake-qmake/qmake"
+	require "pmk/extensions/premake-qmake/qmake"
 end
 
 local qtdir_x86 = io.readfile("tmp/.qtdir_x86")
