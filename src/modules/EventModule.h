@@ -22,11 +22,11 @@ public:
 		bool isEventRunning{ false };
 		bool eventHighRiskHighRewardRunning{ false };
 		bool eventLowRiskLowRewardRunning{ false };
-		int luckyTicket{ 0 };
 		bool claimedReward = true;
 		bool eventRaffleDrawRunning{ false };
 		unsigned int currentTicketIndex{ 0 };
 		int raffleDrawTicketPrice{ 50 };
+		snowflake_t luckyUser;
 	};
 	EventModule(UmikoBot* client);
 	void OnMessage(Discord::Client& client, const Discord::Message& message) override;

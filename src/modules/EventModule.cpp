@@ -312,9 +312,24 @@ EventModule::EventModule(UmikoBot* client) : Module("event", true)
 								embed.setDescription("**RAFFLE DRAW** event has **ended**!\n"
 									"**The lucky ticket which wins the draw is `" + tiketId + "`**\n"
 									"**The owner can claim their rewards within 24 hours**");
-								config.luckyTicket = luckyTicketId;
 								config.claimedReward = false;
 								config.currentTicketIndex = 0;
+
+								//Get the user who has the lucky ticket
+								for (auto& user : raffleDrawGuildList[guildID])
+								{
+									for (auto& userTicket : user.m_TicketIds)
+									{
+										if (luckyTicketId == userTicket)
+										{
+											config.luckyUser = user.m_UserId;
+										}
+									}
+								}
+
+								//Clear all the tickets
+								for (auto& user : raffleDrawGuildList[guildID])
+									user.m_TicketIds.clear();
 
 								//Set the reward claiming time (24 hours)
 								config.raffleDrawRewardClaimTimer = new QTimer;
@@ -324,14 +339,10 @@ EventModule::EventModule(UmikoBot* client) : Module("event", true)
 								QObject::connect(config.raffleDrawRewardClaimTimer, &QTimer::timeout, [this, guildID, chan, authorId]()
 									{
 										auto& config = getServerEventData(guildID);
-										config.currentTicketIndex = 0;
-										for (auto& user : raffleDrawGuildList[guildID])
-											user.m_TicketIds.clear();
 										config.claimedReward = true;
 										UmikoBot::Instance().createMessage(chan, "The owner of the price in the RaffleDraw didn't get their rewards!\n"
-											"The role(s) who have permission can start this event again!");
+																				"The role(s) who have permission can start this event again!");
 									});
-
 								config.raffleDrawRewardClaimTimer->start();
 								config.isEventRunning = false;
 								config.eventRaffleDrawRunning = false;
@@ -436,9 +447,24 @@ EventModule::EventModule(UmikoBot* client) : Module("event", true)
 							embed.setDescription("**RAFFLE DRAW** event has **ended**!\n"
 												"**The lucky ticket which wins the draw is `" + tiketId + "`**\n"
 												"**The owner can claim their rewards within 24 hours**");
-							config.luckyTicket = luckyTicketId;
 							config.claimedReward = false;
 							config.currentTicketIndex = 0;
+
+							//Get the user who has the lucky ticket
+							for (auto& user : raffleDrawGuildList[channel.guildId()])
+							{
+								for (auto& userTicket : user.m_TicketIds)
+								{
+									if (luckyTicketId == userTicket)
+									{
+										config.luckyUser = user.m_UserId;
+									}
+								}
+							}
+
+							//Clear all the tickets
+							for (auto& user : raffleDrawGuildList[channel.guildId()])
+								user.m_TicketIds.clear();
 
 							//Set the reward claiming time (24 hours)
 							config.raffleDrawRewardClaimTimer = new QTimer;
@@ -451,9 +477,6 @@ EventModule::EventModule(UmikoBot* client) : Module("event", true)
 							QObject::connect(config.raffleDrawRewardClaimTimer, &QTimer::timeout, [this, guildID, chan, authorId]()
 							{
 								auto& config = getServerEventData(guildID);
-								config.currentTicketIndex = 0;
-								for (auto& user : raffleDrawGuildList[guildID])
-									user.m_TicketIds.clear();
 								config.claimedReward = true;
 								UmikoBot::Instance().createMessage(chan, "The owner of the price in the RaffleDraw didn't get their rewards!\n"
 																		"The role(s) who have permission can start this event again!");
@@ -461,7 +484,7 @@ EventModule::EventModule(UmikoBot* client) : Module("event", true)
 							config.raffleDrawRewardClaimTimer->start();
 							config.isEventRunning = false;
 							config.eventRaffleDrawRunning = false;
-							config.eventTimer->stop();
+							config.eventTimer->stop(); // Forcefully stop the timer.
 							UmikoBot::Instance().createMessage(message.channelId(), embed);
 						}
 					}
@@ -485,32 +508,27 @@ EventModule::EventModule(UmikoBot* client) : Module("event", true)
 		auto& configRD = raffleDrawGuildList[channel.guildId()][raffleDrawGetUserIndex(channel.guildId(), message.author().id())];
 		if (!config.claimedReward)
 		{
-			for (auto& userTicket : configRD.m_TicketIds)
+			if(message.author().id() == config.luckyUser)
 			{
-				if (config.luckyTicket == userTicket)
+				if (config.raffleDrawRewardClaimTimer->isActive())
 				{
-					if (config.raffleDrawRewardClaimTimer->isActive())
-					{
-						CurrencyModule* currencyModule = static_cast<CurrencyModule*>(UmikoBot::Instance().GetModuleByName("currency"));
-						auto& currencyConfig = currencyModule->getServerData(channel.guildId());
-						auto& authorCurrency = currencyModule->guildList[channel.guildId()][currencyModule->getUserIndex(channel.guildId(), message.author().id())];
-						QString authorName = UmikoBot::Instance().GetName(channel.guildId(), message.author().id());
-						config.claimedReward = true;
-						Embed embed;
-						embed.setColor(15844367);
-						authorCurrency.setCurrency(authorCurrency.currency() + 500);
-						embed.setTitle("**Raffle Draw Reward goes to " + authorName + "!**");
-						embed.setDescription("Congratulations **" + authorName + "**!\n"
-											"You just got `500` " + currencyConfig.currencySymbol);
-						for (auto& user : raffleDrawGuildList[channel.guildId()])
-							user.m_TicketIds.clear();
-						config.raffleDrawRewardClaimTimer->stop();
-						client.createMessage(message.channelId(), embed);
-						return;
-					}
+					CurrencyModule* currencyModule = static_cast<CurrencyModule*>(UmikoBot::Instance().GetModuleByName("currency"));
+					auto& currencyConfig = currencyModule->getServerData(channel.guildId());
+					auto& authorCurrency = currencyModule->guildList[channel.guildId()][currencyModule->getUserIndex(channel.guildId(), message.author().id())];
+					QString authorName = UmikoBot::Instance().GetName(channel.guildId(), message.author().id());
+					config.claimedReward = true;
+					Embed embed;
+					embed.setColor(15844367);
+					authorCurrency.setCurrency(authorCurrency.currency() + 500);
+					embed.setTitle("**Raffle Draw Reward goes to " + authorName + "!**");
+					embed.setDescription("Congratulations **" + authorName + "**!\n"
+										"You just got `500` " + currencyConfig.currencySymbol);
+					config.raffleDrawRewardClaimTimer->stop();
+					client.createMessage(message.channelId(), embed);
+					return;
 				}
 			}
-			if (config.raffleDrawRewardClaimTimer->isActive())
+			else if (config.raffleDrawRewardClaimTimer->isActive())
 			{
 				client.createMessage(message.channelId(), "**BRUH, you don't have the lucky ticket!**");
 				return;
