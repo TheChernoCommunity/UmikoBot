@@ -1,4 +1,4 @@
-﻿#include "UmikoBot.h"
+#include "UmikoBot.h"
 #include "EventModule.h"
 #include "core/Permissions.h"
 #include "core/Utility.h"
@@ -8,8 +8,6 @@
 #include <QtCore/QJsonDocument>
 #include <QtCore/qregexp.h>
 #include <QtCore/QtMath>
-
-#include <QRandomGenerator>
 
 #define eventConfigLoc QString("eventConfig")
 
@@ -306,8 +304,12 @@ EventModule::EventModule(UmikoBot* client) : Module("event", true)
 								}
 
 								//Announce Winner
-								int lastTicket = static_cast<int>(config.currentTicketIndex + 1);
-								int luckyTicketId = QRandomGenerator::global()->bounded(1, lastTicket);
+								int lastTicket = static_cast<int>(config.currentTicketIndex);
+								std::random_device randomDevice;
+								std::mt19937 gen(randomDevice());
+								std::uniform_int_distribution<> dist(1, lastTicket);
+								int luckyTicketId = dist(gen);
+
 								QString tiketId = QString::number(luckyTicketId);
 								embed.setDescription("**RAFFLE DRAW** event has **ended**!\n"
 									"**The lucky ticket which wins the draw is `" + tiketId + "`**\n"
@@ -441,8 +443,12 @@ EventModule::EventModule(UmikoBot* client) : Module("event", true)
 							}
 
 							//Announce Winner
-							int lastTicket = static_cast<int>(config.currentTicketIndex + 1);
-							int luckyTicketId = QRandomGenerator::global()->bounded(1, lastTicket);
+							int lastTicket = static_cast<int>(config.currentTicketIndex);
+							std::random_device randomDevice;
+							std::mt19937 gen(randomDevice());
+							std::uniform_int_distribution<> dist(1, lastTicket);
+							int luckyTicketId = dist(gen);
+
 							QString tiketId = QString::number(luckyTicketId);
 							embed.setDescription("**RAFFLE DRAW** event has **ended**!\n"
 												"**The lucky ticket which wins the draw is `" + tiketId + "`**\n"
