@@ -817,6 +817,7 @@ void UmikoBot::Load()
 		Command(EVENT_BUY_TICKET),
 		Command(EVENT_TICKET),
 		Command(EVENT_SET_TICKET_PRICE),
+		Command(EVENT_SET_USER_MAX_TICKET),
 
 
 		Command(FUN_MEME),

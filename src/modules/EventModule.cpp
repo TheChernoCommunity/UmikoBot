@@ -566,13 +566,25 @@ EventModule::EventModule(UmikoBot* client) : Module("event", true)
 			return;
 		}
 		unsigned int ticket = args.at(1).toUInt();
-			
+		snowflake_t authorID = message.author().id();
+		auto& configRD = raffleDrawGuildList[channel.guildId()][raffleDrawGetUserIndex(channel.guildId(), authorID)];
+		if (configRD.m_TicketIds.size() >= config.maxTicketOfUser)
+		{
+			client.createMessage(message.channelId(), "**You have already bought so many tickets, I can't give you more!**");
+			return;
+		}
+		if (ticket > (config.maxTicketOfUser - configRD.m_TicketIds.size()))
+		{
+			QString num = QString::number(config.maxTicketOfUser);
+			client.createMessage(message.channelId(), "**Don't be selfish!\n**"
+													"Let others also have a go at some tickets.You can only have " + num + " tickets at max!");
+			return;
+		}
 		if (ticket == 0)
 		{
 			client.createMessage(message.channelId(), "**BrUh, don't bother me if you don't want to buy ticket..**");
 			return;
 		}
-		snowflake_t authorID = message.author().id();
 		snowflake_t chan = message.channelId();
 		double totalFee = (static_cast<double>(config.raffleDrawTicketPrice) * ticket);
 		CurrencyModule* currencyModule = static_cast<CurrencyModule*>(UmikoBot::Instance().GetModuleByName("currency"));
@@ -588,8 +600,6 @@ EventModule::EventModule(UmikoBot* client) : Module("event", true)
 			client.createMessage(message.channelId(), "**Can you afford that much ticket?**");
 			return;
 		}
-		auto& configRD = raffleDrawGuildList[channel.guildId()][raffleDrawGetUserIndex(channel.guildId(), authorID)];
-
 		for (int i = 0; i != ticket; i++)
 		{
 			config.currentTicketIndex++;
@@ -620,14 +630,18 @@ EventModule::EventModule(UmikoBot* client) : Module("event", true)
 		QString totalTicket = QString::number(configRD.m_TicketIds.size());
 		QString ticketEmoji = QString(utility::consts::emojis::TICKETS);
 		QString ticketAmount = QString::number(configRD.m_TicketIds.size());
-		QString txt = QString(ticketEmoji + "Total Ticket(s) belonging to **%1**: `%2`\nYour ticket numbers are:\n").arg(name, totalTicket);
+		QString txt = QString(ticketEmoji + "Total Ticket(s) belonging to **%1**: `%2`\nYour ticket number(s) are:\n").arg(name, totalTicket);
 
-		for (int tickets : configRD.m_TicketIds)
+		for (auto ticket : configRD.m_TicketIds)
 		{
-			txt += QString("|`%1`").arg(tickets);
+			if (ticket == configRD.m_TicketIds.last())
+			{
+				txt += QString("%1").arg(ticket);
+				client.createMessage(message.channelId(), txt);
+				return;
+			}
+			txt += QString("%1, ").arg(ticket);
 		}
-		txt += QString("|");
-		client.createMessage(message.channelId(), txt);
 	});
 	RegisterCommand(Commands::EVENT_SET_TICKET_PRICE, "setticketprice", [this](Client& client, const Message& message, const Channel& channel)
 	{
@@ -638,6 +652,17 @@ EventModule::EventModule(UmikoBot* client) : Module("event", true)
 				auto& config = getServerEventData(channel.guildId());
 				config.raffleDrawTicketPrice = args.at(1).toInt();
 				client.createMessage(message.channelId(), "Raffle Draw ticket price set to **" + QString::number(config.raffleDrawTicketPrice) + "**");
+			});
+	});
+	RegisterCommand(Commands::EVENT_SET_USER_MAX_TICKET, "setusermaxticket", [this](Client& client, const Message& message, const Channel& channel)
+	{
+		QStringList args = message.content().split(' ');
+
+		UmikoBot::VerifyAndRunAdminCmd(client, message, channel, 2, args, true, [this, &client, channel, message, args]()
+			{
+				auto& config = getServerEventData(channel.guildId());
+				config.maxTicketOfUser = args.at(1).toInt();
+				client.createMessage(message.channelId(), "User max ticket set to **" + QString::number(config.maxTicketOfUser) + "**");
 			});
 	});
 }
@@ -691,6 +716,7 @@ void EventModule::OnSave(QJsonDocument& doc) const
 				obj["event-whitelist"] = list;
 			}
 			obj["raffleDrawTicketPrice"] = QString::number(config.raffleDrawTicketPrice);
+			obj["maxTicketOfUser"] = QString::number(config.maxTicketOfUser);
 			obj["currentTicketIndex"] = QString::number(config.currentTicketIndex);
 			serverList[QString::number(server)] = obj;
 		}
@@ -747,6 +773,7 @@ void EventModule::OnLoad(const QJsonDocument& doc)
 			auto serverObj = rootObj[server].toObject();
 			config.raffleDrawTicketPrice = serverObj["raffleDrawTicketPrice"].toString("50").toInt();
 			config.currentTicketIndex = serverObj["currentTicketIndex"].toString("0").toInt();
+			config.maxTicketOfUser = serverObj["maxTicketOfUser"].toString("20").toInt();
 			m_EventWhitelist.clear();
 			snowflake_t guild = server.toULongLong();
 			auto list = serverObj["event-whitelist"].toArray();

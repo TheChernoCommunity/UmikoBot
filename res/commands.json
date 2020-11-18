@@ -300,6 +300,11 @@
 		"usage": "setticketprice <amount>",
 		"admin": true
 	},
+	"EVENT_SET_USER_MAX_TICKET": {
+		"brief": "Sets the max ticket amount a user can buy.",
+		"usage": "setusermaxticket <amount>",
+		"admin": true
+	},
 	"EVENT_TICKET": {
 		"brief": "Retrive information about the ticket(s) of the user.",
 		"usage": "ticket",

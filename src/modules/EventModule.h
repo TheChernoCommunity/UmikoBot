@@ -2,7 +2,7 @@
 #include <qtimer.h>
 #include "core/Module.h"
 #include "UmikoBot.h"
-#include <random>
+
 class EventModule : public Module
 {
 public:
@@ -26,6 +26,7 @@ public:
 		bool eventRaffleDrawRunning{ false };
 		unsigned int currentTicketIndex{ 0 };
 		int raffleDrawTicketPrice{ 50 };
+		int maxTicketOfUser{ 20 };
 		snowflake_t luckyUser;
 	};
 	EventModule(UmikoBot* client);
