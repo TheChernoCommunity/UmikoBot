@@ -266,8 +266,8 @@
 		"admin": true
 	},
 	"CURRENCY_COMPENSATE": {
-		"brief": "Adds some amount to everyone's currency. Intended to be used as a compensation for when the bot is down.",
-		"usage": "compensate <amount>",
+		"brief": "Adds some amount to everyone's currency (if only the amount is provided). Intended to be used as a compensation for when the bot is down.",
+		"usage": "compensate <amount>\ncompensate @Person <amount>",
 		"admin": true
 	},
 	"FUN_MEME": {

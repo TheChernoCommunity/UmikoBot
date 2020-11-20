@@ -1,6 +1,7 @@
 #include "CurrencyModule.h"
 #include "UmikoBot.h"
 #include "core/Utility.h"
+#include "core/Permissions.h"
 
 #include <QtCore/QFile>
 #include <QtCore/QJsonDocument>
@@ -1043,21 +1044,85 @@ CurrencyModule::CurrencyModule(UmikoBot* client) : Module("currency", true), m_c
 
 	RegisterCommand(Commands::CURRENCY_COMPENSATE, "compensate", [this](Client& client, const Message& message, const Channel& channel) 
 	{
-
 		QStringList args = message.content().split(' ');
 
-		UmikoBot::VerifyAndRunAdminCmd(client, message, channel, 2, args, true, [this, &client, channel, message, args]()
-		{
-			auto& config = getServerData(channel.guildId());
-			auto amt = args.at(1).toDouble();
+		//! Doesn't use VerifyAndRunCmd because that currently 
+		//! doesn't handle cases where we need at least n arguments.
 
-			for (auto& user : guildList[channel.guildId()])
+		::Permissions::ContainsPermission(client, channel.guildId(), message.author().id(), CommandPermission::ADMIN,
+			[this, args, &client, message, channel](bool result) 
 			{
-				user.setCurrency(user.currency() + amt);
-			}
+			
+				if (!result) 
+				{
+					client.createMessage(message.channelId(), "**You don't have permissions to use this command.**");
+					return;
+				}
 
-			client.createMessage(message.channelId(), "**Everyone has been compensated with `" + QString::number(amt) + config.currencySymbol + "`**\nSorry for any inconvenience!");
-		});
+				if (args.size() > 3 || args.size() == 1) 
+				{
+					client.createMessage(channel.id(), "**Wrong Usage of Command!**");
+					return;
+				}
+
+				QRegExp numReg{ "[+]?\\d*\\.?\\d+" };
+
+				if (args.size() == 2) 
+				{
+					auto& config = getServerData(channel.guildId());
+
+					if (!numReg.exactMatch(args.at(1))) 
+					{
+						client.createMessage(channel.id(), "**That's an invalid compensation amount.**");
+						return;
+					}
+
+					auto amt = args.at(1).toDouble();
+
+					for (auto& user : guildList[channel.guildId()]) 
+					{
+						user.setCurrency(user.currency() + amt);
+					}
+
+					client.createMessage(message.channelId(), "**Everyone has been compensated with `" + QString::number(amt) + config.currencySymbol + "`**\nSorry for any inconvenience!");
+					return;
+				}
+
+				if (args.size() == 3) 
+				{
+					auto& config = getServerData(channel.guildId());
+
+					if (!numReg.exactMatch(args.at(2))) {
+						client.createMessage(channel.id(), "**That's an invalid compensation amount.**");
+						return;
+					}
+
+					snowflake_t userId = message.mentions().at(0).id();
+					auto amt = args.at(2).toDouble();
+
+					auto& list = guildList[channel.guildId()];
+					auto pos = std::find_if(list.begin(), list.end(),
+						[userId, amt](const UserCurrency& usr) 
+						{
+							return usr.userId == userId;
+						});
+
+					if (pos != list.end()) 
+					{
+						pos->setCurrency(pos->currency() + amt);
+					}
+					else 
+					{
+						client.createMessage(message.channelId(), "**Couldn't find the user!**");
+						return;
+					}
+
+					client.createMessage(message.channelId(), "**" + UmikoBot::Instance().GetName(channel.guildId(), userId) + " has been compensated with `" + QString::number(amt) + config.currencySymbol + "`**\nSorry for any inconvenience!");
+					return;
+				}
+			
+			});
+
 	});
 }
 
