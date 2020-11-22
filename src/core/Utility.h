@@ -82,10 +82,34 @@ namespace utility
 			}
 			
 			constexpr auto TICKETS = ":tickets:";
+
+			constexpr auto REGIONAL_INDICATOR_A = ":regional_indicator_a:";
+			constexpr auto REGIONAL_INDICATOR_B = ":regional_indicator_b:";
+			constexpr auto REGIONAL_INDICATOR_C = ":regional_indicator_c:";
+			constexpr auto REGIONAL_INDICATOR_D = ":regional_indicator_d:";
 			constexpr auto REGIONAL_INDICATOR_E = ":regional_indicator_e:";
-			constexpr auto REGIONAL_INDICATOR_V = ":regional_indicator_v:";
+			constexpr auto REGIONAL_INDICATOR_F = ":regional_indicator_f:";
+			constexpr auto REGIONAL_INDICATOR_G = ":regional_indicator_g:";
+			constexpr auto REGIONAL_INDICATOR_H = ":regional_indicator_h:";
+			constexpr auto REGIONAL_INDICATOR_I = ":regional_indicator_i:";
+			constexpr auto REGIONAL_INDICATOR_J = ":regional_indicator_j:";
+			constexpr auto REGIONAL_INDICATOR_K = ":regional_indicator_k:";
+			constexpr auto REGIONAL_INDICATOR_L = ":regional_indicator_l:";
+			constexpr auto REGIONAL_INDICATOR_M = ":regional_indicator_m:";
 			constexpr auto REGIONAL_INDICATOR_N = ":regional_indicator_n:";
+			constexpr auto REGIONAL_INDICATOR_O = ":regional_indicator_o:";
+			constexpr auto REGIONAL_INDICATOR_P = ":regional_indicator_p:";
+			constexpr auto REGIONAL_INDICATOR_Q = ":regional_indicator_q:";
+			constexpr auto REGIONAL_INDICATOR_R = ":regional_indicator_r:";
+			constexpr auto REGIONAL_INDICATOR_S = ":regional_indicator_s:";
 			constexpr auto REGIONAL_INDICATOR_T = ":regional_indicator_t:";
+			constexpr auto REGIONAL_INDICATOR_U = ":regional_indicator_u:";
+			constexpr auto REGIONAL_INDICATOR_V = ":regional_indicator_v:";
+			constexpr auto REGIONAL_INDICATOR_W = ":regional_indicator_w:";
+			constexpr auto REGIONAL_INDICATOR_X = ":regional_indicator_x:";
+			constexpr auto REGIONAL_INDICATOR_Y = ":regional_indicator_y:";
+			constexpr auto REGIONAL_INDICATOR_Z = ":regional_indicator_z:";
+
 			constexpr auto GREEN_BLOCK = "<:green_block:777298339858612255>";
 			constexpr auto BLACK_BLOCK = "<:black_block:777298360267833345>";
 			constexpr auto WE_SMART = "<:wesmart:777299810658680892>";

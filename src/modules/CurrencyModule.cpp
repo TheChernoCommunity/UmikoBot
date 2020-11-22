@@ -924,16 +924,31 @@ CurrencyModule::CurrencyModule(UmikoBot* client) : Module("currency", true), m_c
 
 		EventModule* eventModule = static_cast<EventModule*>(UmikoBot::Instance().GetModuleByName("event"));
 		auto& eventConfig = eventModule->getServerEventData(channel.guildId());
-		
-		if (eventConfig.eventHighRiskHighRewardRunning)
-		{
-			double successChance = (config.highRiskRewardStealSuccessChance / 100.0) * qExp(-0.0001 * qPow(amountToSteal, 1.5));
-			std::random_device device;
-			std::mt19937 prng{ device() };
-			std::discrete_distribution<> distribution{ { 1 - successChance, successChance } };
-			int roll = distribution(prng);
 
-			if (roll)
+		// https://www.desmos.com/calculator/z6b0k7wb1t
+		// This success chance is in the range of 0 to 1
+		double successChance;
+		if (eventConfig.isHighRiskHighRewardRunning)
+		{
+			successChance = (config.highRiskRewardStealSuccessChance / 100.0)* qExp(-0.0001 * qPow(amountToSteal, 1.5));
+		}
+		else if (eventConfig.isLowRiskLowRewardRunning)
+		{
+			successChance = (config.lowRiskRewardStealSuccessChance / 100.0) * qExp(-0.0001 * qPow(amountToSteal, 1.5));
+		}
+		else if(!eventConfig.isHighRiskHighRewardRunning || !eventConfig.isLowRiskLowRewardRunning)
+		{
+			successChance = (config.stealSuccessChance / 100.0) * qExp(-0.0001 * qPow(amountToSteal, 1.5));
+		}
+
+		std::random_device device;
+		std::mt19937 prng { device() };
+		std::discrete_distribution<> distribution { { 1 - successChance, successChance } };
+		int roll = distribution(prng);
+
+		if (roll)
+		{
+			if (eventConfig.isHighRiskHighRewardRunning)
 			{
 				double bonus = amountToSteal * highRiskRewardBonus * 0.01;
 				victimCurrency.setCurrency(victimCurrency.currency() - amountToSteal);
@@ -950,36 +965,7 @@ CurrencyModule::CurrencyModule(UmikoBot* client) : Module("currency", true), m_c
 				client.createMessage(message.channelId(), output);
 				return;
 			}
-			else
-			{
-				authorCurrency.setCurrency(authorCurrency.currency() - amountToSteal * config.stealFinePercent / 100);
-				victimCurrency.setCurrency(victimCurrency.currency() + amountToSteal * config.stealVictimBonusPercent / 100);
-				authorCurrency.jailTimer->start(config.stealFailedJailTime * 60 * 60 * 1000);
-
-				QString fineAmount = QString::number(amountToSteal * config.stealFinePercent / 100.0);
-				QString victimBonus = QString::number(amountToSteal * config.stealVictimBonusPercent / 100.0);
-				QString jailTime = QString::number(config.stealFailedJailTime);
-				QString output = QString(
-					":rotating_light: **You got caught!** :rotating_light:\n"
-					"*%1* has been fined **`%2 %3`** and placed in jail for %4 hours.\n"
-					"*%5* has been granted **`%6 %3`** in insurance."
-				).arg(thiefName, fineAmount, config.currencySymbol, jailTime, victimName, victimBonus);
-
-				client.createMessage(message.channelId(), output);
-			}
-			return;
-		}
-
-		else if (eventConfig.eventLowRiskLowRewardRunning)
-		{
-			double successChance = (config.lowRiskRewardStealSuccessChance / 100.0) * qExp(-0.0001 * qPow(amountToSteal, 1.5));
-
-			std::random_device device;
-			std::mt19937 prng{ device() };
-			std::discrete_distribution<> distribution{ { 1 - successChance, successChance } };
-			int roll = distribution(prng);
-
-			if (roll)
+			if (eventConfig.isLowRiskLowRewardRunning)
 			{
 				double penalty = amountToSteal * lowRiskRewardPenalty * 0.01;
 				victimCurrency.setCurrency(victimCurrency.currency() - (amountToSteal - penalty));
@@ -995,46 +981,15 @@ CurrencyModule::CurrencyModule(UmikoBot* client) : Module("currency", true), m_c
 				client.createMessage(message.channelId(), output);
 				return;
 			}
-			else
-			{
-				authorCurrency.setCurrency(authorCurrency.currency() - amountToSteal * config.stealFinePercent / 100);
-				victimCurrency.setCurrency(victimCurrency.currency() + amountToSteal * config.stealVictimBonusPercent / 100);
-				authorCurrency.jailTimer->start(config.stealFailedJailTime * 60 * 60 * 1000);
-
-				QString fineAmount = QString::number(amountToSteal * config.stealFinePercent / 100.0);
-				QString victimBonus = QString::number(amountToSteal * config.stealVictimBonusPercent / 100.0);
-				QString jailTime = QString::number(config.stealFailedJailTime);
-				QString output = QString(
-					":rotating_light: **You got caught!** :rotating_light:\n"
-					"*%1* has been fined **`%2 %3`** and placed in jail for %4 hours.\n"
-					"*%5* has been granted **`%6 %3`** in insurance."
-				).arg(thiefName, fineAmount, config.currencySymbol, jailTime, victimName, victimBonus);
-
-				client.createMessage(message.channelId(), output);
-			}
-			return;
-		}
-
-		// https://www.desmos.com/calculator/z6b0k7wb1t
-		// This success chance is in the range of 0 to 1
-		double successChance = (config.stealSuccessChance / 100.0) * qExp(-0.0001 * qPow(amountToSteal, 1.5));
-		
-		std::random_device device;
-		std::mt19937 prng { device() };
-		std::discrete_distribution<> distribution { { 1 - successChance, successChance } };
-		int roll = distribution(prng);
-
-		if (roll)
-		{
 			victimCurrency.setCurrency(victimCurrency.currency() - amountToSteal);
 			authorCurrency.setCurrency(authorCurrency.currency() + amountToSteal);
-				
+
 			QString stealAmount = QString::number(amountToSteal);
 			QString output = QString(
 					":man_detective: **Steal success!** :man_detective:\n"
 					"*%1* has discreetly stolen **`%2 %3`** from under *%4's* nose.\n"
 				).arg(thiefName, stealAmount, config.currencySymbol, victimName);
-				
+
 			client.createMessage(message.channelId(), output);
 		}
 		else
@@ -1054,9 +1009,41 @@ CurrencyModule::CurrencyModule(UmikoBot* client) : Module("currency", true), m_c
 				
 			client.createMessage(message.channelId(), output);
 		}
-
 	});
-
+	RegisterCommand(Commands::EVENT_SET_HRHR_STEAL_SUCCESS_CHANCE, "setHRHRstealsuccesschance", [this](Client& client, const Message& message, const Channel& channel) 
+	{
+		QStringList args = message.content().split(' ');
+		UmikoBot::VerifyAndRunAdminCmd(client, message, channel, 2, args, true, [this, &client, channel, message, args]()
+		{
+			auto& config = getServerData(channel.guildId());
+			EventModule* eventModule = static_cast<EventModule*>(UmikoBot::Instance().GetModuleByName("event"));
+			auto& eventConfig = eventModule->getServerEventData(channel.guildId());
+			if (eventConfig.isEventRunning)
+			{
+				client.createMessage(message.channelId(), "**You cannot set configarations regarding steal while an event is running!** ");
+				return;
+			}
+			config.highRiskRewardStealSuccessChance = args.at(1).toInt();
+			client.createMessage(message.channelId(), "HRHR Steal Success Chance set to **" + QString::number(config.highRiskRewardStealSuccessChance) + "%**");
+		});
+	});
+	RegisterCommand(Commands::EVENT_SET_LRLR_STEAL_SUCCESS_CHANCE, "setLRLRstealsuccesschance", [this](Client& client, const Message& message, const Channel& channel) 
+	{
+		QStringList args = message.content().split(' ');
+		UmikoBot::VerifyAndRunAdminCmd(client, message, channel, 2, args, true, [this, &client, channel, message, args]()
+		{
+			auto& config = getServerData(channel.guildId());
+			EventModule* eventModule = static_cast<EventModule*>(UmikoBot::Instance().GetModuleByName("event"));
+			auto& eventConfig = eventModule->getServerEventData(channel.guildId());
+			if (eventConfig.isEventRunning)
+			{
+				client.createMessage(message.channelId(), "**You cannot set configarations regarding steal while an event is running!** ");
+				return;
+			}
+			config.lowRiskRewardStealSuccessChance = args.at(1).toInt();
+			client.createMessage(message.channelId(), "LRLR Steal Success Chance set to **" + QString::number(config.lowRiskRewardStealSuccessChance) + "%**");
+		});
+	});
 	RegisterCommand(Commands::CURRENCY_SET_STEAL_SUCCESS_CHANCE, "setstealsuccesschance", [this](Client& client, const Message& message, const Channel& channel) 
 	{
 

@@ -235,6 +235,16 @@
 		"additional": "**Example: ** `!steal 20 @Person1` will try to steal 20 credits from Person 1",
 		"admin": false
 	},
+	"EVENT_SET_HRHR_STEAL_SUCCESS_CHANCE": {
+		"brief": "Sets the chance (as a percentage) that a !steal at the time of HighRiskHighReward will succeed.",
+		"usage": "setHRHRstealsuccesschance <chance>",
+		"admin": true
+	},
+	"EVENT_SET_LRLR_STEAL_SUCCESS_CHANCE": {
+		"brief": "Sets the chance (as a percentage) that a !steal at the time of LowRiskLowReward will succeed.",
+		"usage": "setLRLRstealsuccesschance <chance>",
+		"admin": true
+	},
 	"CURRENCY_SET_STEAL_SUCCESS_CHANCE": {
 		"brief": "Sets the chance (as a percentage) that a !steal will succeed.",
 		"usage": "setstealsuccesschance <chance>",
@@ -301,7 +311,7 @@
 		"admin": true
 	},
 	"EVENT_SET_USER_MAX_TICKET": {
-		"brief": "Sets the max ticket amount a user can buy.",
+		"brief": "Sets the maximum tickets a user can buy.",
 		"usage": "setusermaxticket <amount>",
 		"admin": true
 	},
@@ -310,9 +320,9 @@
 		"usage": "ticket",
 		"admin": false
 	},
-	"EVENT_BUY_TICKET": {
+	"EVENT_BUY_TICKETS": {
 		"brief": "Buy ticket(s) for the RaffleDraw event",
-		"usage": "buyticket <amount>",
+		"usage": "buytickets <amount>",
 		"additional": "**Example:** `!buyticket 4` will cut the required money and give the user `4` tickets",
 		"admin": false
 	},
