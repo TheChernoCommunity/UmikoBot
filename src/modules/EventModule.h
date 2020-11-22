@@ -3,6 +3,10 @@
 #include "core/Module.h"
 #include "UmikoBot.h"
 
+//Used for the events (Needed in the EventModule.cpp and CurrencyModule.cpp)
+#define highRiskRewardBonus 50 // In percentage
+#define lowRiskRewardPenalty 40 //In percentage
+
 class EventModule : public Module
 {
 public:
@@ -20,13 +24,13 @@ public:
 		QTimer* eventTimer{ nullptr };
 		QTimer* raffleDrawRewardClaimTimer{ nullptr };
 		bool isEventRunning{ false };
-		bool eventHighRiskHighRewardRunning{ false };
-		bool eventLowRiskLowRewardRunning{ false };
+		bool isHighRiskHighRewardRunning{ false };
+		bool isLowRiskLowRewardRunning{ false };
 		bool claimedReward = true;
 		bool eventRaffleDrawRunning{ false };
-		unsigned int currentTicketIndex{ 0 };
+		unsigned int numTicketsBought{ 0 };
 		int raffleDrawTicketPrice{ 50 };
-		int maxTicketOfUser{ 20 };
+		int maxUserTickets{ 20 };
 		snowflake_t luckyUser;
 	};
 	EventModule(UmikoBot* client);
@@ -35,11 +39,12 @@ public:
 	void OnSave(QJsonDocument& doc) const override;
 	void OnLoad(const QJsonDocument& doc) override;
 private:
+	QList<QString> eventNamesAndCodes = {"HRHR", "LRLR", "RaffleDraw"};
 	QMap<snowflake_t, QList<RaffleDraw>> raffleDrawGuildList;
 	QMap<snowflake_t, QList<snowflake_t>> m_EventWhitelist;
 	QMap<snowflake_t, EventConfig>serverEventConfig;
-
-	snowflake_t raffleDrawGetUserIndex(snowflake_t guild, snowflake_t id)
+	
+	int raffleDrawGetUserIndex(snowflake_t guild, snowflake_t id)
 	{
 		for (auto it = raffleDrawGuildList[guild].begin(); it != raffleDrawGuildList[guild].end(); ++it)
 		{
@@ -52,6 +57,7 @@ private:
 		return std::distance(raffleDrawGuildList[guild].begin(), std::prev(raffleDrawGuildList[guild].end()));
 	}
 public:
+	void EndEvent(const snowflake_t& channelID, const snowflake_t& guildID, const snowflake_t& authorID, bool isInQObjectConnect, QString eventNameOrCode);
 	RaffleDraw getUserRaffleDrawData(snowflake_t guild, snowflake_t id)
 	{
 		for (auto user : raffleDrawGuildList[guild])
