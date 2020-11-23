@@ -3,6 +3,7 @@
 #include "core/Module.h"
 #include "UmikoBot.h"
 #include <random>
+#include "core/Currency.h"
 
 class UmikoBot;
 
@@ -13,19 +14,19 @@ public:
 	struct UserCurrency
 	{
 	private:
-		double m_Currency;
+		Currency m_Currency;
 
 	public:
 		snowflake_t userId;
 		bool isDailyClaimed;
 		bool isBribeUsed;
-		double maxCurrency;
+		Currency maxCurrency;
 		unsigned int dailyStreak;
 		QTimer* jailTimer;
 		unsigned int numberOfDailysClaimed;
 		unsigned int numberOfGiveawaysClaimed;
 
-		UserCurrency(snowflake_t userId, double currency, double maxCurrency, bool isDailyClaimed, unsigned int dailyStreak, unsigned int numberOfDailysClaimed, unsigned int numberOfGiveawaysClaimed)
+		UserCurrency(snowflake_t userId, Currency currency, Currency maxCurrency, bool isDailyClaimed, unsigned int dailyStreak, unsigned int numberOfDailysClaimed, unsigned int numberOfGiveawaysClaimed)
 			: userId(userId), maxCurrency(maxCurrency), isDailyClaimed(isDailyClaimed), isBribeUsed(false), dailyStreak(dailyStreak), jailTimer(new QTimer()), numberOfDailysClaimed(numberOfDailysClaimed), numberOfGiveawaysClaimed(numberOfGiveawaysClaimed)
 		{
 			setCurrency(currency);
@@ -71,12 +72,12 @@ public:
 			return *this;
 		}
 
-		double currency() const
+		const Currency& currency() const
 		{
 			return m_Currency;
 		}
 
-		void setCurrency(double value)
+		void setCurrency(const Currency& value)
 		{
 			m_Currency = value;
 
@@ -89,12 +90,12 @@ public:
 	{
 		double randGiveawayProb { 0.001 };
 		unsigned int freebieExpireTime { 60 };	//in seconds
-		int dailyReward { 100 };
-		int freebieReward { 300 };
-		int gambleReward { 50 };
+		Currency dailyReward { 100 };
+		Currency freebieReward { 300 };
+		Currency gambleReward { 50 };
 		int minGuess { 0 };
 		int maxGuess { 5 };
-		int gambleLoss { 10 };
+		Currency gambleLoss { 10 };
 		snowflake_t giveawayChannelId { 0 };
 		QString currencyName;
 		QString currencySymbol;
@@ -102,14 +103,14 @@ public:
 		bool allowGiveaway{ false };
 		snowflake_t giveawayClaimer { 0 };
 		QTimer* freebieTimer{ nullptr };
-		int dailyBonusAmount { 50 };
+		Currency dailyBonusAmount { 50 };
 		int dailyBonusPeriod { 3 };
 		int stealSuccessChance { 30 };
 		int stealFinePercent { 50 };
 		int stealVictimBonusPercent { 25 };
 		int stealFailedJailTime { 3 };
-		int bribeMaxAmount { 150 };
-		int bribeLeastAmount { 20 };
+		Currency bribeMaxAmount { 150 };
+		Currency bribeLeastAmount { 20 };
 		int bribeSuccessChance { 68 };
 
 		int lowRiskRewardStealSuccessChance{ 50 };
@@ -134,7 +135,7 @@ private:
 		snowflake_t userId{ 0 };
 		int randNum = 0;
 		snowflake_t channelId{ 0 };
-		double betAmount{ 0 }; //!Use if doubleOrNothing
+		Currency betAmount{ 0 }; //!Use if doubleOrNothing
 		QTimer* timer;
 	};
 
@@ -166,7 +167,7 @@ public:
 
 	UserCurrency& getUserData(snowflake_t guild, snowflake_t id)
 	{
-		for (auto user : guildList[guild])
+		for (auto& user : guildList[guild])
 		{
 			if (user.userId == id)
 			{
