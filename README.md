@@ -3,7 +3,7 @@
 ## Prerequisites
 ### Windows
 - [Qt](https://www.qt.io/) (`> 5`)
-- [OpenSSL](https://indy.fulgan.com/SSL/openssl-1.0.2u-x64_86-win64.zip) (`Win64 OpenSSL* v1.0.2u`)
+- [OpenSSL](https://indy.fulgan.com/SSL/Archive/Experimental/openssl-1.0.2o-x64-VC2017.zip) (`OpenSSL v1.0.2`)
  - Visual Studio 2017 or 2019
  - Some sort of bash
 
