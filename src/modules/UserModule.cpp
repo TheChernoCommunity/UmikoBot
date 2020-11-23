@@ -180,7 +180,7 @@ UserModule::UserModule()
 					const CurrencyModule::UserCurrency& userCurrency = currencyModule->getUserData(channel.guildId(), userId);
 
 					desc += "\n**Currency:**\n";
-					desc += "Max " + serverConfig.currencyName + "s: **" + QString::number(userCurrency.maxCurrency) + " " + serverConfig.currencySymbol + "**\n";
+					desc += "Max " + serverConfig.currencyName + "s: **" + QString::number((double)userCurrency.maxCurrency) + " " + serverConfig.currencySymbol + "**\n";
 					desc += "`daily`s claimed: **" + QString::number(userCurrency.numberOfDailysClaimed) + "**\n";
 					desc += "`claim`s claimed: **" + QString::number(userCurrency.numberOfGiveawaysClaimed) + "**\n";
 				}

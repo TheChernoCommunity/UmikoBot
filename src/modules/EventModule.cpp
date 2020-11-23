@@ -369,7 +369,7 @@ EventModule::EventModule(UmikoBot* client) : Module("event", true)
 					config.claimedReward = true;
 					Embed embed;
 					embed.setColor(15844367);
-					authorCurrency.setCurrency(authorCurrency.currency() + 400);
+					authorCurrency.setCurrency(authorCurrency.currency() + 400.0);
 					embed.setTitle("**Raffle Draw Reward goes to " + authorName + "!**");
 					embed.setDescription("Congratulations **" + authorName + "**!\n"
 										"You just got `400 " + currencyConfig.currencySymbol + "`");
@@ -429,12 +429,12 @@ EventModule::EventModule(UmikoBot* client) : Module("event", true)
 		CurrencyModule* currencyModule = static_cast<CurrencyModule*>(UmikoBot::Instance().GetModuleByName("currency"));
 		auto& authorCurrency = currencyModule->guildList[channel.guildId()][currencyModule->getUserIndex(channel.guildId(), authorID)];
 
-		if (authorCurrency.currency() <= 0)
+		if (authorCurrency.currency() <= 0.0)
 		{
 			client.createMessage(message.channelId(), "**Haha you poor bruh. Git gud enough to afford tickets.**");
 			return;
 		}
-		if (totalFee > authorCurrency.currency())
+		if (totalFee > (double)authorCurrency.currency())
 		{
 			client.createMessage(message.channelId(), "**Can you afford that many tickets?**");
 			return;

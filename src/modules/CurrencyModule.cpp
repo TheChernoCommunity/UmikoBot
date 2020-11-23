@@ -15,10 +15,10 @@
 #define currenConfigLoc QString("currencyConfig")
 
 //! Maximum amount that can be bet
-#define gamblebetMax 100
+#define gamblebetMax Currency(100)
 
 //! Maximum debt that a user can be in
-#define debtMax -100
+#define debtMax Currency(-100)
 
 //! Gamble Timeout in seconds
 #define gambleTimeout 20
@@ -134,7 +134,7 @@ CurrencyModule::CurrencyModule(UmikoBot* client) : Module("currency", true), m_c
 			embed.setColor(qrand() % 11777216);
 			embed.setAuthor(EmbedAuthor(UmikoBot::Instance().GetName(channel.guildId(), user) + "'s Wallet", "", icon));
 
-			QString credits = QString::number(getUserData(guild, user).currency());
+			QString credits = QString::number((double)getUserData(guild, user).currency());
 			QString dailyStreak = QString::number(getUserData(guild, user).dailyStreak);
 			QString dailyClaimed = getUserData(guild, user).isDailyClaimed ? "Yes" : "No";
 
@@ -178,7 +178,7 @@ CurrencyModule::CurrencyModule(UmikoBot* client) : Module("currency", true), m_c
 		{
 			auto index = getUserIndex(channel.guildId(), message.author().id());
 			unsigned int& dailyStreak = guildList[channel.guildId()][index].dailyStreak;
-			double todaysReward = config.dailyReward;
+			Currency todaysReward = config.dailyReward;
 			bool bonus = false;
 
 			if (++dailyStreak % config.dailyBonusPeriod == 0)
@@ -187,17 +187,22 @@ CurrencyModule::CurrencyModule(UmikoBot* client) : Module("currency", true), m_c
 				bonus = true;
 			}
 
+			Currency current = guildList[channel.guildId()][index].currency();
+			Currency newC = guildList[channel.guildId()][index].currency() + todaysReward;
+
 			guildList[channel.guildId()][index].isDailyClaimed = true;
 			guildList[channel.guildId()][index].setCurrency(guildList[channel.guildId()][index].currency() + todaysReward);
 			guildList[channel.guildId()][index].numberOfDailysClaimed += 1;
 			QString displayedMessage = "";
+
+			Currency after = guildList[channel.guildId()][index].currency();
 
 			if (bonus)
 			{
 				displayedMessage += "**Bonus!** ";
 			}
 
-			displayedMessage += "You now have **" + QString::number(todaysReward) + "** more " + getServerData(channel.guildId()).currencyName + "s in your wallet!\n";
+			displayedMessage += "You now have **" + QString::number((double)todaysReward) + "** more " + getServerData(channel.guildId()).currencyName + "s in your wallet!\n";
 			displayedMessage += "Streak: **" + QString::number(dailyStreak) + "/" + QString::number(config.dailyBonusPeriod) + "**";
 
 			if (dailyStreak % config.dailyBonusPeriod == 0)
@@ -287,7 +292,7 @@ CurrencyModule::CurrencyModule(UmikoBot* client) : Module("currency", true), m_c
 			Embed embed;
 			embed.setColor(qrand() % 16777216);
 			embed.setTitle("Welcome to Gamble " + name + "!");
-			embed.setDescription("All you need to do is guess a random number between " + QString::number(config.minGuess) + " and " + QString::number(config.maxGuess) + " (inclusive) and if it is the same as the number I think of, you get **" + QString::number(config.gambleReward) + config.currencySymbol + "**!\n\n**What number do you think of?** " + utility::consts::emojis::WE_SMART);
+			embed.setDescription("All you need to do is guess a random number between " + QString::number(config.minGuess) + " and " + QString::number(config.maxGuess) + " (inclusive) and if it is the same as the number I think of, you get **" + QString::number((double)config.gambleReward) + config.currencySymbol + "**!\n\n**What number do you think of?** " + utility::consts::emojis::WE_SMART);
 			
 			client.createMessage(message.channelId(), embed);
 		}
@@ -320,9 +325,9 @@ CurrencyModule::CurrencyModule(UmikoBot* client) : Module("currency", true), m_c
 				client.createMessage(message.channelId(), embed);
 				return;
 			}
-			if (args.at(1).toDouble() > gamblebetMax) 
+			if (args.at(1).toDouble() > (double)gamblebetMax) 
 			{
-				client.createMessage(channel.id(), "You cannot bet an amount more than **" + QString::number(gamblebetMax) + config.currencySymbol+"**");
+				client.createMessage(channel.id(), "You cannot bet an amount more than **" + QString::number((double)gamblebetMax) + config.currencySymbol+"**");
 				return;
 			}
 			if (args.at(1).toDouble() == 0) 
@@ -368,7 +373,7 @@ CurrencyModule::CurrencyModule(UmikoBot* client) : Module("currency", true), m_c
 			Embed embed;
 			embed.setColor(qrand() % 16777216);
 			embed.setTitle("Welcome to Gamble (Double or Nothing) " + name + "!");
-			embed.setDescription("All you need to do is guess a random number between " + QString::number(config.minGuess) + " and " + QString::number(config.maxGuess) + " (inclusive) and if it is the same as the number I guess, you get double the amount you just bet: **" + QString::number(2* serverGamble.betAmount) + config.currencySymbol + "**!\n\n**What number do you think of?** " + utility::consts::emojis::WE_SMART);
+			embed.setDescription("All you need to do is guess a random number between " + QString::number(config.minGuess) + " and " + QString::number(config.maxGuess) + " (inclusive) and if it is the same as the number I guess, you get double the amount you just bet: **" + QString::number(2 * (double)serverGamble.betAmount) + config.currencySymbol + "**!\n\n**What number do you think of?** " + utility::consts::emojis::WE_SMART);
 
 			client.createMessage(message.channelId(), embed);
 		}
@@ -406,7 +411,7 @@ CurrencyModule::CurrencyModule(UmikoBot* client) : Module("currency", true), m_c
 					Embed embed;
 					embed.setColor(qrand() % 11777216);
 					embed.setTitle("Claim FREEBIE");
-					embed.setDescription(":drum: And today's FREEBIE goes to **" + message.author().username() + "**! \n\n Congratulations! You just got **"+ QString::number(config.freebieReward) + config.currencySymbol +"**!");
+					embed.setDescription(":drum: And today's FREEBIE goes to **" + message.author().username() + "**! \n\n Congratulations! You just got **"+ QString::number((double)config.freebieReward) + config.currencySymbol +"**!");
 
 					auto index = getUserIndex(channel.guildId(), message.author().id());
 
@@ -479,7 +484,7 @@ CurrencyModule::CurrencyModule(UmikoBot* client) : Module("currency", true), m_c
 		{
 			auto& config = getServerData(channel.guildId());
 			config.dailyReward = args.at(1).toInt();
-			client.createMessage(message.channelId(), "Daily Reward Amount set to **" + QString::number(config.dailyReward) + "**");
+			client.createMessage(message.channelId(), "Daily Reward Amount set to **" + QString::number((double)config.dailyReward) + "**");
 		});
 	});
 
@@ -491,7 +496,7 @@ CurrencyModule::CurrencyModule(UmikoBot* client) : Module("currency", true), m_c
 		{
 			auto& config = getServerData(channel.guildId());
 			config.freebieReward = args.at(1).toInt();
-			client.createMessage(message.channelId(), "Freebie Reward Amount set to **" + QString::number(config.freebieReward) + "**");
+			client.createMessage(message.channelId(), "Freebie Reward Amount set to **" + QString::number((double)config.freebieReward) + "**");
 		});
 	});
 
@@ -527,7 +532,7 @@ CurrencyModule::CurrencyModule(UmikoBot* client) : Module("currency", true), m_c
 		{
 			auto& config = getServerData(channel.guildId());
 			config.gambleLoss = args.at(1).toInt();
-			client.createMessage(message.channelId(), "Gamble Loss Amount set to **" + QString::number(config.gambleLoss) + "**");
+			client.createMessage(message.channelId(), "Gamble Loss Amount set to **" + QString::number((double)config.gambleLoss) + "**");
 		});
 	});
 
@@ -563,7 +568,7 @@ CurrencyModule::CurrencyModule(UmikoBot* client) : Module("currency", true), m_c
 		{
 			auto& config = getServerData(channel.guildId());
 			config.gambleReward = args.at(1).toInt();
-			client.createMessage(message.channelId(), "Gamble Reward Amount set to **" + QString::number(config.gambleReward) + "**");
+			client.createMessage(message.channelId(), "Gamble Reward Amount set to **" + QString::number((double)config.gambleReward) + "**");
 		});
 	});
 
@@ -613,7 +618,7 @@ CurrencyModule::CurrencyModule(UmikoBot* client) : Module("currency", true), m_c
 
 				rank++;
 
-				QString currency = QString::number(user.currency());
+				QString currency = QString::number((double)user.currency());
 
 				desc += "`" + QString::number(rank).rightJustified(numberOfDigits, ' ') + "`) **" + username + "** - ";
 				desc += currency + " " + getServerData(channel.guildId()).currencySymbol + "\n";
@@ -673,8 +678,8 @@ CurrencyModule::CurrencyModule(UmikoBot* client) : Module("currency", true), m_c
 		auto& userCurrency = guildList[channel.guildId()][getUserIndex(channel.guildId(), message.author().id())];
 		userCurrency.setCurrency(userCurrency.currency() - args.at(1).toDouble());
 
-		double donation = args.at(1).toDouble() / mentions.size();
-		QString desc = "<@" + QString::number(message.author().id()) + "> donated **" + QString::number(donation) + getServerData(channel.guildId()).currencySymbol + "** to";
+		Currency donation = args.at(1).toDouble() / mentions.size();
+		QString desc = "<@" + QString::number(message.author().id()) + "> donated **" + QString::number((double)donation) + getServerData(channel.guildId()).currencySymbol + "** to";
 
 		for (auto user : mentions) 
 		{
@@ -725,7 +730,7 @@ CurrencyModule::CurrencyModule(UmikoBot* client) : Module("currency", true), m_c
 			return;
 		}
 
-		double amountToBribe = args.at(1).toDouble();
+		Currency amountToBribe = args.at(1).toDouble();
 
 		auto guildID = channel.guildId();
 		QObject::connect(authorCurrency.jailTimer, &QTimer::timeout, [this, &client, guildID, authorId]()
@@ -745,7 +750,7 @@ CurrencyModule::CurrencyModule(UmikoBot* client) : Module("currency", true), m_c
 
 		else if (amountToBribe > config.bribeMaxAmount)
 		{
-			QString maxBribeAmount = QString::number(config.bribeMaxAmount);
+			QString maxBribeAmount = QString::number((double)config.bribeMaxAmount);
 			QString output = QString(
 				":police_officer: **If I take more than `%1` %2 then I might get caught... ** :police_officer:\n"
 			).arg(maxBribeAmount, config.currencySymbol);
@@ -756,7 +761,7 @@ CurrencyModule::CurrencyModule(UmikoBot* client) : Module("currency", true), m_c
 
 		else if (amountToBribe < config.bribeLeastAmount)
 		{
-			QString leastBribeAmount = QString::number(config.bribeLeastAmount);
+			QString leastBribeAmount = QString::number((double)config.bribeLeastAmount);
 			QString output = QString(
 				":police_officer: **Pfft! Such measly amounts... Do you want to be in jail for longer?** :police_officer:\n"
 				"*(You can always give me `%1 %2` or more... maybe then I could do something?)*\n"
@@ -773,7 +778,7 @@ CurrencyModule::CurrencyModule(UmikoBot* client) : Module("currency", true), m_c
 		}
 
 		// This success chance is in the range of 0 to 1
-		double successChance = (static_cast<double>(config.bribeSuccessChance) / (static_cast<double>(config.bribeMaxAmount) * 100)) * amountToBribe;
+		double successChance = (static_cast<double>(config.bribeSuccessChance) / (static_cast<double>(config.bribeMaxAmount) * 100)) * static_cast<double>(amountToBribe);
 
 		QString authorName = UmikoBot::Instance().GetName(channel.guildId(), authorId);
 
@@ -834,7 +839,7 @@ CurrencyModule::CurrencyModule(UmikoBot* client) : Module("currency", true), m_c
 		{
 			auto& config = getServerData(channel.guildId());
 			config.bribeMaxAmount = args.at(1).toInt();
-			client.createMessage(message.channelId(), "Bribe Max Amount set to **" + QString::number(config.bribeMaxAmount) + "**");
+			client.createMessage(message.channelId(), "Bribe Max Amount set to **" + QString::number((double)config.bribeMaxAmount) + "**");
 		});
 	});
 
@@ -846,7 +851,7 @@ CurrencyModule::CurrencyModule(UmikoBot* client) : Module("currency", true), m_c
 		{
 			auto& config = getServerData(channel.guildId());
 			config.bribeLeastAmount = args.at(1).toInt();
-			client.createMessage(message.channelId(), "Bribe Least Amount set to **" + QString::number(config.bribeLeastAmount) + "**");
+			client.createMessage(message.channelId(), "Bribe Least Amount set to **" + QString::number((double)config.bribeLeastAmount) + "**");
 		});
 	});
 
@@ -878,15 +883,14 @@ CurrencyModule::CurrencyModule(UmikoBot* client) : Module("currency", true), m_c
 			return;
 		}
 
-		double amountToSteal = args.at(1).toDouble();
-
+		Currency amountToSteal = args.at(1).toDouble();
 		if (amountToSteal == 0.0)
 		{
 			client.createMessage(message.channelId(), "**Don't bother me if you don't want to steal anything.**");
 			return;
 		}
 
-		if (guildList[channel.guildId()][getUserIndex(channel.guildId(), authorId)].currency() - (amountToSteal * config.stealFinePercent / 100) < debtMax)
+		if (guildList[channel.guildId()][getUserIndex(channel.guildId(), authorId)].currency() - (amountToSteal * config.stealFinePercent / 100.0) < debtMax)
 		{
 			client.createMessage(message.channelId(), "**I can't let you do that, you might go into serious debt.**");
 			return;
@@ -930,15 +934,15 @@ CurrencyModule::CurrencyModule(UmikoBot* client) : Module("currency", true), m_c
 		double successChance;
 		if (eventConfig.isHighRiskHighRewardRunning)
 		{
-			successChance = (config.highRiskRewardStealSuccessChance / 100.0)* qExp(-0.0001 * qPow(amountToSteal, 1.5));
+			successChance = (config.highRiskRewardStealSuccessChance / 100.0)* qExp(-0.0001 * qPow((double)amountToSteal, 1.5));
 		}
 		else if (eventConfig.isLowRiskLowRewardRunning)
 		{
-			successChance = (config.lowRiskRewardStealSuccessChance / 100.0) * qExp(-0.0001 * qPow(amountToSteal, 1.5));
+			successChance = (config.lowRiskRewardStealSuccessChance / 100.0) * qExp(-0.0001 * qPow((double)amountToSteal, 1.5));
 		}
 		else if(!eventConfig.isHighRiskHighRewardRunning || !eventConfig.isLowRiskLowRewardRunning)
 		{
-			successChance = (config.stealSuccessChance / 100.0) * qExp(-0.0001 * qPow(amountToSteal, 1.5));
+			successChance = (config.stealSuccessChance / 100.0) * qExp(-0.0001 * qPow((double)amountToSteal, 1.5));
 		}
 
 		std::random_device device;
@@ -950,12 +954,12 @@ CurrencyModule::CurrencyModule(UmikoBot* client) : Module("currency", true), m_c
 		{
 			if (eventConfig.isHighRiskHighRewardRunning)
 			{
-				double bonus = amountToSteal * highRiskRewardBonus * 0.01;
+				Currency bonus = (double)amountToSteal * highRiskRewardBonus * 0.01;
 				victimCurrency.setCurrency(victimCurrency.currency() - amountToSteal);
 				authorCurrency.setCurrency(authorCurrency.currency() + amountToSteal + bonus);
-				QString num = QString::number(bonus);
+				QString num = QString::number((double)bonus);
 
-				QString stealAmount = QString::number(amountToSteal);
+				QString stealAmount = QString::number((double)amountToSteal);
 				QString output = QString(
 					":man_detective: **Steal success!** :man_detective:\n"
 					"*%1* has discreetly stolen **`%2 %3`** from under *%4's* nose.\n"
@@ -967,12 +971,12 @@ CurrencyModule::CurrencyModule(UmikoBot* client) : Module("currency", true), m_c
 			}
 			if (eventConfig.isLowRiskLowRewardRunning)
 			{
-				double penalty = amountToSteal * lowRiskRewardPenalty * 0.01;
+				Currency penalty = (double)amountToSteal * lowRiskRewardPenalty * 0.01;
 				victimCurrency.setCurrency(victimCurrency.currency() - (amountToSteal - penalty));
 				authorCurrency.setCurrency(authorCurrency.currency() + (amountToSteal - penalty));
-				QString num = QString::number(penalty);
+				QString num = QString::number((double)penalty);
 
-				QString stealAmount = QString::number(amountToSteal);
+				QString stealAmount = QString::number((double)amountToSteal);
 				QString output = QString(
 					":man_detective: **Steal success!** :man_detective:\n"
 					"*%1* has discreetly stolen **`%2 %3`** from under *%4's* nose.\n"
@@ -984,7 +988,7 @@ CurrencyModule::CurrencyModule(UmikoBot* client) : Module("currency", true), m_c
 			victimCurrency.setCurrency(victimCurrency.currency() - amountToSteal);
 			authorCurrency.setCurrency(authorCurrency.currency() + amountToSteal);
 
-			QString stealAmount = QString::number(amountToSteal);
+			QString stealAmount = QString::number((double)amountToSteal);
 			QString output = QString(
 					":man_detective: **Steal success!** :man_detective:\n"
 					"*%1* has discreetly stolen **`%2 %3`** from under *%4's* nose.\n"
@@ -994,12 +998,12 @@ CurrencyModule::CurrencyModule(UmikoBot* client) : Module("currency", true), m_c
 		}
 		else
 		{
-			authorCurrency.setCurrency(authorCurrency.currency() - amountToSteal * config.stealFinePercent / 100);
-			victimCurrency.setCurrency(victimCurrency.currency() + amountToSteal * config.stealVictimBonusPercent / 100);
+			authorCurrency.setCurrency(authorCurrency.currency() - amountToSteal * config.stealFinePercent / 100.0);
+			victimCurrency.setCurrency(victimCurrency.currency() + amountToSteal * config.stealVictimBonusPercent / 100.0);
 			authorCurrency.jailTimer->start(config.stealFailedJailTime * 60 * 60 * 1000);
 
-			QString fineAmount = QString::number(amountToSteal * config.stealFinePercent / 100.0);
-			QString victimBonus = QString::number(amountToSteal * config.stealVictimBonusPercent / 100.0);
+			QString fineAmount = QString::number((double)amountToSteal * config.stealFinePercent / 100.0);
+			QString victimBonus = QString::number((double)amountToSteal * config.stealVictimBonusPercent / 100.0);
 			QString jailTime = QString::number(config.stealFailedJailTime);
 			QString output = QString(
 					":rotating_light: **You got caught!** :rotating_light:\n"
@@ -1133,7 +1137,7 @@ CurrencyModule::CurrencyModule(UmikoBot* client) : Module("currency", true), m_c
 		{
 			auto& config = getServerData(channel.guildId());
 			config.dailyBonusAmount = args.at(1).toInt();
-			client.createMessage(message.channelId(), "Daily Bonus Amount set to **" + QString::number(config.dailyBonusAmount) + "**");
+			client.createMessage(message.channelId(), "Daily Bonus Amount set to **" + QString::number((double)config.dailyBonusAmount) + "**");
 		});
 	});
 
@@ -1185,14 +1189,14 @@ CurrencyModule::CurrencyModule(UmikoBot* client) : Module("currency", true), m_c
 						return;
 					}
 
-					auto amt = args.at(1).toDouble();
+					Currency amt = args.at(1).toDouble();
 
 					for (auto& user : guildList[channel.guildId()]) 
 					{
 						user.setCurrency(user.currency() + amt);
 					}
 
-					client.createMessage(message.channelId(), "**Everyone has been compensated with `" + QString::number(amt) + config.currencySymbol + "`**\nSorry for any inconvenience!");
+					client.createMessage(message.channelId(), "**Everyone has been compensated with `" + QString::number((double)amt) + config.currencySymbol + "`**\nSorry for any inconvenience!");
 					return;
 				}
 
@@ -1206,7 +1210,7 @@ CurrencyModule::CurrencyModule(UmikoBot* client) : Module("currency", true), m_c
 					}
 
 					snowflake_t userId = message.mentions().at(0).id();
-					auto amt = args.at(2).toDouble();
+					Currency amt = args.at(2).toDouble();
 
 					auto& list = guildList[channel.guildId()];
 					auto pos = std::find_if(list.begin(), list.end(),
@@ -1225,7 +1229,7 @@ CurrencyModule::CurrencyModule(UmikoBot* client) : Module("currency", true), m_c
 						return;
 					}
 
-					client.createMessage(message.channelId(), "**" + UmikoBot::Instance().GetName(channel.guildId(), userId) + " has been compensated with `" + QString::number(amt) + config.currencySymbol + "`**\nSorry for any inconvenience!");
+					client.createMessage(message.channelId(), "**" + UmikoBot::Instance().GetName(channel.guildId(), userId) + " has been compensated with `" + QString::number((double)amt) + config.currencySymbol + "`**\nSorry for any inconvenience!");
 					return;
 				}
 			
@@ -1236,7 +1240,7 @@ CurrencyModule::CurrencyModule(UmikoBot* client) : Module("currency", true), m_c
 
 void CurrencyModule::StatusCommand(QString& result, snowflake_t guild, snowflake_t user) 
 {
-	QString creditScore = QString::number(getUserData(guild, user).currency());
+	QString creditScore = QString::number((double)getUserData(guild, user).currency());
 	auto& config = getServerData(guild);
 
 	result += "Wallet: " + creditScore + " " + getServerData(guild).currencySymbol;
@@ -1294,14 +1298,14 @@ void CurrencyModule::OnMessage(Client& client, const Message& message)
 						if (playerWon) 
 						{
 
-							auto prize = gambleData[guildId].doubleOrNothing ? 2 * gambleData[guildId].betAmount : serverConfig.gambleReward;
+							Currency prize = gambleData[guildId].doubleOrNothing ? gambleData[guildId].betAmount * 2.0 : serverConfig.gambleReward;
 
 							auto index = getUserIndex(guildId, 
 								message.author().id());
 							guildList[guildId][index].setCurrency(guildList[guildId][index].currency() + prize);
 							client.createMessage(message.channelId(),
 								"**You guessed CORRECTLY!**\n(**" +
-								QString::number(prize) +
+								QString::number((double)prize) +
 								serverConfig.currencySymbol + 
 								"** have been added to your wallet!)");
 
@@ -1314,7 +1318,7 @@ void CurrencyModule::OnMessage(Client& client, const Message& message)
 
 							auto index = getUserIndex(guildId, message.author().id());
 							guildList[guildId][index].setCurrency(guildList[guildId][index].currency() - loss);
-							client.createMessage(message.channelId(), "**Better Luck next time! The number was `" + QString::number(gambleData[guildId].randNum) +"`**\n*(psst! I took **" + QString::number(loss) + symbol + "** from your wallet for my time...)*");
+							client.createMessage(message.channelId(), "**Better Luck next time! The number was `" + QString::number(gambleData[guildId].randNum) +"`**\n*(psst! I took **" + QString::number((double)loss) + symbol + "** from your wallet for my time...)*");
 
 						}
 
@@ -1342,8 +1346,8 @@ void CurrencyModule::OnSave(QJsonDocument& doc) const
 		for (auto user = guildList[server].begin(); user != guildList[server].end(); user++)
 		{
 			QJsonObject obj;
-			obj["currency"] = user->currency();
-			obj["maxCurrency"] = user->maxCurrency;
+			obj["currency"] = (double)user->currency();
+			obj["maxCurrency"] = (double)user->maxCurrency;
 			obj["isDailyClaimed"] = user->isDailyClaimed;
 			obj["dailyStreak"] = (int) user->dailyStreak;
 			obj["numberOfDailysClaimed"] = (int) user->numberOfDailysClaimed;
@@ -1372,22 +1376,22 @@ void CurrencyModule::OnSave(QJsonDocument& doc) const
 			obj["name"] = config.currencyName;
 			obj["symbol"] = config.currencySymbol;
 			obj["freebieChannelId"] = QString::number(config.giveawayChannelId);
-			obj["dailyReward"] = QString::number(config.dailyReward);
-			obj["freebieReward"] = QString::number(config.freebieReward);
-			obj["gambleLoss"] = QString::number(config.gambleLoss);
-			obj["gambleReward"] = QString::number(config.gambleReward);
+			obj["dailyReward"] = QString::number((double)config.dailyReward);
+			obj["freebieReward"] = QString::number((double)config.freebieReward);
+			obj["gambleLoss"] = QString::number((double)config.gambleLoss);
+			obj["gambleReward"] = QString::number((double)config.gambleReward);
 			obj["gambleMinGuess"] = QString::number(config.minGuess);
 			obj["gambleMaxGuess"] = QString::number(config.maxGuess);
 			obj["freebieProb"] = QString::number(config.randGiveawayProb);
 			obj["freebieExpireTime"] = QString::number(config.freebieExpireTime);
-			obj["dailyBonusAmount"] = QString::number(config.dailyBonusAmount);
+			obj["dailyBonusAmount"] = QString::number((double)config.dailyBonusAmount);
 			obj["dailyBonusPeriod"] = QString::number(config.dailyBonusPeriod);
 			obj["stealSuccessChance"] = QString::number(config.stealSuccessChance);
 			obj["stealFinePercent"] = QString::number(config.stealFinePercent);
 			obj["stealVictimBonusPercent"] = QString::number(config.stealVictimBonusPercent);
 			obj["stealFailedJailTime"] = QString::number(config.stealFailedJailTime);
-			obj["bribeMaxAmount"] = QString::number(config.bribeMaxAmount);
-			obj["bribeLeastAmount"] = QString::number(config.bribeLeastAmount);
+			obj["bribeMaxAmount"] = QString::number((double)config.bribeMaxAmount);
+			obj["bribeLeastAmount"] = QString::number((double)config.bribeLeastAmount);
 			obj["bribeSuccessChance"] = QString::number(config.bribeSuccessChance);
 
 			obj["lowRiskRewardStealSuccessChance"] = QString::number(config.lowRiskRewardStealSuccessChance);
