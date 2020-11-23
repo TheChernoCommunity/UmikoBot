@@ -1,7 +1,7 @@
 
 # UmikoBot
 
-Umiko is the bot used on [TheCherno's Discord Sever](https://discord.gg/K9rMPsu9pQ). This repository is what makes Umiko; it's the source code and it is completely open source!
+Umiko is the bot used on [TheCherno's Discord Server](https://discord.gg/K9rMPsu9pQ). This repository is what makes Umiko; it's the source code and it is completely open source!
 
 ## ❓ What can it do?
 
@@ -26,7 +26,7 @@ Umiko is mainly built for fun. Currently, Umiko can
 
 ## 🙋‍♂️ Contributing
 
-So you want to contribute? Awesome! Let's get you going. For starters, know that Umiko uses the **[QDiscord API](https://github.com/Gaztin/QDiscord)** to interface with Discord. This is already in the repo as a submodule, so you don't need to worry much.
+So you want to contribute? Awesome! Let's get you going. For starters, know that Umiko uses **[QDiscord](https://github.com/Gaztin/QDiscord)** to interface with the Discord API. This is already in the repo as a submodule, so you don't need to worry much.
 
 There are some prerequisites to the whole setup and build process after you're done forking and cloning (checkout Git 101 under **[Help and FAQ](#-help-and-faq)** if you're unfamiliar with the whole process), so let's start with those:
 
@@ -96,12 +96,6 @@ For Visual Studio, you can add the token here:
 ## ❓ Help and FAQ
 
 If you weren't able to properly carry out the setup process, or if you just want to know more Umiko in general, considering checking these questions before opening an issue:
-
-<details>
-<summary>Windows: I think I didn't add the Qt version properly in `init.sh`</summary>
-
-If you're using Visual Studio, you need not worry; you can add those using `Qt VS Tools` (a Visual Studio extension). Simply go to `Qt Options` and then use the file explorer to add the required directories after clicking on `Add`.
-</details>
 
 <details>
 <summary>Is Umiko going to be open for invites anytime soon?</summary>
