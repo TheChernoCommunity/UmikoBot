@@ -22,6 +22,8 @@ FunModule::FunModule(UmikoBot* client) : Module("funutil", true), m_memeChannel(
 			if (reply->error()) {
 				qDebug() << reply->errorString();
 				client.createMessage(m_memeChannel, reply->errorString());
+
+				return;
 			}
 
 			QString in = reply->readAll();
@@ -58,6 +60,8 @@ FunModule::FunModule(UmikoBot* client) : Module("funutil", true), m_memeChannel(
 			if (reply->error()) {
 				qDebug() << reply->errorString();
 				client.createMessage(m_GithubChannel, reply->errorString());
+
+				return;
 			}
 
 			QString in = reply->readAll();
@@ -109,7 +113,7 @@ FunModule::FunModule(UmikoBot* client) : Module("funutil", true), m_memeChannel(
 		{
 
 		QStringList args = message.content().split(' ');
-		
+
 		double max;
 		double min;
 
@@ -133,7 +137,7 @@ FunModule::FunModule(UmikoBot* client) : Module("funutil", true), m_memeChannel(
 		}
 		min = args.at(1).toDouble();
 		max = args.at(2).toDouble();
-		
+
 		std::random_device rand_device;
 		std::mt19937 gen(rand_device());
 
