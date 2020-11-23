@@ -1,6 +1,7 @@
 #include "CurrencyModule.h"
 #include "UmikoBot.h"
 #include "core/Utility.h"
+#include "core/Permissions.h"
 #include "EventModule.h"
 
 #include <QtCore/QFile>
