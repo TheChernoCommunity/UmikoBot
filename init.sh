@@ -133,4 +133,4 @@ fi
 
 
 # Init or update submodules
-git submodule update --init
+git submodule update --init --recursive
