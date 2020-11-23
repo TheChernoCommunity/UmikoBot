@@ -61,6 +61,7 @@ namespace Commands {
 		FUN_MEME,
 		FUN_ROLL,
 		FUN_POLL,
+		FUN_GITHUB,
 		FUN_GIVE_NEW_POLL_ACCESS,
 		FUN_TAKE_NEW_POLL_ACCESS
 	};

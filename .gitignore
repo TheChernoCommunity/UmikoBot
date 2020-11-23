@@ -6,3 +6,4 @@
 /tmp/
 /res/
 !/res/commands.json
+/.vscode
