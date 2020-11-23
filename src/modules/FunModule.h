@@ -44,8 +44,8 @@ private:
 	//! A list of roles (for each server) that have been given poll 
 	//! creation access
 	QMap<snowflake_t, QList<snowflake_t>> m_pollWhitelist;
-	QNetworkAccessManager m_MemeManager;
-	snowflake_t m_memeChannel;
+	QNetworkAccessManager m_MemeManager, m_GithubManager;
+	snowflake_t m_memeChannel, m_GithubChannel;
 	UmikoBot* m_client;
 
 	void pollReactAndAdd(const PollOptions& options, int pos, const Poll& poll, snowflake_t msg, snowflake_t chan, snowflake_t guild);
