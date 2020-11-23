@@ -582,12 +582,19 @@ FunModule::FunModule(UmikoBot* client) : Module("funutil", true), m_memeChannel(
 
 		m_GithubChannel = channel.id();
 
+		if(args.size() != 1)
+		{
+			UmikoBot::Instance().createMessage(m_GithubChannel, "**Wrong Usage of Command!**");
+
+			return;
+		}
+
 		// For extra randomness
 		std::random_device device;
 		std::mt19937 rng(device());
 		std::uniform_int_distribution<std::mt19937::result_type> ch('A', 'Z');
 
-		m_GithubManager.get(QNetworkRequest(QUrl("https://api.github.com/search/repositories?sort=stars&q=" + QString(QChar((char)ch(rng))))));
+		m_GithubManager.get(QNetworkRequest(QUrl("https://api.github.com/search/repositories?q=" + QString(QChar((char)ch(rng))))));
 	});
 
 	RegisterCommand(Commands::FUN_GIVE_NEW_POLL_ACCESS, "give-new-poll-access", [this](Client& client, const Message& message, const Channel& channel) 
