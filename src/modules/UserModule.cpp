@@ -128,7 +128,7 @@ UserModule::UserModule()
 		client.createMessage(message.channelId(), msg);
 	});
 
-	RegisterCommand(Commands::USER_MODULE_STATS, "stats",
+	RegisterCommand(Commands::USER_MODULE_RECORDS, "records",
 		[this](Client& client, const Message& message, const Channel& channel)
 	{
 		QStringList args = message.content().split(' ');

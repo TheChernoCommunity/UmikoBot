@@ -89,9 +89,9 @@
 		"additional": "",
 		"admin:": false
 	},
-	"USER_MODULE_STATS": {
+	"USER_MODULE_RECORDS": {
 		"brief": "Shows statistics about a user's time in the server.",
-		"usage": "stats <Person>",
+		"usage": "records <Person>",
 		"additional": "",
 		"admin:": false
 	},
@@ -327,7 +327,7 @@
 		"admin": false
 	},
 	"EVENT_GET_REWARD": {
-		"brief": "Gets the price of the RaffleDraw event when the lucky ticket is announced.",
+		"brief": "Gets the prize of the RaffleDraw event when the lucky ticket is announced.",
 		"usage": "getreward",
 		"additional": "Only use this when the lucky ticket is announced and you have the lucky ticket.",
 		"admin": false
@@ -340,7 +340,7 @@
 	"FUN_ROLL": {
 		"brief": "Gets a random number.",
 		"usage": "roll <min> <max>\nroll <max>",
-		"additional": "**Example:\n** `!roll 4 10`: Gets a random number between `4` and `10` (inclusive).\n `roll 10`: Gets a random number from `0` to `10` (inclusive).",
+		"additional": "**Example:\n** `!roll 4 10`: Gets a random number between `4` and `10` (inclusive).\n `!roll 10`: Gets a random number from `0` to `10` (inclusive).",
 		"admin": false
 	},
 	"FUN_POLL": {
