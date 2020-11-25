@@ -281,7 +281,7 @@
 		"admin": true
 	},
 	"EVENT": {
-		"brief": "Retrieve information about the running event(s).",
+		"brief": "Retrieve information about the running event.",
 		"usage": "event",
 		"admin": false
 	},

@@ -26,7 +26,7 @@ void Module::OnMessage(Discord::Client& client, const Discord::Message& message)
 			{
 				for (const Command& command : m_commands)
 				{
-					if (message.content().startsWith(setting.prefix + command.name))
+					if (message.content().startsWith(setting.prefix + command.name) && message.content().split(' ').at(0) == (setting.prefix + command.name))
 					{
 						command.callback(client, message, channel);
 					}
