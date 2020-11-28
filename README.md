@@ -56,7 +56,7 @@ Thanks to those, all you need to do is run them in succession and you should hav
 
 This file makes temporary folders and files to facilitate the setup. It also makes sure you have `premake5` to generate the project files and that the submodules are initialized and cloned (helpful for those who forgot to clone with `--recurse-submodules`).
 
-On Windows it will ask you for the paths of the **x86** and **x64** versions of Qt and OpenSSL. You don't need both of the versions; you can just specify one and later on build for that specific platform.
+On Windows it will ask you for the paths of the **x86** and **x64** versions of Qt and OpenSSL. You don't need both of the versions; you can just specify one and only build for that specific platform.
 
 > Make sure you use forward slashes instead of the backslashes.
 
@@ -64,7 +64,7 @@ On Windows it will ask you for the paths of the **x86** and **x64** versions of 
 
 As the name suggests, this script generates the necessary files by using [Premake](https://premake.github.io/).
 
-You can provide an action like you do with premake, but the script is configured such that it generates file for
+You can provide an action like you do with premake, but the script is configured such that it (by default) generates files for
 
 - Visual Studio 2019 if you're on Windows.
 - `qmake` if you're on Linux.
@@ -124,7 +124,7 @@ In our case, the link would be `https://github.com/<your-github-account>/UmikoBo
 git clone --recurse-submodules -j8 https://github.com/<your-github-account>/UmikoBot.git
 ```
 
-<small>`-j8` is an optional flag which enables fetching up to 8 submodules in parallel. We don't really need to use it, but it's always better to know about it.</small>
+(`-j8` is an optional flag which enables fetching up to 8 submodules in parallel. We don't really need to use it, but it's always better to know about it.)
 
 > If that doesn't work, you might be using an old version of Git. Just do
 >
@@ -138,13 +138,13 @@ You have successfully forked and cloned the project. If you came from [Contribut
 
 The following material explains the basic commands and workflow to use for making contributions after you're done setting up and can build the project.
 
-Remember, you can always check the *status* of your repo, using
+Remember, you can always check the *status* of your repo using
 
 ```
 git status
 ```
 
-You can also look into more about commands by using
+You can also find more about a command by using
 
 ```
 git help <command>
@@ -152,7 +152,7 @@ git help <command>
 
 And of course, the **[documentation](https://git-scm.com/docs)** always helps.
 
-We talked about remotes just a bit earlier. We came across the `origin` which is another name for your fork. The remote from you forked your fork, is usually called `upstream`. To list the remotes you have, use
+We talked about remotes just a bit earlier. We came across the `origin` which is another name for your fork. The remote from where you forked your fork is usually called `upstream`. To list the remotes you have, use
 
 ```
 git remote -v
@@ -164,15 +164,15 @@ You'll notice that you don't actually have an upstream setup (unless you set it 
 git remote add upstream https://github.com/TheChernoCommunity/UmikoBot.git
 ```
 
-You have covered all the basic prerequisites. From now on, when you make intend to add a certain feature, follow this steps.
+You have covered all the basic prerequisites. From now on, when you intend to add a certain feature, follow these steps:
 
 1. Firstly, you need to create a new branch dedicated to that feature. You would usually branch out from the `master` branch of the main repo and then work on those changes.
-2. With each small change you bring make sure you commit it. Each commit is essentially a package of changes to different files. It's up to you to decide when something doesn't belong to a particular commit.
-3. After the whole thing is properly done. You can then push it to your origin (you can push commits one by one while you work through them as well, but well it's up to you again).
-4. The only thing is that this code isn't part of the upstream. To make it part of that, you need to open a Pull Request (or a PR) which is basically a request to pull changes from your code. Pull Requests are a GitHub construct, and to do open one, simply go to the `Pull Requests` > `New Pull Request`.
-5. The code would be then reviewed and if it's all fine, it should be merged with the repo.
-6. The branch that you worked on would now become a stale branch. You can now delete it.
-7. If while working on a feature, you find yourself in a scenario where upstream has had new commits that you would want to have in your version as well, you just need to rebase your branch onto upstream's branch (this would usually be `master`).
+2. With each small change you bring, make sure you commit it. Each commit is essentially a package of changes to different files. It's up to you to decide when something doesn't belong to a particular commit.
+3. After the whole thing is properly done, you can then push it to your origin (you can push commits one by one while you work through them as well, but well it's up to you again).
+4. The only thing is that this code isn't part of the upstream. To make it part of that, you need to open a Pull Request (or a PR) which is basically a request to pull changes from your code. Pull Requests are a GitHub construct, and to open one, simply go to `Pull Requests` (on this repo's page) > `New Pull Request`.
+5. The code would then be reviewed and if it's all fine, it should be merged with the repo.
+6. The branch that you worked on would then become a stale branch. You can now delete it.
+7. While working on a feature if you find yourself in a scenario where upstream has had new commits that you would want to have in your version as well, just *rebase* your branch onto upstream's branch (this would usually be `master`).
 
 The commands that you'll find useful to go with the above process are listed here (stuff beginning with `#` are comments to guide you):
 
