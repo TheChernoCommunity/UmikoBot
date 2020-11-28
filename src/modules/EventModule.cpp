@@ -452,6 +452,7 @@ EventModule::EventModule(UmikoBot* client) : Module("event", true)
 	});
 	RegisterCommand(Commands::EVENT_TICKET, "ticket", [this](Client& client, const Message& message, const Channel& channel)
 	{
+		GuildSetting setting = GuildSettings::GetGuildSetting(channel.guildId());
 		QStringList args = message.content().split(' ');
 		if (args.size() != 1)
 		{
@@ -462,7 +463,7 @@ EventModule::EventModule(UmikoBot* client) : Module("event", true)
 		auto& config = getServerEventData(channel.guildId());
 		if (configRD.m_TicketIds.size() == 0)
 		{
-			client.createMessage(message.channelId(), "**You have no tickets.**\nYou can buy them by using `!buyticket <amount>`");
+			client.createMessage(message.channelId(), "**You have no tickets.**\nYou can buy them by using `" + setting.prefix + "buytickets <amount>`");
 			return;
 		}
 		QString name = UmikoBot::Instance().GetName(channel.guildId(), message.author().id());

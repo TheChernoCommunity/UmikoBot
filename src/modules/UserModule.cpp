@@ -128,7 +128,7 @@ UserModule::UserModule()
 		client.createMessage(message.channelId(), msg);
 	});
 
-	RegisterCommand(Commands::USER_MODULE_STATS, "stats",
+	RegisterCommand(Commands::USER_MODULE_ACHIEVEMENTS, "achievements",
 		[this](Client& client, const Message& message, const Channel& channel)
 	{
 		QStringList args = message.content().split(' ');
@@ -167,7 +167,7 @@ UserModule::UserModule()
 			{
 				Embed embed;
 				QString name = UmikoBot::Instance().GetName(channel.guildId(), userId);
-				embed.setAuthor(EmbedAuthor(name + "'s Statistics", "", icon));
+				embed.setAuthor(EmbedAuthor(name + "'s Achievements", "", icon));
 				embed.setColor(qrand() % 16777216);
 
 				QString desc = "**General:**\n";
