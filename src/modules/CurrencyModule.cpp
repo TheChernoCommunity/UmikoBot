@@ -307,6 +307,13 @@ CurrencyModule::CurrencyModule(UmikoBot* client) : Module("currency", true), m_c
 					return;
 			}
 
+			re = QRegExp("[+]?\\d*\\.?\\d{1,2}");
+			if (!re.exactMatch(args.at(1)))
+			{
+				client.createMessage(message.channelId(), "**You may only specify amounts with 2 decimal places or fewer**");
+				return;
+			}
+
 			auto& serverGamble = gambleData[channel.guildId()];
 			auto& config = getServerData(channel.guildId());
 
@@ -648,6 +655,13 @@ CurrencyModule::CurrencyModule(UmikoBot* client) : Module("currency", true), m_c
 				return;
 		}
 
+		re = QRegExp("[+]?\\d*\\.?\\d{1,2}");
+		if (!re.exactMatch(args.at(1)))
+		{
+			client.createMessage(message.channelId(), "**You may only specify amounts with 2 decimal places or fewer**");
+			return;
+		}
+
 		if (args.at(1).toDouble() == 0) 
 		{
 			client.createMessage(message.channelId(), "**Please don't donate at all if you don't want to donate anything.**");
@@ -727,6 +741,13 @@ CurrencyModule::CurrencyModule(UmikoBot* client) : Module("currency", true), m_c
 		if (!re.exactMatch(args.at(1)))
 		{
 			client.createMessage(message.channelId(), "**Your bribe amount must be valid!**");
+			return;
+		}
+
+		re = QRegExp("[+]?\\d*\\.?\\d{1,2}");
+		if (!re.exactMatch(args.at(1)))
+		{
+			client.createMessage(message.channelId(), "**You may only specify amounts with 2 decimal places or fewer**");
 			return;
 		}
 
@@ -880,6 +901,13 @@ CurrencyModule::CurrencyModule(UmikoBot* client) : Module("currency", true), m_c
 		if (!re.exactMatch(args.at(1)))
 		{
 			client.createMessage(message.channelId(), "**You can't steal invalid amounts**");
+			return;
+		}
+
+		re = QRegExp("[+]?\\d*\\.?\\d{1,2}");
+		if (!re.exactMatch(args.at(1)))
+		{
+			client.createMessage(message.channelId(), "**You may only specify amounts with 2 decimal places or fewer**");
 			return;
 		}
 
