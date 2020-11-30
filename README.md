@@ -64,7 +64,7 @@ On Windows it will ask you for the paths of the **x86** and **x64** versions of 
 
 As the name suggests, this script generates the necessary files by using [Premake](https://premake.github.io/).
 
-You can provide an action like you do with premake, but the script is configured such that it (by default) generates files for
+You can provide an action like you do with premake, but by default the script generates files for
 
 - Visual Studio 2019 if you're on Windows.
 - `qmake` if you're on Linux.
@@ -144,7 +144,7 @@ Remember, you can always check the *status* of your repo using
 git status
 ```
 
-You can also find more about a command by using
+You can also learn more about a command by using
 
 ```
 git help <command>
