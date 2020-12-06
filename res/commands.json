@@ -104,7 +104,7 @@
 	"MODERATION_INVITATION_TOGGLE": {
 		"brief": "Toggles if invitations should be automatically deleted",
 		"usage": "invitations",
-		"additional": "",
+		"additional": "**NOTE:** Admins can send server links even if the invitation is turned on",
 		"admin": true
 	},
 	"CURRENCY_WALLET": {
