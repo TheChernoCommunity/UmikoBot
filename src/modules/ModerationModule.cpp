@@ -1,6 +1,6 @@
 #include "ModerationModule.h"
 #include "UmikoBot.h"
-#include "Core/Permissions.h"
+#include "core/Permissions.h"
 
 using namespace Discord;
 
@@ -10,8 +10,12 @@ ModerationModule::ModerationModule()
 	RegisterCommand(Commands::MODERATION_INVITATION_TOGGLE, "invitations",
 		[this](Client& client, const Message& message, const Channel& channel)
 	{
-		m_invitationModeration ^= true;
-		client.createMessage(message.channelId(), m_invitationModeration ? "Invitations will be deleted!" : "Invitations won't be deleted!");
+			QStringList args = message.content().split(' ');
+			UmikoBot::VerifyAndRunAdminCmd(client, message, channel, 1, args, true, [this, &client, channel, message, args]()
+			{
+				m_invitationModeration ^= true;
+				client.createMessage(message.channelId(), m_invitationModeration ? "Invitations will be deleted!" : "Invitations won't be deleted!");
+			});
 	});
 }
 
@@ -31,7 +35,7 @@ void ModerationModule::OnMessage(Client& client, const Message& message)
 					if (!result)
 					{
 						client.deleteMessage(message.channelId(), message.id());
-						client.createMessage(message.channelId(), "**<@" + QString::number(authorID) + ">, you can't publicly advertise servers!**");
+						client.createMessage(message.channelId(), "**<@" + QString::number(authorID) + ">, invitation link of servers aren't allowed in any channels on this server. Please take it to DMs!**");
 					}
 				});
 			}
@@ -57,5 +61,5 @@ void ModerationModule::OnLoad(const QJsonDocument& doc)
 {
 	QJsonObject json = doc.object();
 	QJsonObject moderation = json["moderation"].toObject();
-	m_invitationModeration = moderation["moderation"].toBool();
+	m_invitationModeration = json["invitationModeration"].toBool();
 }
