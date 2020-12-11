@@ -30,12 +30,18 @@ void ModerationModule::OnMessage(Client& client, const Message& message)
 			{
 				auto authorID = message.author().id();
 				::Permissions::ContainsPermission(client, channel.guildId(), message.author().id(), CommandPermission::ADMIN,
-					[this, message, &client, authorID](bool result)
+					[this, message, &client, authorID, channel](bool result)
 				{
 					if (!result)
 					{
 						client.deleteMessage(message.channelId(), message.id());
-						client.createMessage(message.channelId(), "**<@" + QString::number(authorID) + ">, invitation link of servers aren't allowed in any channels on this server. Please take it to DMs!**");
+						UmikoBot::Instance().createDm(authorID)
+							.then([authorID, &client, message](const Channel& channel)
+								{
+									client.createMessage(channel.id(), "**<@" + QString::number(authorID) + ">, invitation link of servers aren't allowed in any channels on this server. Please take it to DMs!**");
+									client.createMessage(channel.id(), "**Here is your message which you posted in the server:**\n" + message.content());
+								});
+						client.createMessage(channel.id(), "**<@" + QString::number(authorID) + ">, invitation link of servers aren't allowed in any channels on this server. Please take it to DMs!**");
 					}
 				});
 			}
