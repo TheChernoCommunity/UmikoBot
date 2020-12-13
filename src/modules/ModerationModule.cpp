@@ -38,10 +38,9 @@ void ModerationModule::OnMessage(Client& client, const Message& message)
 						UmikoBot::Instance().createDm(authorID)
 							.then([authorID, &client, message](const Channel& channel)
 								{
-									client.createMessage(channel.id(), "**<@" + QString::number(authorID) + ">, invitation link of servers aren't allowed in any channels on this server. Please take it to DMs!**");
-									client.createMessage(channel.id(), "**Here is your message which you posted in the server:**\n" + message.content());
+									client.createMessage(channel.id(), "**Invitation link of servers aren't allowed in any channels on this server. Please take it to DMs!** Here is your message which you posted in the server:\n");
+									client.createMessage(channel.id(), message.content());
 								});
-						client.createMessage(channel.id(), "**<@" + QString::number(authorID) + ">, invitation link of servers aren't allowed in any channels on this server. Please take it to DMs!**");
 					}
 				});
 			}
