@@ -738,3 +738,30 @@ void EventModule::EndEvent(const snowflake_t& channelID, const snowflake_t& guil
 		UmikoBot::Instance().createMessage(channelID, embed);
 	}
 }
+
+int EventModule::raffleDrawGetUserIndex(snowflake_t guild, snowflake_t id)
+{
+	for (auto it = raffleDrawGuildList[guild].begin(); it != raffleDrawGuildList[guild].end(); ++it)
+	{
+		if (it->m_UserId == id)
+		{
+			return std::distance(raffleDrawGuildList[guild].begin(), it);
+		}
+	}
+	raffleDrawGuildList[guild].append(RaffleDraw { id });
+	return std::distance(raffleDrawGuildList[guild].begin(), std::prev(raffleDrawGuildList[guild].end()));
+}
+
+EventModule::RaffleDraw EventModule::getUserRaffleDrawData(snowflake_t guild, snowflake_t id)
+{
+	for (auto user : raffleDrawGuildList[guild])
+	{
+		if (user.m_UserId == id)
+		{
+			return user;
+		}
+	}
+	RaffleDraw user { id };
+	raffleDrawGuildList[guild].append(user);
+	return raffleDrawGuildList[guild].back();
+}
