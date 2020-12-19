@@ -54,91 +54,91 @@ FunModule::FunModule(UmikoBot* client) : Module("funutil", true), m_memeChannel(
 		});
 
 			QObject::connect(&m_GithubManager, &QNetworkAccessManager::finished,
-        this, [this](QNetworkReply* reply) {
+		this, [this](QNetworkReply* reply) {
 			auto& client = UmikoBot::Instance();
 
 			if (reply->error()) {
 				qDebug() << reply->errorString();
-                client.createMessage(m_GithubChannel, "**Sorry, the repository you requested doesn't exist**");
+				client.createMessage(m_GithubChannel, "**Sorry, the repository you requested doesn't exist**");
 
 				return;
 			}
 
-            auto getRepositoryMetadataFromJSON = [](const QJsonObject data) {
-                GithubRepo repository;
+			auto getRepositoryMetadataFromJSON = [](const QJsonObject data) {
+				GithubRepo repository;
 
-                repository.fullname = data["full_name"].toString();
-                repository.language = data["language"].toString();
-                repository.stars = data["stargazers_count"].toInt();
-                repository.url = data["html_url"].toString();
+				repository.fullname = data["full_name"].toString();
+				repository.language = data["language"].toString();
+				repository.stars = data["stargazers_count"].toInt();
+				repository.url = data["html_url"].toString();
 
-                return repository;
-            };
+				return repository;
+			};
 
 			QString in = reply->readAll();
 
 			QJsonDocument doc = QJsonDocument::fromJson(in.toUtf8());
 			auto obj = doc.object();
 
-            QJsonObject repo;
+			QJsonObject repo;
 
-            Embed embed;
+			Embed embed;
 
-            if(m_GithubFlag == GITHUB_RANDOM)
-            {
-                QJsonArray items = obj["items"].toArray();
+			if(m_GithubFlag == GITHUB_RANDOM)
+			{
+				QJsonArray items = obj["items"].toArray();
 
-                std::random_device device;
-                std::mt19937 rng(device());
-                std::uniform_int_distribution<std::mt19937::result_type> dist(0, items.size() - 1);
+				std::random_device device;
+				std::mt19937 rng(device());
+				std::uniform_int_distribution<std::mt19937::result_type> dist(0, items.size() - 1);
 
-                repo = items[dist(rng)].toObject();
-            }
-            else if(m_GithubFlag == GITHUB_REPOSITORY)
-            {
-                repo = doc.object();
-            }
-            else if(m_GithubFlag == GITHUB_SEARCH)
-            {
-                QJsonArray items = obj["items"].toArray();
+				repo = items[dist(rng)].toObject();
+			}
+			else if(m_GithubFlag == GITHUB_REPOSITORY)
+			{
+				repo = doc.object();
+			}
+			else if(m_GithubFlag == GITHUB_SEARCH)
+			{
+				QJsonArray items = obj["items"].toArray();
 
-                embed.setTitle("Top 5 results");
+				embed.setTitle("Top 5 results");
 
-                QString desc;
+				QString desc;
 
-                for(int i = 0; i < 5; i++)
-                {
-                    GithubRepo repository = getRepositoryMetadataFromJSON(items[i].toObject());
+				for(int i = 0; i < 5; i++)
+				{
+					GithubRepo repository = getRepositoryMetadataFromJSON(items[i].toObject());
 
-                    desc += "[**" + repository.fullname + "**](" + repository.url + ")\n";
-                    desc += "Stars: " + QString::number(repository.stars) + "\n";
-                    if(repository.language != "")
-                    {
-                        desc += "Language: " + repository.language;
-                    }
-                    desc += "\n\n";
-                }
+					desc += "[**" + repository.fullname + "**](" + repository.url + ")\n";
+					desc += "Stars: " + QString::number(repository.stars) + "\n";
+					if(repository.language != "")
+					{
+						desc += "Language: " + repository.language;
+					}
+					desc += "\n\n";
+				}
 
-                embed.setDescription(desc);
-            }
+				embed.setDescription(desc);
+			}
 
 
-            if(m_GithubFlag == GITHUB_RANDOM || m_GithubFlag == GITHUB_REPOSITORY)
-            {
-                GithubRepo repository = getRepositoryMetadataFromJSON(repo);
+			if(m_GithubFlag == GITHUB_RANDOM || m_GithubFlag == GITHUB_REPOSITORY)
+			{
+				GithubRepo repository = getRepositoryMetadataFromJSON(repo);
 
-                embed.setTitle(utility::consts::emojis::GITHUB + (" " + repository.fullname));
+				embed.setTitle(utility::consts::emojis::GITHUB + (" " + repository.fullname));
 
-                QString desc;
-                desc += "Stars: " + QString::number(repository.stars) + "\n";
-                if(repository.language != "")
-                {
-                    desc += "Language: " + repository.language + "\n";
-                }
-                desc += repository.url;
+				QString desc;
+				desc += "Stars: " + QString::number(repository.stars) + "\n";
+				if(repository.language != "")
+				{
+					desc += "Language: " + repository.language + "\n";
+				}
+				desc += repository.url;
 
-                embed.setDescription(desc);
-            }
+				embed.setDescription(desc);
+			}
 
 			client.createMessage(m_GithubChannel, embed);
 		});
@@ -674,60 +674,60 @@ FunModule::FunModule(UmikoBot* client) : Module("funutil", true), m_memeChannel(
 			return;
 		}
 
-        QString repo;
+		QString repo;
 
-        m_GithubFlag = GITHUB_RANDOM;
+		m_GithubFlag = GITHUB_RANDOM;
 
-        if(args.size() == 2)
-        {
-            m_GithubFlag = GITHUB_REPOSITORY;
-        }
+		if(args.size() == 2)
+		{
+			m_GithubFlag = GITHUB_REPOSITORY;
+		}
 
-        for(int i = 1; i < args.size(); i++)
-        {
-            auto text = args[i].toLower();
+		for(int i = 1; i < args.size(); i++)
+		{
+			auto text = args[i].toLower();
 
-            if(text == "--random")
-            {
-                    m_GithubFlag = GITHUB_RANDOM;
+			if(text == "--random")
+			{
+					m_GithubFlag = GITHUB_RANDOM;
 
-                    continue;
-            }
-            else if(text == "--repository")
-            {
-                    m_GithubFlag = GITHUB_REPOSITORY;
+					continue;
+			}
+			else if(text == "--repository")
+			{
+					m_GithubFlag = GITHUB_REPOSITORY;
 
-                    continue;
-            }
-            else if(text == "--search")
-            {
-                    m_GithubFlag = GITHUB_SEARCH;
+					continue;
+			}
+			else if(text == "--search")
+			{
+					m_GithubFlag = GITHUB_SEARCH;
 
-                    continue;
-            }
-            else
-            {
-                repo = text;
-            }
-        }
+					continue;
+			}
+			else
+			{
+				repo = text;
+			}
+		}
 
-        if(m_GithubFlag == GITHUB_RANDOM)
-        {
-            // For extra randomness
-            std::random_device device;
-            std::mt19937 rng(device());
-            std::uniform_int_distribution<std::mt19937::result_type> ch('A', 'Z');
+		if(m_GithubFlag == GITHUB_RANDOM)
+		{
+			// For extra randomness
+			std::random_device device;
+			std::mt19937 rng(device());
+			std::uniform_int_distribution<std::mt19937::result_type> ch('A', 'Z');
 
-            m_GithubManager.get(QNetworkRequest(QUrl("https://api.github.com/search/repositories?q=" + QString(QChar((char)ch(rng))))));
-        }
-        else if(m_GithubFlag == GITHUB_SEARCH)
-        {
-            m_GithubManager.get(QNetworkRequest(QUrl("https://api.github.com/search/repositories?q=" + repo)));
-        }
-        else if(m_GithubFlag == GITHUB_REPOSITORY)
-        {
-            m_GithubManager.get(QNetworkRequest(QUrl("https://api.github.com/repos/" + repo)));
-        }
+			m_GithubManager.get(QNetworkRequest(QUrl("https://api.github.com/search/repositories?q=" + QString(QChar((char)ch(rng))))));
+		}
+		else if(m_GithubFlag == GITHUB_SEARCH)
+		{
+			m_GithubManager.get(QNetworkRequest(QUrl("https://api.github.com/search/repositories?q=" + repo)));
+		}
+		else if(m_GithubFlag == GITHUB_REPOSITORY)
+		{
+			m_GithubManager.get(QNetworkRequest(QUrl("https://api.github.com/repos/" + repo)));
+		}
 	});
 
 	RegisterCommand(Commands::FUN_GIVE_NEW_POLL_ACCESS, "give-new-poll-access", [this](Client& client, const Message& message, const Channel& channel) 
