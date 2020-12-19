@@ -40,11 +40,27 @@ private:
 		PollSettings(const PollOptions& op, long long maxvotes, snowflake_t chan, const QString& name, int num, double time, const ServerPolls& pollList, snowflake_t msg);
 	};
 	Polls m_polls;
-	
+
+    enum GithubFlag
+    {
+        GITHUB_RANDOM,
+        GITHUB_REPOSITORY,
+        GITHUB_SEARCH
+    };
+
+    struct GithubRepo
+    {
+        QString fullname;
+        QString language;
+        int stars;
+        QString url;
+    };
+
 	//! A list of roles (for each server) that have been given poll 
 	//! creation access
 	QMap<snowflake_t, QList<snowflake_t>> m_pollWhitelist;
 	QNetworkAccessManager m_MemeManager, m_GithubManager;
+    GithubFlag m_GithubFlag = GITHUB_RANDOM;
 	snowflake_t m_memeChannel, m_GithubChannel;
 	UmikoBot* m_client;
 

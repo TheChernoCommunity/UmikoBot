@@ -350,8 +350,9 @@
 		"admin": false
 	},
 	"FUN_GITHUB": {
-		"brief": "Shows popular projects on GitHub",
+		"brief": "Shows information about GitHub repositories",
 		"usage": "github",
+		"additional": "**Examples**:\n`!github --random` - Displays a random GitHub repository\n`!github --repository TheChernoCommunity/UmikoBot` - Shows stats of a particular GitHub repository\n`!github --search QDiscord` - Searches for a repository",
 		"admin": false
 	},
 	"FUN_GIVE_NEW_POLL_ACCESS": {
