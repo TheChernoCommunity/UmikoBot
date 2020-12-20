@@ -93,8 +93,8 @@ EventModule::EventModule(UmikoBot* client) : Module("event", true)
 				}
 				for (auto& role : roles)
 				{
-					if (m_EventWhitelist[guild].contains(role)) continue;
-					m_EventWhitelist[guild].push_back(role);
+					if (serverEventConfig[guild].roleWhiteList.contains(role)) continue;
+					serverEventConfig[guild].roleWhiteList.push_back(role);
 				}
 
 				UmikoBot::Instance().createMessage(channel.id(), "**The roles have been added.**\nPeople with the role(s) can now launch & end events!");
@@ -117,7 +117,7 @@ EventModule::EventModule(UmikoBot* client) : Module("event", true)
 
 				for (auto& role : roles)
 				{
-					m_EventWhitelist[guild].removeOne(role);
+					serverEventConfig[guild].roleWhiteList.removeOne(role);
 				}
 
 				UmikoBot::Instance().createMessage(channel.id(), "**The roles have been removed.**\nPeople with the role(s) can no longer launch or end events!");
@@ -133,7 +133,7 @@ EventModule::EventModule(UmikoBot* client) : Module("event", true)
 				{
 					bool found = false;
 
-					for (auto& allowedRole : m_EventWhitelist[channel.guildId()])
+					for (auto& allowedRole : serverEventConfig[channel.guildId()].roleWhiteList)
 					{
 						if (member.roles().contains(allowedRole))
 						{
@@ -290,7 +290,7 @@ EventModule::EventModule(UmikoBot* client) : Module("event", true)
 				{
 					bool found = false;
 
-					for (auto& allowedRole : m_EventWhitelist[channel.guildId()])
+					for (auto& allowedRole : serverEventConfig[channel.guildId()].roleWhiteList)
 					{
 						if (member.roles().contains(allowedRole))
 						{
@@ -545,16 +545,15 @@ void EventModule::OnSave(QJsonDocument& doc) const
 		for (auto server : serverEventConfig.keys())
 		{
 			QJsonObject obj;
-			QJsonArray list;
 			auto config = serverEventConfig[server];
-			for (auto& server : m_EventWhitelist.keys())
+
+			QJsonArray roleWhitelistArray {};
+			for (auto& role : serverEventConfig[server].roleWhiteList)
 			{
-				for (auto& roleId : m_EventWhitelist[server])
-				{
-					list.push_back(QString::number(roleId));
-				}
-				obj["event-whitelist"] = list;
+				roleWhitelistArray.push_back(QString::number(role));
 			}
+
+			obj["role-whitelist"] = roleWhitelistArray;
 			obj["raffleDrawTicketPrice"] = QString::number(config.raffleDrawTicketPrice);
 			obj["maxUserTickets"] = QString::number(config.maxUserTickets);
 			obj["currentTicketIndex"] = QString::number(config.numTicketsBought);
@@ -610,21 +609,22 @@ void EventModule::OnLoad(const QJsonDocument& doc)
 		for (const auto& server : servers)
 		{
 			EventConfig config;
+			auto guildId = server.toULongLong();
 			auto serverObj = rootObj[server].toObject();
+
 			config.raffleDrawTicketPrice = serverObj["raffleDrawTicketPrice"].toString("50").toInt();
 			config.numTicketsBought = serverObj["currentTicketIndex"].toString("0").toInt();
 			config.maxUserTickets = serverObj["maxUserTickets"].toString("20").toInt();
-			m_EventWhitelist.clear();
-			snowflake_t guild = server.toULongLong();
-			auto list = serverObj["event-whitelist"].toArray();
+
+			serverEventConfig[guildId].roleWhiteList.clear();
+			auto list = serverObj["role-whitelist"].toArray();
 
 			for (auto role : list)
 			{
 				snowflake_t roleId = role.toString().toULongLong();
-				m_EventWhitelist[guild].push_back(roleId);
+				config.roleWhiteList.push_back(roleId);
 			}
 			
-			auto guildId = server.toULongLong();
 			serverEventConfig.insert(guildId, config);
 		}
 		eventConfigfile.close();
