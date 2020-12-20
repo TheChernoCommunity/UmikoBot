@@ -62,6 +62,9 @@ project "UmikoBot"
 		objdir "obj/x64/"
 		targetdir "bin/x64/"
 
+	filter {"toolset:msc"}
+		disablewarnings { "C4996" }
+
 	filter {}
 
 	-- Enable premake-qt when targeting Visual Studio
