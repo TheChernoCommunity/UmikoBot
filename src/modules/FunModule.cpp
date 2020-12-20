@@ -111,12 +111,12 @@ FunModule::FunModule(UmikoBot* client) : Module("funutil", true), m_memeChannel(
 					GithubRepo repository = getRepositoryMetadataFromJSON(items[i].toObject());
 
 					desc += "[**" + repository.fullname + "**](" + repository.url + ")\n";
-					desc += "Stars: " + QString::number(repository.stars) + "\n";
+					desc += utility::consts::emojis::STAR + (" " + QString::number(repository.stars) + "\n");
 					if(repository.language != "")
 					{
-						desc += "Language: " + repository.language;
+						desc += utility::consts::emojis::LAPTOP + (" " + repository.language + "\n");
 					}
-					desc += "\n\n";
+					desc += "\n";
 				}
 
 				embed.setDescription(desc);

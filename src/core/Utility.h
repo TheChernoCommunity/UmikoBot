@@ -82,6 +82,9 @@ namespace utility
 			}
 			
 			constexpr auto TICKETS = ":tickets:";
+			constexpr auto STAR = ":star:";
+			constexpr auto LAPTOP = ":computer:";
+			constexpr auto DESKTOP = ":desktop_computer:";
 
 			constexpr auto REGIONAL_INDICATOR_A = ":regional_indicator_a:";
 			constexpr auto REGIONAL_INDICATOR_B = ":regional_indicator_b:";
