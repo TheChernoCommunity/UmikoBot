@@ -32,6 +32,7 @@ public:
 		int raffleDrawTicketPrice{ 50 };
 		int maxUserTickets{ 20 };
 		snowflake_t luckyUser;
+		QList<snowflake_t> roleWhiteList;
 	};
 	EventModule(UmikoBot* client);
 	void OnMessage(Discord::Client& client, const Discord::Message& message) override;
@@ -41,7 +42,6 @@ public:
 private:
 	QList<QString> eventNamesAndCodes = {"HRHR", "LRLR", "RaffleDraw"};
 	QMap<snowflake_t, QList<RaffleDraw>> raffleDrawGuildList;
-	QMap<snowflake_t, QList<snowflake_t>> m_EventWhitelist;
 	QMap<snowflake_t, EventConfig>serverEventConfig;
 	
 	int raffleDrawGetUserIndex(snowflake_t guild, snowflake_t id);
