@@ -198,8 +198,8 @@
 		"admin": true
 	},
 	"CURRENCY_RICH_LIST": {
-		"brief": "Displays the top 30 rich people on the server",
-		"usage": "richlist",
+		"brief": "Displays a list of the richest people on the server",
+		"usage": "richlist (List top 30 richest people)\nrichlist <count> (List of richest people until <count>)\nrichlist <count1> <count2> (List of richest people from <count1> to <count2>)",
 		"additional": "Make sure you're in the list!",
 		"admin": false
 	},
