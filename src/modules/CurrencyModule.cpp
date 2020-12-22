@@ -594,11 +594,23 @@ CurrencyModule::CurrencyModule(UmikoBot* client) : Module("currency", true), m_c
 		{
 			min = 1;
 			max = args[1].toUInt();
+
+			if (max == 0)
+			{
+				client.createMessage(message.channelId(), "**Your argument must be an integer greater than 0**");
+				return;
+			}
 		}
 		else if (args.size() == 3)
 		{
 			min = args[1].toUInt();
 			max = args[2].toUInt();
+
+			if (min == 0 || max == 0)
+			{
+				client.createMessage(message.channelId(), "**Your arguments must be integers greater than 0**");
+				return;
+			}
 		}
 		else
 		{
@@ -640,7 +652,7 @@ CurrencyModule::CurrencyModule(UmikoBot* client) : Module("currency", true), m_c
 			auto& user = leaderboard[i - 1]; // `i` is one-based, not zero-based
 			QString username = UmikoBot::Instance().GetName(channel.guildId(), user.userId);
 
-			if (username == "")
+			if (username.isEmpty())
 			{
 				max += 1;
 				if (max > leaderboard.size())
