@@ -131,6 +131,12 @@
 		"additional": "Don't use it unless the bot notifies everyone of a giveaway!",
 		"admin": false
 	},
+	"CURRENCY_GIFT": {
+		"brief": "Accepts a gift on a special day.",
+		"usage": "gift",
+		"additional": "You only have 5 minutes to accept each gift... be speedy!",
+		"admin": false
+	},
 	"CURRENCY_SET_PRIZE_CHANNEL": {
 		"brief": "Sets the giveaway announcement channel to the current channel in use.",
 		"usage": "setannouncechan",
