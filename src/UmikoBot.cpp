@@ -782,6 +782,7 @@ void UmikoBot::Load()
 		Command(CURRENCY_DAILY),
 		Command(CURRENCY_GAMBLE),
 		Command(CURRENCY_CLAIM),
+		Command(CURRENCY_GIFT),
 		Command(CURRENCY_SET_PRIZE_CHANNEL),
 		Command(CURRENCY_SET_NAME),
 		Command(CURRENCY_SET_SYMBOL),

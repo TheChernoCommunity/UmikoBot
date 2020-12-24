@@ -539,6 +539,49 @@ CurrencyModule::CurrencyModule(UmikoBot* client) : Module("currency", true), m_c
 
 	});
 
+	RegisterCommand(Commands::CURRENCY_GIFT, "gift", [this](Client& client, const Message& message, const Channel& channel)
+	{
+		QStringList args = message.content().split(' ');
+
+		if (args.size() > 1)
+		{
+			client.createMessage(message.channelId(), "**Wrong Usage of Command!** ");
+			return;
+		}
+
+		if (!isHolidaySpecialActive)
+		{
+			client.createMessage(message.channelId(), "**Today is not a special day!**\nWait for one to arrive before looking for gifts.");
+			return;
+		}
+
+		if (!isHolidaySpecialClaimable)
+		{
+			client.createMessage(message.channelId(), "**There is no gift available at the moment!**");
+			return;
+		}
+
+		int jailRemainingTime = guildList[channel.guildId()][getUserIndex(channel.guildId(), message.author().id())].jailTimer->remainingTime();
+		if (jailRemainingTime > 0)
+		{
+			QString time = utility::StringifyMilliseconds(jailRemainingTime);
+			QString desc = "**You are in jail!**\nYou can't receive gifts for another " + time;
+			client.createMessage(message.channelId(), desc);
+			return;
+		}
+
+		// TODO(fkp): Stop users from claiming a gift twice
+		int amountReceived = (qrand() % 6) + 20;
+		auto& userCurrency = getUserData(channel.guildId(), message.author().id());
+		userCurrency.setCurrency(userCurrency.currency() + amountReceived);
+
+		QString name = UmikoBot::Instance().GetName(channel.guildId(), message.author().id());
+		QString amountString = QString::number(amountReceived);
+		QString currencySymbol = getServerData(channel.guildId()).currencySymbol;
+		QString msg = "**Congratulations!** " + name + " has been gifted `" + amountString + " " + currencySymbol + "`";
+		client.createMessage(message.channelId(), msg);
+	});
+
 	RegisterCommand(Commands::CURRENCY_SET_PRIZE_CHANNEL, "setannouncechan", [this](Client& client, const Message& message, const Channel& channel) 
 	{
 		QStringList args = message.content().split(' ');
