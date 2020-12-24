@@ -114,6 +114,11 @@ CurrencyModule::CurrencyModule(UmikoBot* client) : Module("currency", true), m_c
 				}
 
 				isHolidaySpecialActive = true;
+				// This one isn't random, will occur 20 minutes after announcement
+				// TODO(fkp): Randomness here?
+				// holidaySpecialTimer.setInterval(20 * 60 * 60 * 1000);
+				holidaySpecialTimer.setInterval(30 * 1000);
+				holidaySpecialTimer.start();
 			}
 		}
 		else
@@ -127,14 +132,53 @@ CurrencyModule::CurrencyModule(UmikoBot* client) : Module("currency", true), m_c
 				}
 
 				isHolidaySpecialActive = false;
+				holidaySpecialTimer.stop();
 			}
 		}
 	};
 
 	// holidaySpecialCheckTimer.setInterval(1 * 60 * 60 * 1000); // Hourly timer
-	holidaySpecialCheckTimer.setInterval(60 * 1000); // Hourly timer
+	holidaySpecialCheckTimer.setInterval(15 * 1000); // Hourly timer
 	QObject::connect(&holidaySpecialCheckTimer, &QTimer::timeout, holidaySpecialCheck);
 	holidaySpecialCheckTimer.start();
+
+	QObject::connect(&holidaySpecialTimer, &QTimer::timeout, [this, client]()
+	{
+		if (!isHolidaySpecialActive)
+		{
+			isHolidaySpecialClaimable = false;
+			holidaySpecialTimer.stop();
+			return;
+		}
+
+		if (isHolidaySpecialClaimable)
+		{
+			isHolidaySpecialClaimable = false;
+			// int numberOfMinutes = (qrand() % 40) + 40; // 40 - 80 minutes later
+			int numberOfMinutes = (qrand() % 2) + 1; // 1 - 3 minutes later
+			holidaySpecialTimer.setInterval(numberOfMinutes * 60 * 1000);
+
+			for (snowflake_t guild : serverCurrencyConfig.keys())
+			{
+				snowflake_t channel = serverCurrencyConfig[guild].giveawayChannelId;
+				UmikoBot::Instance().createMessage(channel, "**The holiday gift window has closed!**\nThere may be another one soon...");;
+			}
+		}
+		else
+		{
+			isHolidaySpecialClaimable = true;
+			// int numberOfMinutes = 5;
+			int numberOfMinutes = 1;
+			holidaySpecialTimer.setInterval(numberOfMinutes * 60 * 1000);
+
+			for (snowflake_t guild : serverCurrencyConfig.keys())
+			{
+				snowflake_t channel = serverCurrencyConfig[guild].giveawayChannelId;
+				QString msg = "**Holiday gift window is now open!**\nGet your `!gift` within the next " + QString::number(numberOfMinutes) + " minutes!";
+				UmikoBot::Instance().createMessage(channel, msg);
+			}
+		}
+	});
 
 	RegisterCommand(Commands::CURRENCY_WALLET, "wallet", [this](Client& client, const Message& message, const Channel& channel) 
 	{

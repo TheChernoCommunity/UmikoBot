@@ -145,8 +145,10 @@ private:
 	UmikoBot* m_client;
 
 	// Holiday special stuff
-	QTimer holidaySpecialCheckTimer;
-	bool isHolidaySpecialActive = false;
+	QTimer holidaySpecialCheckTimer; // Checks if the current day is special
+	QTimer holidaySpecialTimer; // Either stores time left for people to claim or time until next gift event
+	bool isHolidaySpecialActive = false; // Whether today is a special day
+	bool isHolidaySpecialClaimable = false;
 
 private:
 	void OnSave(QJsonDocument& doc) const override;
