@@ -144,6 +144,10 @@ private:
 
 	UmikoBot* m_client;
 
+	// Holiday special stuff
+	QTimer holidaySpecialCheckTimer;
+	bool isHolidaySpecialActive = false;
+
 private:
 	void OnSave(QJsonDocument& doc) const override;
 	void OnLoad(const QJsonDocument& doc) override;

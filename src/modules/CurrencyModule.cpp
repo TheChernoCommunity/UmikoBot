@@ -27,7 +27,6 @@ using namespace Discord;
 
 CurrencyModule::CurrencyModule(UmikoBot* client) : Module("currency", true), m_client(client)
 {
-
 	m_timer.setInterval(24*60*60*1000); //!24hr timer
 	QObject::connect(&m_timer, &QTimer::timeout, [this, client]() 
 		{
@@ -87,6 +86,55 @@ CurrencyModule::CurrencyModule(UmikoBot* client) : Module("currency", true), m_c
 	});
 
 	m_timer.start();
+
+	auto holidaySpecialCheck = [this]()
+	{
+		// Y/M/D but we ignore the year (set to 1 because 0 is invalid)
+		QList<QDate> specialDates = { QDate { 1, 12, 24 }, QDate { 1, 12, 25 }, QDate { 1, 1, 1 } };
+		QDate currentDate = QDate::currentDate();
+		bool isHoliday = false;
+
+		for (const QDate& date : specialDates)
+		{
+			if (date.month() == currentDate.month() && date.day() == currentDate.day())
+			{
+				isHoliday = true;
+				break;
+			}
+		}
+
+		if (isHoliday)
+		{
+			if (!isHolidaySpecialActive)
+			{
+				for (snowflake_t guild : serverCurrencyConfig.keys())
+				{
+					snowflake_t channel = serverCurrencyConfig[guild].giveawayChannelId;
+					UmikoBot::Instance().createMessage(channel, "**A holiday special is now occurring!**\nLook out for gifts during the day!");
+				}
+
+				isHolidaySpecialActive = true;
+			}
+		}
+		else
+		{
+			if (isHolidaySpecialActive)
+			{
+				for (snowflake_t guild : serverCurrencyConfig.keys())
+				{
+					snowflake_t channel = serverCurrencyConfig[guild].giveawayChannelId;
+					UmikoBot::Instance().createMessage(channel, "**The holiday special has ended!**\nBe sure to grab your gifts next time!");
+				}
+
+				isHolidaySpecialActive = false;
+			}
+		}
+	};
+
+	// holidaySpecialCheckTimer.setInterval(1 * 60 * 60 * 1000); // Hourly timer
+	holidaySpecialCheckTimer.setInterval(60 * 1000); // Hourly timer
+	QObject::connect(&holidaySpecialCheckTimer, &QTimer::timeout, holidaySpecialCheck);
+	holidaySpecialCheckTimer.start();
 
 	RegisterCommand(Commands::CURRENCY_WALLET, "wallet", [this](Client& client, const Message& message, const Channel& channel) 
 	{
