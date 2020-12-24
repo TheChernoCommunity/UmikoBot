@@ -25,9 +25,10 @@ public:
 		QTimer* jailTimer;
 		unsigned int numberOfDailysClaimed;
 		unsigned int numberOfGiveawaysClaimed;
+		bool hasClaimedCurrentGift;
 
-		UserCurrency(snowflake_t userId, Currency currency, Currency maxCurrency, bool isDailyClaimed, unsigned int dailyStreak, unsigned int numberOfDailysClaimed, unsigned int numberOfGiveawaysClaimed)
-			: userId(userId), maxCurrency(maxCurrency), isDailyClaimed(isDailyClaimed), isBribeUsed(false), dailyStreak(dailyStreak), jailTimer(new QTimer()), numberOfDailysClaimed(numberOfDailysClaimed), numberOfGiveawaysClaimed(numberOfGiveawaysClaimed)
+		UserCurrency(snowflake_t userId, Currency currency, Currency maxCurrency, bool isDailyClaimed, unsigned int dailyStreak, unsigned int numberOfDailysClaimed, unsigned int numberOfGiveawaysClaimed, bool hasClaimedCurrentGift)
+			: userId(userId), maxCurrency(maxCurrency), isDailyClaimed(isDailyClaimed), isBribeUsed(false), dailyStreak(dailyStreak), jailTimer(new QTimer()), numberOfDailysClaimed(numberOfDailysClaimed), numberOfGiveawaysClaimed(numberOfGiveawaysClaimed), hasClaimedCurrentGift(hasClaimedCurrentGift)
 		{
 			setCurrency(currency);
 			jailTimer->setSingleShot(true);
@@ -39,7 +40,7 @@ public:
 		}
 
 		UserCurrency(const UserCurrency& other)
-			: userId(other.userId), maxCurrency(other.maxCurrency), isDailyClaimed(other.isDailyClaimed), isBribeUsed(other.isBribeUsed), dailyStreak(other.dailyStreak), jailTimer(new QTimer()), numberOfDailysClaimed(other.numberOfDailysClaimed), numberOfGiveawaysClaimed(other.numberOfGiveawaysClaimed)
+			: userId(other.userId), maxCurrency(other.maxCurrency), isDailyClaimed(other.isDailyClaimed), isBribeUsed(other.isBribeUsed), dailyStreak(other.dailyStreak), jailTimer(new QTimer()), numberOfDailysClaimed(other.numberOfDailysClaimed), numberOfGiveawaysClaimed(other.numberOfGiveawaysClaimed), hasClaimedCurrentGift(other.hasClaimedCurrentGift)
 		{
 			setCurrency(other.currency());
 			jailTimer->setSingleShot(true);
@@ -60,6 +61,7 @@ public:
 			dailyStreak = other.dailyStreak;
 			numberOfDailysClaimed = other.numberOfDailysClaimed;
 			numberOfGiveawaysClaimed = other.numberOfGiveawaysClaimed;
+			hasClaimedCurrentGift = other.hasClaimedCurrentGift;
 
 			jailTimer = new QTimer();
 			jailTimer->setSingleShot(true);
@@ -162,7 +164,7 @@ private:
 			}
 		}
 		//! If user is not added to the system, make a new one
-		guildList[guild].append(UserCurrency{ id, 0, 0, false, 0, 0, 0 });
+		guildList[guild].append(UserCurrency{ id, 0, 0, false, 0, 0, 0, false });
 		return std::distance(guildList[guild].begin(), std::prev(guildList[guild].end()));
 	}
 
@@ -182,7 +184,7 @@ public:
 		}
 
 		//! If user is not added to the system, make a new one
-		UserCurrency user{ id, 0, 0, false, 0, 0, 0 };
+		UserCurrency user{ id, 0, 0, false, 0, 0, 0, false };
 
 		guildList[guild].append(user);
 		return guildList[guild].back();
