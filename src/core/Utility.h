@@ -115,6 +115,9 @@ namespace utility
 			constexpr auto WE_SMART = "<:wesmart:777299810658680892>";
 			constexpr auto AANGER = "<:aanger:777298666485841921>";
 			constexpr auto SHOPPING_BAGS = ":shopping_bags:";
+
+			constexpr auto GIFT = ":gift:";
+			constexpr auto GIFT_HEART = ":gift_heart:";
 		}
 	}
 

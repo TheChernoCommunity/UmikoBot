@@ -110,7 +110,8 @@ CurrencyModule::CurrencyModule(UmikoBot* client) : Module("currency", true), m_c
 				for (snowflake_t guild : serverCurrencyConfig.keys())
 				{
 					snowflake_t channel = serverCurrencyConfig[guild].giveawayChannelId;
-					UmikoBot::Instance().createMessage(channel, "**A holiday special is now occurring!**\nLook out for gifts during the day!");
+					QString emoji = utility::consts::emojis::GIFT;
+					UmikoBot::Instance().createMessage(channel, emoji + " **A holiday special is now occurring!** " + emoji + "\nLook out for gifts during the day!");
 				}
 
 				isHolidaySpecialActive = true;
@@ -176,7 +177,8 @@ CurrencyModule::CurrencyModule(UmikoBot* client) : Module("currency", true), m_c
 				}
 
 				snowflake_t channel = serverCurrencyConfig[guild].giveawayChannelId;
-				QString msg = "**Holiday gift window is now open!**\nGet your `!gift` within the next " + QString::number(numberOfMinutes) + " minutes!";
+				QString emoji = utility::consts::emojis::GIFT;
+				QString msg = emoji + " **Holiday gift window is now open!** " + emoji + "\nGet your `!gift` within the next " + QString::number(numberOfMinutes) + " minutes!";
 				UmikoBot::Instance().createMessage(channel, msg);
 			}
 		}
@@ -586,7 +588,8 @@ CurrencyModule::CurrencyModule(UmikoBot* client) : Module("currency", true), m_c
 		QString name = UmikoBot::Instance().GetName(channel.guildId(), message.author().id());
 		QString amountString = QString::number(amountReceived);
 		QString currencySymbol = getServerData(channel.guildId()).currencySymbol;
-		QString msg = "**Congratulations!** " + name + " has been gifted `" + amountString + " " + currencySymbol + "`";
+		QString emoji = utility::consts::emojis::GIFT_HEART;
+		QString msg = emoji + " **Congratulations!** " + emoji + "\n" + name + " has been gifted `" + amountString + " " + currencySymbol + "`";
 		client.createMessage(message.channelId(), msg);
 	});
 
