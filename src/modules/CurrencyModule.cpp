@@ -132,6 +132,7 @@ CurrencyModule::CurrencyModule(UmikoBot* client) : Module("currency", true), m_c
 				}
 
 				isHolidaySpecialActive = false;
+				isHolidaySpecialClaimable = false;
 				holidaySpecialTimer.stop();
 			}
 		}
@@ -173,6 +174,12 @@ CurrencyModule::CurrencyModule(UmikoBot* client) : Module("currency", true), m_c
 
 			for (snowflake_t guild : serverCurrencyConfig.keys())
 			{
+				// Resets everyone's claimed flag
+				for (UserCurrency& userCurrency : guildList[guild])
+				{
+					userCurrency.hasClaimedCurrentGift = false;
+				}
+
 				snowflake_t channel = serverCurrencyConfig[guild].giveawayChannelId;
 				QString msg = "**Holiday gift window is now open!**\nGet your `!gift` within the next " + QString::number(numberOfMinutes) + " minutes!";
 				UmikoBot::Instance().createMessage(channel, msg);
@@ -570,10 +577,16 @@ CurrencyModule::CurrencyModule(UmikoBot* client) : Module("currency", true), m_c
 			return;
 		}
 
-		// TODO(fkp): Stop users from claiming a gift twice
-		int amountReceived = (qrand() % 6) + 20;
 		auto& userCurrency = getUserData(channel.guildId(), message.author().id());
+		if (userCurrency.hasClaimedCurrentGift)
+		{
+			client.createMessage(message.channelId(), "**You have already claimed this gift!**\nDon't bother me until the next one...");
+			return;
+		}
+
+		int amountReceived = (qrand() % 6) + 20;
 		userCurrency.setCurrency(userCurrency.currency() + amountReceived);
+		userCurrency.hasClaimedCurrentGift = true;
 
 		QString name = UmikoBot::Instance().GetName(channel.guildId(), message.author().id());
 		QString amountString = QString::number(amountReceived);
@@ -1632,6 +1645,7 @@ void CurrencyModule::OnLoad(const QJsonDocument& doc)
 				(unsigned int) obj[user].toObject()["dailyStreak"].toInt(),
 				(unsigned int) obj[user].toObject()["numberOfDailysClaimed"].toInt(),
 				(unsigned int) obj[user].toObject()["numberOfGiveawaysClaimed"].toInt(),
+				false,
 			};
 
 			list.append(currencyData);
