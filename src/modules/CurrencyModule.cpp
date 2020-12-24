@@ -90,7 +90,7 @@ CurrencyModule::CurrencyModule(UmikoBot* client) : Module("currency", true), m_c
 	auto holidaySpecialCheck = [this]()
 	{
 		// Y/M/D but we ignore the year (set to 1 because 0 is invalid)
-		QList<QDate> specialDates = { QDate { 1, 12, 24 }, QDate { 1, 12, 25 }, QDate { 1, 1, 1 } };
+		QList<QDate> specialDates = { QDate { 1, 12, 25 }, QDate { 1, 1, 1 } };
 		QDate currentDate = QDate::currentDate();
 		bool isHoliday = false;
 
@@ -114,10 +114,8 @@ CurrencyModule::CurrencyModule(UmikoBot* client) : Module("currency", true), m_c
 				}
 
 				isHolidaySpecialActive = true;
-				// This one isn't random, will occur 20 minutes after announcement
-				// TODO(fkp): Randomness here?
-				// holidaySpecialTimer.setInterval(20 * 60 * 60 * 1000);
-				holidaySpecialTimer.setInterval(30 * 1000);
+				int numberOfMinutes = (qrand() % 30) + 15; // 15 - 45 after start
+				holidaySpecialTimer.setInterval(numberOfMinutes * 60 * 1000);
 				holidaySpecialTimer.start();
 			}
 		}
@@ -138,8 +136,7 @@ CurrencyModule::CurrencyModule(UmikoBot* client) : Module("currency", true), m_c
 		}
 	};
 
-	// holidaySpecialCheckTimer.setInterval(1 * 60 * 60 * 1000); // Hourly timer
-	holidaySpecialCheckTimer.setInterval(15 * 1000); // Hourly timer
+	holidaySpecialCheckTimer.setInterval(1 * 60 * 60 * 1000); // Hourly timer
 	QObject::connect(&holidaySpecialCheckTimer, &QTimer::timeout, holidaySpecialCheck);
 	holidaySpecialCheckTimer.start();
 
@@ -155,8 +152,7 @@ CurrencyModule::CurrencyModule(UmikoBot* client) : Module("currency", true), m_c
 		if (isHolidaySpecialClaimable)
 		{
 			isHolidaySpecialClaimable = false;
-			// int numberOfMinutes = (qrand() % 40) + 40; // 40 - 80 minutes later
-			int numberOfMinutes = (qrand() % 2) + 1; // 1 - 3 minutes later
+			int numberOfMinutes = (qrand() % 40) + 40; // 40 - 80 minutes later
 			holidaySpecialTimer.setInterval(numberOfMinutes * 60 * 1000);
 
 			for (snowflake_t guild : serverCurrencyConfig.keys())
@@ -168,8 +164,7 @@ CurrencyModule::CurrencyModule(UmikoBot* client) : Module("currency", true), m_c
 		else
 		{
 			isHolidaySpecialClaimable = true;
-			// int numberOfMinutes = 5;
-			int numberOfMinutes = 1;
+			int numberOfMinutes = 5;
 			holidaySpecialTimer.setInterval(numberOfMinutes * 60 * 1000);
 
 			for (snowflake_t guild : serverCurrencyConfig.keys())
