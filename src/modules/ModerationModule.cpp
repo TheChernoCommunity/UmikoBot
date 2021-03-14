@@ -26,7 +26,7 @@ void ModerationModule::OnMessage(Client& client, const Message& message)
 	{
 		if (m_invitationModeration)
 		{
-			if (message.content().contains("https://discord.gg/", Qt::CaseInsensitive))
+			if (message.content().contains("https://discord.gg/", Qt::CaseInsensitive) || message.content().contains("discord.gg", Qt::CaseInsensitive))
 			{
 				auto authorID = message.author().id();
 				::Permissions::ContainsPermission(client, channel.guildId(), message.author().id(), CommandPermission::ADMIN,
