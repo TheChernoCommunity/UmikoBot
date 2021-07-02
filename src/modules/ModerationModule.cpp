@@ -17,6 +17,59 @@ ModerationModule::ModerationModule()
 				client.createMessage(message.channelId(), m_invitationModeration ? "Invitations will be deleted!" : "Invitations won't be deleted!");
 			});
 	});
+
+	RegisterCommand(Commands::MODERATION_WARN, "warn",
+					[this](Client& client, const Message& message, const Channel& channel)
+	{
+		QStringList args = message.content().split(' ');
+		UmikoBot::VerifyAndRunAdminCmd(client, message, channel, 2, args, false, [this, &client, channel, message, args]()
+		{
+			snowflake_t warnedBy = message.author().id();
+			snowflake_t user;
+			QList<User> mentions = message.mentions();
+
+			if (mentions.size() > 0)
+			{
+				user = mentions[0].id();
+			}
+			else
+			{
+				user = UmikoBot::Instance().GetUserFromArg(channel.guildId(), args, 1);
+
+				if (!user)
+				{
+					client.createMessage(message.channelId(), "**Couldn't find " + args.at(1) + "**");
+					return;
+				}
+			}
+
+			QString msg = "[no message]";
+
+			if (args.size() > 2)
+			{
+				// The 6 starts the search after "!warn "
+				msg = message.content().mid(message.content().indexOf(QRegExp("[ \t\n\v\f\r]"), 6)).trimmed();
+			}
+
+			warnings[user].append(UserWarning { warnedBy, msg });
+
+			unsigned int numberOfWarnings = countWarnings(user);
+			QString warningNumberString = "";
+
+			switch (numberOfWarnings)
+			{
+			case 1: warningNumberString = "First"; break;
+			case 2: warningNumberString = "Second"; break;
+			case 3: warningNumberString = "Third"; break;
+
+			// Good enough, shouldn't be seen very often (if at all)
+			default: warningNumberString = QString::number(numberOfWarnings) + "th"; break;
+			}
+
+			QString output = QString("%1 warning for <@%2>.").arg(warningNumberString, QString::number(user));
+			client.createMessage(message.channelId(), output);
+		});
+	});
 }
 
 void ModerationModule::OnMessage(Client& client, const Message& message)
@@ -67,4 +120,26 @@ void ModerationModule::OnLoad(const QJsonDocument& doc)
 	QJsonObject json = doc.object();
 	QJsonObject moderation = json["moderation"].toObject();
 	m_invitationModeration = json["invitationModeration"].toBool();
+}
+
+unsigned int ModerationModule::countWarnings(snowflake_t user, bool countExpired)
+{
+	QList<UserWarning> userWarnings = warnings[user];
+
+	if (countExpired)
+	{
+		return userWarnings.size();
+	}
+
+	unsigned int total = 0;
+	
+	for (const UserWarning& warning : userWarnings)
+	{
+		if (!warning.expired)
+		{
+			total += 1;
+		}
+	}
+
+	return total;
 }
