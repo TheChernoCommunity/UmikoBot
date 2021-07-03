@@ -26,6 +26,11 @@ private:
 			: warnedBy(warnedBy), when(QDateTime::currentDateTime()), message(message), expired(false)
 		{
 		}
+
+		UserWarning(snowflake_t warnedBy, QDateTime when, QString message, bool expired)
+			: warnedBy(warnedBy), when(when), message(message), expired(expired)
+		{
+		}
 	};
 
 	// Maps user ID to a list of warnings

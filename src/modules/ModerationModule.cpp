@@ -110,6 +110,29 @@ void ModerationModule::OnSave(QJsonDocument& doc) const
 	QJsonObject moderation;
 
 	moderation["invitationModeration"] = m_invitationModeration;
+
+	QJsonObject warningsJson; // Holds a map of user:array_of_warnings
+	for (auto i = warnings.keyValueBegin(); i != warnings.keyValueEnd(); i++)
+	{
+		snowflake_t user = i->first;
+		const QList<UserWarning>& userWarnings = i->second;
+		QJsonArray warningsArrayJson; // Holds the array of warnings for a specific user
+
+		for (auto& warning : userWarnings)
+		{
+			QJsonObject warningJson;
+			warningJson["warnedBy"] = QString::number(warning.warnedBy);
+			warningJson["when"] = warning.when.toString();
+			warningJson["message"] = warning.message;
+			warningJson["expired"] = warning.expired;
+
+			warningsArrayJson.append(warningJson);
+		}
+
+		warningsJson[QString::number(user)] = warningsArrayJson;
+	}
+
+	moderation["warnings"] = warningsJson;
 	json["moderation"] = moderation;
 
 	doc.setObject(moderation);
@@ -120,11 +143,38 @@ void ModerationModule::OnLoad(const QJsonDocument& doc)
 	QJsonObject json = doc.object();
 	QJsonObject moderation = json["moderation"].toObject();
 	m_invitationModeration = json["invitationModeration"].toBool();
+
+	// Loads warnings
+	warnings.clear();
+	QJsonObject warningsObj = json["warnings"].toObject();
+	QStringList users = warningsObj.keys();
+
+	for (auto& userString : users)
+	{
+		snowflake_t user = userString.toULongLong();
+		QList<UserWarning> userWarnings;
+		QJsonArray warningsArrayJson = warningsObj[userString].toArray();
+
+		for (auto& warningJson : warningsArrayJson)
+		{
+			QJsonObject warningObj = warningJson.toObject();
+
+			UserWarning warning {
+				warningObj["warnedBy"].toString().toULongLong(),
+				QDateTime::fromString(warningObj["when"].toString()),
+				warningObj["message"].toString(),
+				warningObj["expired"].toBool()
+			};
+			userWarnings.append(warning);
+		}
+
+		warnings[user] = userWarnings;
+	}
 }
 
 unsigned int ModerationModule::countWarnings(snowflake_t user, bool countExpired)
 {
-	QList<UserWarning> userWarnings = warnings[user];
+	const QList<UserWarning>& userWarnings = warnings[user];
 
 	if (countExpired)
 	{
