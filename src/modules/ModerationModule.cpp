@@ -70,6 +70,54 @@ ModerationModule::ModerationModule()
 			client.createMessage(message.channelId(), output);
 		});
 	});
+
+	RegisterCommand(Commands::MODERATION_WARNINGS, "warnings",
+					[this](Client& client, const Message& message, const Channel& channel)
+	{
+		QStringList args = message.content().split(' ');
+		UmikoBot::VerifyAndRunAdminCmd(client, message, channel, 2, args, false, [this, &client, channel, message, args]()
+		{
+			snowflake_t user;
+			QList<User> mentions = message.mentions();
+
+			if (mentions.size() > 0)
+			{
+				user = mentions[0].id();
+			}
+			else
+			{
+				user = UmikoBot::Instance().GetUserFromArg(channel.guildId(), args, 1);
+
+				if (!user)
+				{
+					client.createMessage(message.channelId(), "**Couldn't find " + args.at(1) + "**");
+					return;
+				}
+			}
+
+			UmikoBot::Instance().GetAvatar(channel.guildId(), user).then(
+				[this, user, channel, &client, message](const QString& icon)
+			{
+				Embed embed;
+				embed.setColor(qrand() % 11777216);
+				embed.setAuthor(EmbedAuthor("Warnings for " + UmikoBot::Instance().GetName(channel.guildId(), user), "", icon));
+
+				QString desc = warnings[user].size() == 0 ? "Nothing to see here..." : "";
+
+				for (auto& warning : warnings[user])
+				{
+					desc += QString("%1%2 - warned by %3\n%4\n\n").arg(warning.expired ? "\\*\\*\\* " : "",
+																	   warning.when.toString(),
+																	   UmikoBot::Instance().GetName(channel.guildId(), warning.warnedBy),
+																	   warning.message);
+
+				}
+
+				embed.setDescription(desc);
+				client.createMessage(message.channelId(), embed);
+			});
+		});
+	});
 }
 
 void ModerationModule::OnMessage(Client& client, const Message& message)
