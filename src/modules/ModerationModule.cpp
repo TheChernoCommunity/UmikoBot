@@ -71,11 +71,11 @@ ModerationModule::ModerationModule()
 		});
 	});
 
-	RegisterCommand(Commands::MODERATION_WARNINGS, "warnings",
-					[this](Client& client, const Message& message, const Channel& channel)
+	// This is used by both !warnings and !warnings-all
+	auto warningsCommand = [this](Client& client, const Message& message, const Channel& channel, bool showExpired)
 	{
 		QStringList args = message.content().split(' ');
-		UmikoBot::VerifyAndRunAdminCmd(client, message, channel, 2, args, false, [this, &client, channel, message, args]()
+		UmikoBot::VerifyAndRunAdminCmd(client, message, channel, 2, args, false, [this, &client, channel, message, args, showExpired]()
 		{
 			snowflake_t user;
 			QList<User> mentions = message.mentions();
@@ -96,7 +96,7 @@ ModerationModule::ModerationModule()
 			}
 
 			UmikoBot::Instance().GetAvatar(channel.guildId(), user).then(
-				[this, user, channel, &client, message](const QString& icon)
+				[this, user, channel, &client, message, showExpired](const QString& icon)
 			{
 				Embed embed;
 				embed.setColor(qrand() % 11777216);
@@ -106,6 +106,11 @@ ModerationModule::ModerationModule()
 
 				for (auto& warning : warnings[user])
 				{
+					if (!showExpired && warning.expired)
+					{
+						continue;
+					}
+
 					desc += QString("%1%2 - warned by %3\n%4\n\n").arg(warning.expired ? "\\*\\*\\* " : "",
 																	   warning.when.toString(),
 																	   UmikoBot::Instance().GetName(channel.guildId(), warning.warnedBy),
@@ -117,6 +122,18 @@ ModerationModule::ModerationModule()
 				client.createMessage(message.channelId(), embed);
 			});
 		});
+	};
+
+	RegisterCommand(Commands::MODERATION_WARNINGS, "warnings",
+					[this, warningsCommand](Client& client, const Message& message, const Channel& channel)
+	{
+		return warningsCommand(client, message, channel, false);
+	});
+
+	RegisterCommand(Commands::MODERATION_WARNINGS_ALL, "warnings-all",
+					[this, warningsCommand](Client& client, const Message& message, const Channel& channel)
+	{
+		return warningsCommand(client, message, channel, true);
 	});
 }
 
