@@ -14,6 +14,7 @@ public:
 
 private:
 	bool m_invitationModeration = true;
+	QTimer m_warningCheckTimer;
 
 	struct UserWarning
 	{
@@ -37,4 +38,5 @@ private:
 	QMap<snowflake_t, QList<UserWarning>> warnings;
 
 	unsigned int countWarnings(snowflake_t user, bool countExpired = false);
+	void checkWarningsExpiry();
 };
