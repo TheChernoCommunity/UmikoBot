@@ -7,6 +7,13 @@ using namespace Discord;
 ModerationModule::ModerationModule()
 	: Module("moderation", true)
 {
+	m_warningCheckTimer.setInterval(24 * 60 * 60 * 1000); // 24hr timer
+	QObject::connect(&m_warningCheckTimer, &QTimer::timeout, [this]
+	{
+		checkWarningsExpiry();
+	});
+	m_warningCheckTimer.start();
+
 	RegisterCommand(Commands::MODERATION_INVITATION_TOGGLE, "invitations",
 		[this](Client& client, const Message& message, const Channel& channel)
 	{
@@ -230,11 +237,14 @@ void ModerationModule::OnLoad(const QJsonDocument& doc)
 				warningObj["message"].toString(),
 				warningObj["expired"].toBool()
 			};
+
 			userWarnings.append(warning);
 		}
 
 		warnings[user] = userWarnings;
 	}
+
+	checkWarningsExpiry();
 }
 
 unsigned int ModerationModule::countWarnings(snowflake_t user, bool countExpired)
@@ -257,4 +267,21 @@ unsigned int ModerationModule::countWarnings(snowflake_t user, bool countExpired
 	}
 
 	return total;
+}
+
+// Checks expiry (warnings expire after 3 months)
+void ModerationModule::checkWarningsExpiry()
+{
+	QDateTime now = QDateTime::currentDateTime();
+
+	for (auto& userWarnings : warnings)
+	{
+		for (auto& warning : userWarnings)
+		{
+			if (!warning.expired && (warning.when.addMonths(3) <= now))
+			{
+				warning.expired = true;
+			}
+		}
+	}
 }
