@@ -109,19 +109,38 @@ ModerationModule::ModerationModule()
 				embed.setColor(qrand() % 11777216);
 				embed.setAuthor(EmbedAuthor("Warnings for " + UmikoBot::Instance().GetName(channel.guildId(), user), "", icon));
 
-				QString desc = warnings[user].size() == 0 ? "Nothing to see here..." : "";
+				QString desc = countWarnings(user, showExpired) == 0 ? "Nothing to see here..." : "";
+				QList<UserWarning>& userWarnings = warnings[user];
+				bool hasOutputExpiredMessage = false;
 
-				for (auto& warning : warnings[user])
+				// Sorts the warnings in order of newest to oldest
+				qSort(userWarnings.begin(), userWarnings.end(), [](const UserWarning& first, const UserWarning& second)
+				{
+					return second.when < first.when;
+				});
+
+				for (auto& warning : userWarnings)
 				{
 					if (!showExpired && warning.expired)
 					{
 						continue;
 					}
 
-					desc += QString("%1%2 - warned by %3\n%4\n\n").arg(warning.expired ? "\\*\\*\\* " : "",
-																	   warning.when.toString(),
-																	   UmikoBot::Instance().GetName(channel.guildId(), warning.warnedBy),
-																	   warning.message);
+					if (warning.expired)
+					{
+						if (!showExpired)
+							continue;
+
+						if (hasOutputExpiredMessage)
+							continue;
+
+						desc += "\n===== Expired =====\n\n";
+						hasOutputExpiredMessage = true;
+					}
+
+					desc += QString("%1 - warned by %2\n**%3**\n\n").arg(warning.when.toString("yyyy-MM-dd hh:mm:ss"),
+																		 UmikoBot::Instance().GetName(channel.guildId(), warning.warnedBy),
+																		 warning.message);
 
 				}
 
