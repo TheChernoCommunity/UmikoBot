@@ -236,7 +236,7 @@ UmikoBot::UmikoBot(QObject* parent)
 		}
 		else
 		{
-			::Permissions::ContainsPermission(*this, channel.guildId(), message.author().id(), CommandPermission::ADMIN,
+			::Permissions::ContainsPermission(*this, channel.guildId(), message.author().id(), CommandPermission::MODERATOR,
 				[this, prefix, message, channel](bool result)
 			{
 				QString description = "";
@@ -702,7 +702,7 @@ QList<Command> UmikoBot::GetAllCommands()
 
 void UmikoBot::VerifyAndRunAdminCmd(Client& client, const Message& message, const Channel& channel, unsigned int requiredNumberOfArgs, const QStringList& args, bool argumentShouldBeANumber, std::function<void()> callback)
 {
-	::Permissions::ContainsPermission(client, channel.guildId(), message.author().id(), CommandPermission::ADMIN, [args, &client, message, channel, requiredNumberOfArgs, argumentShouldBeANumber, callback](bool result)
+	::Permissions::ContainsPermission(client, channel.guildId(), message.author().id(), CommandPermission::MODERATOR, [args, &client, message, channel, requiredNumberOfArgs, argumentShouldBeANumber, callback](bool result)
 	{
 		if (!result)
 		{
