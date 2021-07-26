@@ -6,6 +6,7 @@
 #include "Discord/Patches/MessagePatch.h"
 #include <QtCore/QPair>
 #include <QtCore/QList>
+#include <random>
 
 #define POLL_DEFAULT_TIME 1.0*60.0*60.0		//seconds ~~ 1 hr
 #define POLL_MAX_TIME 168.0					//hours   ~~ 1 week
