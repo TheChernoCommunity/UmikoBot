@@ -871,6 +871,11 @@ CurrencyModule::CurrencyModule(UmikoBot* client) : Module("currency", true), m_c
 				client.createMessage(message.channelId(), "**You cannot donate to yourself!**\nPlease remove yourself from the list.");
 				return;
 			}
+			if (user.bot())
+			{
+				client.createMessage(message.channelId(), "Just _who_ do you think supplies your money here? Donate it to someone else! :angryping:");
+				return;
+			}
 		}
 
 		auto& userCurrency = guildList[channel.guildId()][getUserIndex(channel.guildId(), message.author().id())];
@@ -1124,6 +1129,11 @@ CurrencyModule::CurrencyModule(UmikoBot* client) : Module("currency", true), m_c
 		if (victimId == authorId)
 		{
 			client.createMessage(message.channelId(), "**You cannot steal from yourself.**");
+			return;
+		}
+		if (mentions[0].bot())
+		{
+			client.createMessage(message.channelId(), "**Nice try, but we machines are too advanced to be stolen from.**");
 			return;
 		}
 
