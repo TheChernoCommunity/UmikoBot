@@ -873,7 +873,7 @@ CurrencyModule::CurrencyModule(UmikoBot* client) : Module("currency", true), m_c
 			}
 			if (user.bot())
 			{
-				client.createMessage(message.channelId(), "Just _who_ do you think supplies your money here? Donate it to someone else! :angryping:");
+				client.createMessage(message.channelId(), QString("**Just _who_ do you think supplies your money here? Donate it to someone else!** <:") + utility::consts::emojis::reacts::ANGRY_PING + QString(">"));
 				return;
 			}
 		}
