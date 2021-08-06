@@ -203,10 +203,9 @@ void ModerationModule::OnSave(QJsonDocument& doc) const
 	moderation["invitationModeration"] = m_invitationModeration;
 
 	QJsonObject warningsJson; // Holds a map of user:array_of_warnings
-	for (auto i = warnings.keyValueBegin(); i != warnings.keyValueEnd(); i++)
+	for (auto user : warnings.keys())
 	{
-		snowflake_t user = i->first;
-		const QList<UserWarning>& userWarnings = i->second;
+		const QList<UserWarning>& userWarnings = warnings.value(user);
 		QJsonArray warningsArrayJson; // Holds the array of warnings for a specific user
 
 		for (auto& warning : userWarnings)
@@ -246,7 +245,7 @@ void ModerationModule::OnLoad(const QJsonDocument& doc)
 		QList<UserWarning> userWarnings;
 		QJsonArray warningsArrayJson = warningsObj[userString].toArray();
 
-		for (auto& warningJson : warningsArrayJson)
+		for (const auto& warningJson : warningsArrayJson)
 		{
 			QJsonObject warningObj = warningJson.toObject();
 
