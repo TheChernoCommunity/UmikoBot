@@ -1,8 +1,8 @@
-#include "CurrencyModule.h"
+#include "modules/currency/CurrencyModule.h"
 #include "UmikoBot.h"
 #include "core/Utility.h"
 #include "core/Permissions.h"
-#include "EventModule.h"
+#include "modules/event/EventModule.h"
 
 #include <QtCore/QFile>
 #include <QtCore/QJsonDocument>

@@ -1,4 +1,4 @@
-#include "ModerationModule.h"
+#include "modules/moderation/ModerationModule.h"
 #include "UmikoBot.h"
 #include "core/Permissions.h"
 

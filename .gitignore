@@ -7,3 +7,4 @@
 /res/
 !/res/commands.json
 /.vscode
+/configs

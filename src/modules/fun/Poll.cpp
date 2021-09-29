@@ -1,190 +1,19 @@
-#include "FunModule.h"
-#include <QtNetwork>
-#include <QtCore/QFile>
-#include <QtCore/QJsonDocument>
+#include "modules/fun/FunModule.h"
 #include "core/Permissions.h"
-#include "Discord/Patches/MessagePatch.h"
-#include <QtCore/QPair>
-#include <QtCore/QList>
-#include <random>
+
+using namespace Discord;
 
 #define POLL_DEFAULT_TIME 1.0*60.0*60.0		//seconds ~~ 1 hr
 #define POLL_MAX_TIME 168.0					//hours   ~~ 1 week
 #define POLL_MIN_TIME 1.0/60.0				//hours   ~~ 1 mins
 
-using namespace Discord;
-
-FunModule::FunModule(UmikoBot* client) : Module("funutil", true), m_memeChannel(0), m_client(client)
+void FunModule::initiatePoll()
 {
-
-	QObject::connect(&m_MemeManager, &QNetworkAccessManager::finished,
-		this, [this](QNetworkReply* reply) {
-			auto& client = UmikoBot::Instance();
-			if (reply->error()) {
-				qDebug() << reply->errorString();
-				client.createMessage(m_memeChannel, reply->errorString());
-
-				return;
-			}
-
-			QString in = reply->readAll();
-
-			QJsonDocument doc = QJsonDocument::fromJson(in.toUtf8());
-			auto obj = doc.object();
-			bool isNsfw = obj["nsfw"].toBool();
-			if (isNsfw) {
-				m_MemeManager.get(QNetworkRequest(QUrl("https://meme-api.herokuapp.com/gimme")));
-				return;
-			}
-			QString title = obj["title"].toString();
-			QString url = obj["url"].toString();
-			QString author = obj["author"].toString();
-			QString postLink = obj["postLink"].toString();
-			QString subreddit = obj["subreddit"].toString();
-
-			Embed embed;
-			EmbedImage img;
-			img.setUrl(url);
-			embed.setImage(img);
-			embed.setTitle(title);
-			EmbedFooter footer;
-			footer.setText("Post was made by u/" + author + " on r/" + subreddit + ".\nSee the actual post here: " + postLink);
-			embed.setFooter(footer);
-
-			client.createMessage(m_memeChannel, embed);
-		});
-
-			QObject::connect(&m_GithubManager, &QNetworkAccessManager::finished,
-		this, [this](QNetworkReply* reply) {
-			auto& client = UmikoBot::Instance();
-
-			if (reply->error()) {
-				qDebug() << reply->errorString();
-				client.createMessage(m_GithubChannel, reply->errorString());
-
-				return;
-			}
-
-			QString in = reply->readAll();
-
-			QJsonDocument doc = QJsonDocument::fromJson(in.toUtf8());
-			auto obj = doc.object();
-
-			QJsonArray items = obj["items"].toArray();
-
-			std::random_device device;
-			std::mt19937 rng(device());
-			std::uniform_int_distribution<std::mt19937::result_type> dist(0, items.size());
-
-			QJsonObject repo = items[dist(rng)].toObject();
-
-			QString repo_fullname = repo["full_name"].toString();
-			QString repo_url = repo["html_url"].toString();
-			QString repo_language = repo["language"].toString();
-			int repo_stars = repo["stargazers_count"].toInt();
-
-			Embed embed;
-			embed.setTitle(repo_fullname);
-			embed.setDescription("\nStars: " + QString::number(repo_stars) +
-								"\nLanguage: " + repo_language + "\n" +
-								repo_url);
-
-			client.createMessage(m_GithubChannel, embed);
-		});
-
 	QObject::connect(m_client, &UmikoBot::onMessageReactionAdd, this, &FunModule::onReact);
 	QObject::connect(m_client, &UmikoBot::onMessageReactionRemove, this, &FunModule::onUnReact);
 
-	RegisterCommand(Commands::FUN_MEME, "meme", [this](Client& client, const Message& message, const Channel& channel) 
-		{
-
-		QStringList args = message.content().split(' ');
-
-		if (args.size() >= 2) {
-			client.createMessage(message.channelId(), "**Wrong Usage of Command!** ");
-			return;
-		}
-
-		m_memeChannel = channel.id();
-		m_MemeManager.get(QNetworkRequest(QUrl("https://meme-api.herokuapp.com/gimme")));
-
-		});
-
-	RegisterCommand(Commands::FUN_ROLL, "roll", [this](Client& client, const Message& message, const Channel& channel)
-		{
-			QStringList args = message.content().split(' ');
-
-			if (args.size() < 2 || args.size() > 3)
-			{
-				client.createMessage(message.channelId(), "**Wrong Usage of Command!** ");
-				return;
-			}
-			if (args.size() == 2)
-			{
-				double min = 0;
-				double max = args.at(1).toDouble();
-				QRegExp re("[+-]?\\d*\\.?\\d+");
-				if (!re.exactMatch(args.at(1)))
-				{
-					client.createMessage(message.channelId(), "**You must roll with numbers!**");
-					return;
-				}
-				if (max > 2147483647 || max < -2147483647)
-				{
-					client.createMessage(message.channelId(), "**You can't roll that number!**");
-					return;
-				}
-				std::random_device rand_device;
-				std::mt19937 gen(rand_device());
-
-				if (max < min)
-					std::swap(min, max);
-
-				std::uniform_int_distribution<> dist(min, max);
-
-				QString text = QString("My Value was: **" + QString::number(dist(gen)) + "**");
-				client.createMessage(message.channelId(), text);
-				return;
-			}
-
-			if (args.size() == 3)
-			{
-				double min = args.at(1).toDouble();
-				double max = args.at(2).toDouble();
-				QRegExp re("[+-]?\\d*\\.?\\d+");
-				if (!re.exactMatch(args.at(1)) || !re.exactMatch(args.at(2)))
-				{
-					client.createMessage(message.channelId(), "**You must roll with numbers!**");
-					return;
-				}
-				if (max > 2147483647 || min > 2147483647 || max < -2147483647 || min < -2147483647)
-				{
-					client.createMessage(message.channelId(), "**You can't roll that number!**");
-					return;
-				}
-				if (args.at(1) == args.at(2))
-				{
-					client.createMessage(message.channelId(), "My Value was: **" + args.at(1) + "**");
-					return;
-				}
-
-				std::random_device rand_device;
-				std::mt19937 gen(rand_device());
-
-				if (max < min)
-					std::swap(min, max);
-
-				std::uniform_int_distribution<> dist(min, max);
-
-				QString text = QString("My Value was: **" + QString::number(dist(gen)) + "**");
-				client.createMessage(message.channelId(), text);
-			}
-		});
-
-
 	RegisterCommand(Commands::FUN_POLL, "poll", [this](Client& client, const Message& message, const Channel& channel) 
 	{
-
 		QStringList lines = message.content().split('\n');
 
 		for (auto& line : lines) 
@@ -610,27 +439,6 @@ FunModule::FunModule(UmikoBot* client) : Module("funutil", true), m_memeChannel(
 
 	});
 
-	RegisterCommand(Commands::FUN_GITHUB, "github", [this](Client& client, const Message& message, const Channel& channel) 
-	{
-		QStringList args = message.content().split(' ');
-
-		m_GithubChannel = channel.id();
-
-		if(args.size() != 1)
-		{
-			UmikoBot::Instance().createMessage(m_GithubChannel, "**Wrong Usage of Command!**");
-
-			return;
-		}
-
-		// For extra randomness
-		std::random_device device;
-		std::mt19937 rng(device());
-		std::uniform_int_distribution<std::mt19937::result_type> ch('A', 'Z');
-
-		m_GithubManager.get(QNetworkRequest(QUrl("https://api.github.com/search/repositories?q=" + QString(QChar((char)ch(rng))))));
-	});
-
 	RegisterCommand(Commands::FUN_GIVE_NEW_POLL_ACCESS, "give-new-poll-access", [this](Client& client, const Message& message, const Channel& channel) 
 	{
 		QStringList args = message.content().split(' ');
@@ -669,7 +477,6 @@ FunModule::FunModule(UmikoBot* client) : Module("funutil", true), m_memeChannel(
 			UmikoBot::Instance().createMessage(channel.id(), "**The roles have been added.**\nPeople with the role(s) can now create new polls!");
 
 		});
-		
 	});
 	
 	RegisterCommand(Commands::FUN_TAKE_NEW_POLL_ACCESS, "take-new-poll-access", [this](Client& client, const Message& message, const Channel& channel) 
@@ -802,25 +609,6 @@ void FunModule::onUnReact(snowflake_t user, snowflake_t channel, snowflake_t mes
 		}
 
 	});
-}
-
-void FunModule::OnMessage(Client& client, const Message& message) 
-{
-	for (auto& usr : message.mentions()) 
-	{
-		if (usr.bot()) 
-		{
-			snowflake_t chan = message.channelId();
-			UmikoBot::Instance().createReaction(chan, message.id(), utility::consts::emojis::reacts::ANGRY_PING)
-				.then([chan]
-			{
-				UmikoBot::Instance().triggerTypingIndicator(chan);
-			});
-			return;
-		}
-	}
-
-	Module::OnMessage(client, message);
 }
 
 void FunModule::pollReactAndAdd(const PollOptions& options, int pos, const Poll& poll, snowflake_t msg, snowflake_t chan, snowflake_t guild) 

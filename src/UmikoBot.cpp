@@ -1,13 +1,13 @@
 #include "UmikoBot.h"
 #include "core/Permissions.h"
 
-#include "modules/LevelModule.h"
-#include "modules/TimezoneModule.h"
-#include "modules/CurrencyModule.h"
-#include "modules/ModerationModule.h"
-#include "modules/FunModule.h"
-#include "modules/UserModule.h"
-#include "modules/EventModule.h"
+#include "modules/level/LevelModule.h"
+#include "modules/timezone/TimezoneModule.h"
+#include "modules/currency/CurrencyModule.h"
+#include "modules/moderation/ModerationModule.h"
+#include "modules/fun/FunModule.h"
+#include "modules/user/UserModule.h"
+#include "modules/event/EventModule.h"
 
 #include "Logger.h"
 

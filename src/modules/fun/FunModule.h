@@ -50,6 +50,11 @@ private:
 
 	void pollReactAndAdd(const PollOptions& options, int pos, const Poll& poll, snowflake_t msg, snowflake_t chan, snowflake_t guild);
 
+	void initiateMeme();
+	void initiatePoll();
+	void initiateGithub();
+	void initiateRoll();
+
 public:
 	FunModule(UmikoBot* client);
 

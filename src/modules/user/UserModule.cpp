@@ -1,5 +1,5 @@
-#include "UserModule.h"
-#include "CurrencyModule.h"
+#include "modules/user/UserModule.h"
+#include "modules/currency/CurrencyModule.h"
 #include "UmikoBot.h"
 
 #define descriptionTimeout 60

@@ -1,4 +1,4 @@
-#include "FunModule.h"
+#include "modules/fun/FunModule.h"
 
 #define EMBED_BAR_MAX_WIDTH 15.0
 
