@@ -207,7 +207,7 @@ LevelModule::LevelModule(UmikoBot* client)
 		}
 	});
 
-	initiate_admin_commands();
+	initiateAdminCommands();
 }
 
 void LevelModule::OnSave(QJsonDocument& doc) const

@@ -1,4 +1,4 @@
-#include "modules/timezone/TimezoneModule.h"
+#include "modules/user/TimezoneModule.h"
 #include "UmikoBot.h"
 
 using namespace Discord;

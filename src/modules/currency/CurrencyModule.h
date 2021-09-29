@@ -168,6 +168,11 @@ private:
 		return std::distance(guildList[guild].begin(), std::prev(guildList[guild].end()));
 	}
 
+	void initiateGiveaways(UmikoBot* client);
+	void initiateStatus();
+	void initiateEarnCommands();
+	void initiateAdminCommands();
+
 public:
 	CurrencyModule(UmikoBot* client);
 	void StatusCommand(QString& result, snowflake_t guild, snowflake_t user) override;

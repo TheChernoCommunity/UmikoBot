@@ -48,5 +48,5 @@ private:
 
 	UmikoBot* m_client;
 
-	void initiate_admin_commands();
+	void initiateAdminCommands();
 };

@@ -1,8 +1,8 @@
 #include "UmikoBot.h"
 #include "core/Permissions.h"
 
-#include "modules/level/LevelModule.h"
-#include "modules/timezone/TimezoneModule.h"
+#include "modules/user/LevelModule.h"
+#include "modules/user/TimezoneModule.h"
 #include "modules/currency/CurrencyModule.h"
 #include "modules/moderation/ModerationModule.h"
 #include "modules/fun/FunModule.h"

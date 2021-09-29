@@ -1,4 +1,4 @@
-#include "modules/level/LevelModule.h"
+#include "modules/user/LevelModule.h"
 #include "core/Permissions.h"
 #include "UmikoBot.h"
 
@@ -6,7 +6,7 @@
 
 using namespace Discord;
 
-void LevelModule::initiate_admin_commands()
+void LevelModule::initiateAdminCommands()
 {
 	RegisterCommand(Commands::LEVEL_MODULE_MAX_LEVEL, "setmaxlevel",
 		[this](Client& client, const Message& message, const Channel& channel)
