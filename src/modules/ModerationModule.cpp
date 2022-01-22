@@ -224,14 +224,19 @@ void ModerationModule::OnMessage(Client& client, const Message& message)
 		{
 			if (content.contains(domain))
 			{
-				if (content.contains(".com") || content.contains(".ru") || content.contains(".net"))
+				if (content.contains(".com") || content.contains(".ru") || content.contains(".net")|| content.contains(".site") ||
+					content.contains(".info")|| content.contains(".gift") || content.contains(".ga") || content.contains(".birth"))
 				{
 					snowflake_t outputChannel = GuildSettings::GetGuildSetting(channel.guildId()).primaryChannel;
 					if (!outputChannel) outputChannel = channel.id();
 
 					client.createMessage(outputChannel, QString("<@%1> posted a message containing a dodgy URL in <#%2>. Removed!")
 										 .arg(message.author().id()).arg(message.channelId()));
-					client.deleteMessage(channel.id(), message.id()).then([](){ printf("Deleted\n"); }).otherwise([](){ printf("Failed\n"); });
+					client.deleteMessage(channel.id(), message.id()).otherwise([&client, message, outputChannel]()
+					{
+						client.createMessage(outputChannel, QString("Failed to remove <@%1>'s message in <#%2>! I might be lacking permissions...")
+							.arg(message.author().id()).arg(message.channelId()));;
+					});
 				}
 			}
 		}
@@ -287,7 +292,22 @@ void ModerationModule::OnLoad(const QJsonDocument& doc)
 	QJsonObject moderation = json["moderation"].toObject();
 	m_invitationModeration = json["invitationModeration"].toBool();
 
+	// Adds in default dodgy links
 	dodgyDomainNames.clear();
+	dodgyDomainNames.insert("discorcl");
+	dodgyDomainNames.insert("cliscord");
+	dodgyDomainNames.insert("dlscord");
+	dodgyDomainNames.insert("d1scord");
+	dodgyDomainNames.insert("disc0rd");
+	dodgyDomainNames.insert("d1sc0rd");
+	dodgyDomainNames.insert("disord");
+	dodgyDomainNames.insert("discordgifts");
+	dodgyDomainNames.insert("disordgifts");
+	dodgyDomainNames.insert("discord-app");
+	dodgyDomainNames.insert("discordgg");
+	dodgyDomainNames.insert("discrod");
+	dodgyDomainNames.insert("dicsord");
+	
 	QJsonArray dodgyDomainsArray = json["dodgyDomainNames"].toArray();
 	for (const auto& domain : dodgyDomainsArray)
 	{
