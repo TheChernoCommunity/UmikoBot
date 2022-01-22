@@ -510,6 +510,35 @@ UmikoBot::UmikoBot(QObject* parent)
 		else
 			printHelp();
 	} });
+	
+	m_commands.push_back({ Commands::GLOBAL_SET_PRIMARY_CHANNEL, "set-primary-channel",
+		[this](Client& client, const Message& message, const Channel& channel)
+	{
+		GuildSetting& s = GuildSettings::GetGuildSetting(channel.guildId());
+		QStringList args = message.content().split(' ');
+
+		UmikoBot::VerifyAndRunAdminCmd(client, message, channel, 2, args, false, [this, &client, channel, message, args, &s]()
+		{
+			QString channelArg = args.at(1);
+			bool ok;
+			snowflake_t channelId = channelArg.toULongLong(&ok);
+			
+			if (!ok)
+			{
+				channelArg = channelArg.mid(2, channelArg.length() - 2 - 1);
+				channelId = channelArg.toULongLong(&ok);
+
+				if (!ok)
+				{
+					createMessage(channel.id(), "Could not find channel!");
+					return;
+				}
+			}
+
+			s.primaryChannel = channelId;
+			createMessage(channel.id(), QString("Primary channel is now set to <#%1>").arg(s.primaryChannel));
+		});
+	}});
 }
 
 UmikoBot::~UmikoBot()
@@ -885,6 +914,7 @@ void UmikoBot::GetGuilds(snowflake_t after)
 
 		if (guilds.size() == 100) //guilds size is equal to the limit
 		{
+			QThread::msleep(1000);
 			GetGuilds(guilds[guilds.size() - 1].id());
 		}
 		ULog(ulog::Severity::Debug, UFString("Guild count: %llu", guilds.size()));
@@ -908,6 +938,7 @@ void UmikoBot::GetGuildMemberInformation(snowflake_t guild, snowflake_t after)
 
 		if (members.size() == 1000) //guilds size is equal to the limit
 		{
+			QThread::msleep(1000);
 			GetGuildMemberInformation(guild, members[members.size() - 1].user().id());
 		}
 

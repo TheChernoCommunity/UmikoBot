@@ -20,6 +20,7 @@ struct GuildSetting
 	snowflake_t id;
 
 	QString prefix;
+	snowflake_t primaryChannel;
 	QList<QPair<QString, bool>> modules;
 	
 	// Level system related
