@@ -885,6 +885,7 @@ void UmikoBot::GetGuilds(snowflake_t after)
 
 		if (guilds.size() == 100) //guilds size is equal to the limit
 		{
+			QThread::msleep(1000);
 			GetGuilds(guilds[guilds.size() - 1].id());
 		}
 		ULog(ulog::Severity::Debug, UFString("Guild count: %llu", guilds.size()));
@@ -908,6 +909,7 @@ void UmikoBot::GetGuildMemberInformation(snowflake_t guild, snowflake_t after)
 
 		if (members.size() == 1000) //guilds size is equal to the limit
 		{
+			QThread::msleep(1000);
 			GetGuildMemberInformation(guild, members[members.size() - 1].user().id());
 		}
 
