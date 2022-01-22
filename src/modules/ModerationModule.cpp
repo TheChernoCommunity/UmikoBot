@@ -226,10 +226,12 @@ void ModerationModule::OnMessage(Client& client, const Message& message)
 			{
 				if (content.contains(".com") || content.contains(".ru") || content.contains(".net"))
 				{
-					// TODO(fkp): Primary channel
-					client.createMessage(message.channelId(), QString("<@%1> posted a message containing a dodgy URL in <#%2>. Removed!")
+					snowflake_t outputChannel = GuildSettings::GetGuildSetting(channel.guildId()).primaryChannel;
+					if (!outputChannel) outputChannel = channel.id();
+
+					client.createMessage(outputChannel, QString("<@%1> posted a message containing a dodgy URL in <#%2>. Removed!")
 										 .arg(message.author().id()).arg(message.channelId()));
-					client.deleteMessage(message.channelId(), message.id()).then([](){ printf("Deleted\n"); }).otherwise([](){ printf("Failed\n"); });
+					client.deleteMessage(channel.id(), message.id()).then([](){ printf("Deleted\n"); }).otherwise([](){ printf("Failed\n"); });
 				}
 			}
 		}

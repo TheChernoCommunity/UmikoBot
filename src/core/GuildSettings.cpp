@@ -31,6 +31,11 @@ void GuildSettings::Load(const QString& location)
 				setting.prefix = current["prefix"].toString();
 			}
 
+			if (current.contains("primaryChannel"))
+			{
+				setting.primaryChannel = current["primaryChannel"].toString().toULongLong();
+			}
+
 			if (current.contains("modules"))
 			{
 				QJsonObject moduleJson = current["modules"].toObject();
@@ -114,6 +119,9 @@ void GuildSettings::Save()
 		if(setting.prefix != "!")
 			current["prefix"] = setting.prefix;
 
+		if (setting.primaryChannel != 0)
+			current["primaryChannel"] = QString::number(setting.primaryChannel);
+		
 		if (setting.modules.size() > 0) 
 		{
 			QJsonObject moduleSettings;
@@ -287,5 +295,6 @@ GuildSetting GuildSettings::CreateGuildSetting(snowflake_t id)
 	s.expRequirement   = LEVELMODULE_EXP_REQUIREMENT;
 	s.growthRate       = LEVELMODULE_EXP_GROWTH;
 	s.prefix           = "!";
+	s.primaryChannel   = 0;
 	return s;
 }
