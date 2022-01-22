@@ -39,4 +39,6 @@ private:
 
 	unsigned int countWarnings(snowflake_t user, bool countExpired = false);
 	void checkWarningsExpiry();
+
+	QSet<QString> dodgyDomainNames {};
 };

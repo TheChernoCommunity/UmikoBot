@@ -161,6 +161,34 @@ ModerationModule::ModerationModule()
 	{
 		return warningsCommand(client, message, channel, true);
 	});
+
+	RegisterCommand(Commands::MODERATION_ADD_DODGY_DOMAIN, "add-dodgy-domain",
+		[this](Client& client, const Message& message, const Channel& channel)
+	{
+			QStringList args = message.content().split(' ');
+			UmikoBot::VerifyAndRunAdminCmd(client, message, channel, 2, args, false, [this, &client, channel, message, args]()
+			{
+				dodgyDomainNames.insert(args.at(1));
+				client.createMessage(message.channelId(), QString("Added '%1' as a dodgy domain name.").arg(args.at(1)));
+			});
+	});
+
+	RegisterCommand(Commands::MODERATION_REMOVE_DODGY_DOMAIN, "remove-dodgy-domain",
+		[this](Client& client, const Message& message, const Channel& channel)
+	{
+			QStringList args = message.content().split(' ');
+			UmikoBot::VerifyAndRunAdminCmd(client, message, channel, 2, args, false, [this, &client, channel, message, args]()
+			{
+				if (dodgyDomainNames.remove(args.at(1)))
+				{
+					client.createMessage(message.channelId(), QString("Removed '%1' as a dodgy domain name.").arg(args.at(1)));
+				}
+				else
+				{
+					client.createMessage(message.channelId(), QString("Could not find '%1' in my list of dodgy domain names.").arg(args.at(1)));
+				}
+			});
+	});
 }
 
 void ModerationModule::OnMessage(Client& client, const Message& message)
@@ -168,25 +196,41 @@ void ModerationModule::OnMessage(Client& client, const Message& message)
 	client.getChannel(message.channelId()).then(
 	[this, message, &client](const Channel& channel)
 	{
+		const QString& content = message.content();
+		
 		if (m_invitationModeration)
 		{
-			if (message.content().contains("https://discord.gg/", Qt::CaseInsensitive))
+			if (content.contains("https://discord.gg/", Qt::CaseInsensitive))
 			{
 				auto authorID = message.author().id();
 				::Permissions::ContainsPermission(client, channel.guildId(), message.author().id(), CommandPermission::ADMIN,
-					[this, message, &client, authorID, channel](bool result)
+					[this, message, &client, authorID, channel, content](bool result)
 				{
 					if (!result)
 					{
 						client.deleteMessage(message.channelId(), message.id());
 						UmikoBot::Instance().createDm(authorID)
-							.then([authorID, &client, message](const Channel& channel)
+							.then([authorID, &client, message, content](const Channel& channel)
 								{
 									client.createMessage(channel.id(), "**Invitation link of servers aren't allowed in any channels on this server. Please take it to DMs!** Here is your message which you posted in the server:\n");
-									client.createMessage(channel.id(), message.content());
+									client.createMessage(channel.id(), content);
 								});
 					}
 				});
+			}
+		}
+
+		for (auto& domain : dodgyDomainNames)
+		{
+			if (content.contains(domain))
+			{
+				if (content.contains(".com") || content.contains(".ru") || content.contains(".net"))
+				{
+					// TODO(fkp): Primary channel
+					client.createMessage(message.channelId(), QString("<@%1> posted a message containing a dodgy URL in <#%2>. Removed!")
+										 .arg(message.author().id()).arg(message.channelId()));
+					client.deleteMessage(message.channelId(), message.id()).then([](){ printf("Deleted\n"); }).otherwise([](){ printf("Failed\n"); });
+				}
 			}
 		}
 	});
@@ -223,8 +267,15 @@ void ModerationModule::OnSave(QJsonDocument& doc) const
 	}
 
 	moderation["warnings"] = warningsJson;
-	json["moderation"] = moderation;
 
+	QJsonArray dodgyDomainsArray;
+	for (auto& domain : dodgyDomainNames)
+	{
+		dodgyDomainsArray.append(domain);
+	}
+	moderation["dodgyDomainNames"] = dodgyDomainsArray;
+	
+	json["moderation"] = moderation;
 	doc.setObject(moderation);
 }
 
@@ -233,6 +284,13 @@ void ModerationModule::OnLoad(const QJsonDocument& doc)
 	QJsonObject json = doc.object();
 	QJsonObject moderation = json["moderation"].toObject();
 	m_invitationModeration = json["invitationModeration"].toBool();
+
+	dodgyDomainNames.clear();
+	QJsonArray dodgyDomainsArray = json["dodgyDomainNames"].toArray();
+	for (const auto& domain : dodgyDomainsArray)
+	{
+		dodgyDomainNames.insert(domain.toString());
+	}
 
 	// Loads warnings
 	warnings.clear();
