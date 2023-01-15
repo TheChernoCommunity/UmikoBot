@@ -33,7 +33,7 @@ FunModule::FunModule(UmikoBot* client) : Module("funutil", true), m_memeChannel(
 			auto obj = doc.object();
 			bool isNsfw = obj["nsfw"].toBool();
 			if (isNsfw) {
-				m_MemeManager.get(QNetworkRequest(QUrl("https://meme-api.herokuapp.com/gimme")));
+				m_MemeManager.get(QNetworkRequest(QUrl("https://meme-api.com/gimme")));
 				return;
 			}
 			QString title = obj["title"].toString();
@@ -106,7 +106,7 @@ FunModule::FunModule(UmikoBot* client) : Module("funutil", true), m_memeChannel(
 		}
 
 		m_memeChannel = channel.id();
-		m_MemeManager.get(QNetworkRequest(QUrl("https://meme-api.herokuapp.com/gimme")));
+		m_MemeManager.get(QNetworkRequest(QUrl("https://meme-api.com/gimme")));
 
 		});
 
